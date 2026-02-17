@@ -21,9 +21,13 @@ defmodule FtpdbWeb.Router do
   end
 
   scope "/api", FtpdbWeb do
+    pipe_through :browser
+
     get "/hot", ApiController, :hot
     get "/top_this_week", ApiController, :top_this_week
     get "/fan_favourites", ApiController, :fan_favourites
+    get "/top_all_time", ApiController, :top_all_time
+    get "/most_time_spent", ApiController, :most_time_spent
   end
 
   # Other scopes may use custom stacks.

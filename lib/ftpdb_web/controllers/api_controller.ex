@@ -12,4 +12,12 @@ defmodule FtpdbWeb.ApiController do
   def fan_favourites(conn, _params) do
     json(conn, Ftpdb.DB.fan_favourites())
   end
+
+  def top_all_time(conn, _params) do
+    json(conn, Ftpdb.DB.top_all_time())
+  end
+
+  def most_time_spent(conn, _params) do
+    json(conn, Ftpdb.DB.most_time_spent())
+  end
 end
