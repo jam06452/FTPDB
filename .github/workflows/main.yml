@@ -26,6 +26,5 @@ jobs:
 
       - uses: docker/build-push-action@v5
         with:
-          context: ./exapi
           push: true
           tags: ghcr.io/jam06452/ftpdb_backend:latest
