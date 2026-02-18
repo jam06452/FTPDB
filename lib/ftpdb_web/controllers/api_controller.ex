@@ -68,12 +68,11 @@ defmodule FtpdbWeb.ApiController do
   end
 
   def search(conn, %{"q" => query}) do
-    results = Ftpdb.DB.search_projects(query)
-    json(conn, results)
+    json(conn, %{projects: Ftpdb.DB.search_projects(query), users: Ftpdb.DB.search_users(query)})
   end
 
   def search(conn, _params) do
-    json(conn, [])
+    json(conn, %{projects: [], users: []})
   end
 
   def suggest(conn, %{

@@ -122,24 +122,53 @@
         pointer-events: none;
       }
 
-      /* Autocomplete dropdown */
+      /* Autocomplete dropdown - Two column layout */
       .search-autocomplete {
         position: absolute;
         top: calc(100% + 8px);
         left: 0;
         right: 0;
-        background: var(--surface);
-        border: 1px solid var(--border);
-        border-radius: var(--r-md);
-        max-height: 320px;
-        overflow-y: auto;
+        background: transparent;
         display: none;
         z-index: 1000;
-        box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+        min-width: 800px;
+        max-width: 100vw;
+        width: max-content;
       }
 
       .search-autocomplete.active {
-        display: block;
+        display: flex;
+        gap: 12px;
+      }
+
+      .search-autocomplete-section {
+        flex: 1;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--r-md);
+        box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        min-width: 300px;
+        max-height: 480px;
+        overflow-y: auto;
+      }
+
+      .search-autocomplete-section:empty {
+        display: none;
+      }
+
+      .search-autocomplete-section-title {
+        padding: 12px 14px;
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--muted);
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        background: var(--surface2);
+        border-bottom: 1px solid var(--border);
+        flex-shrink: 0;
       }
 
       .search-autocomplete-item {
@@ -1841,27 +1870,59 @@
         }
       }
 
-      function renderSearchResults(results) {
-        if (!results || results.length === 0) {
-          searchAutocomplete.innerHTML = '<div class="search-autocomplete-empty">No projects found</div>';
+      function renderSearchResults(data) {
+        const projects = data.projects || [];
+        const users = data.users || [];
+        
+        if ((!projects || projects.length === 0) && (!users || users.length === 0)) {
+          searchAutocomplete.innerHTML = '<div class="search-autocomplete-section"><div class="search-autocomplete-empty">No results found</div></div>';
           searchAutocomplete.classList.add('active');
           return;
         }
 
-        searchAutocomplete.innerHTML = results.map(project => `
-          <div class="search-autocomplete-item" onclick="selectProject('${project.id}')">
-            <div class="search-autocomplete-item-icon">
-              ${project.avatar_url && project.avatar_url.trim() ? 
-                `<img src="${project.avatar_url}" alt="${project.display_name || 'User'}" />` : 
-                '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" opacity="0.4"><rect width="4" height="4" x="3" y="3" rx="1"/></svg>'}
-            </div>
-            <div class="search-autocomplete-item-content">
-              <div class="search-autocomplete-item-title">${project.title || project.name || 'Untitled'}</div>
-              <div class="search-autocomplete-item-meta">${project.display_name || 'general'}</div>
-            </div>
-          </div>
-        `).join('');
+        let html = '';
 
+        // Render projects section
+        if (projects && projects.length > 0) {
+          html += '<div class="search-autocomplete-section">';
+          html += '<div class="search-autocomplete-section-title">Projects</div>';
+          html += projects.map(project => `
+            <div class="search-autocomplete-item" onclick="selectProject('${project.id}')">
+              <div class="search-autocomplete-item-icon">
+                ${project.avatar_url && project.avatar_url.trim() ? 
+                  `<img src="${project.avatar_url}" alt="${project.display_name || 'User'}" />` : 
+                  '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" opacity="0.4"><rect width="4" height="4" x="3" y="3" rx="1"/></svg>'}
+              </div>
+              <div class="search-autocomplete-item-content">
+                <div class="search-autocomplete-item-title">${project.title || project.name || 'Untitled'}</div>
+                <div class="search-autocomplete-item-meta">${project.display_name || 'general'}</div>
+              </div>
+            </div>
+          `).join('');
+          html += '</div>';
+        }
+
+        // Render users section
+        if (users && users.length > 0) {
+          html += '<div class="search-autocomplete-section">';
+          html += '<div class="search-autocomplete-section-title">Users</div>';
+          html += users.map(user => `
+            <div class="search-autocomplete-item" onclick="selectUser('${user.id}')">
+              <div class="search-autocomplete-item-icon">
+                ${user.avatar_url && user.avatar_url.trim() ? 
+                  `<img src="${user.avatar_url}" alt="${user.display_name || 'User'}" />` : 
+                  '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" opacity="0.4"><circle cx="12" cy="8" r="4"/><path d="M 4 20 c 0 -4 3.6 -8 8 -8 s 8 4 8 8"/></svg>'}
+              </div>
+              <div class="search-autocomplete-item-content">
+                <div class="search-autocomplete-item-title">${user.display_name || 'User'}</div>
+                <div class="search-autocomplete-item-meta">${user.total_hours || 0} hours</div>
+              </div>
+            </div>
+          `).join('');
+          html += '</div>';
+        }
+
+        searchAutocomplete.innerHTML = html;
         searchAutocomplete.classList.add('active');
       }
 
@@ -1869,6 +1930,12 @@
         searchInput.value = '';
         searchAutocomplete.classList.remove('active');
         viewProject(id);
+      }
+
+      function selectUser(id) {
+        searchInput.value = '';
+        searchAutocomplete.classList.remove('active');
+        viewUser(id);
       }
 
       // Close autocomplete when clicking outside

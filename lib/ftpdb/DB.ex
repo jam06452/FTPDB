@@ -264,6 +264,42 @@ defmodule Ftpdb.DB do
     end
   end
 
+  def search_users(query) when is_binary(query) do
+    cleaned_query = String.trim(query)
+
+    if String.length(cleaned_query) == 0 do
+      []
+    else
+      search_term = "%#{cleaned_query}%"
+
+      {:ok, response} =
+        Supabase.PostgREST.from(client(), "users")
+        |> Supabase.PostgREST.select([
+          "id",
+          "display_name",
+          "avatar_url",
+          "total_time"
+        ])
+        |> Supabase.PostgREST.ilike("display_name", search_term)
+        |> Supabase.PostgREST.limit(10)
+        |> Map.put(:method, :get)
+        |> Supabase.PostgREST.execute()
+
+      response.body
+      |> Enum.map(fn item ->
+        total_time = item["total_time"] || 0
+        total_hours = div(total_time, 3600)
+
+        %{
+          id: to_string(item["id"]),
+          display_name: item["display_name"],
+          avatar_url: item["avatar_url"],
+          total_hours: total_hours
+        }
+      end)
+    end
+  end
+
   def random_projects(filter) do
     # Get all active projects and filter/sort them
     {:ok, response} =
