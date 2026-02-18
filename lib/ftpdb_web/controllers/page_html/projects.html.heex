@@ -261,7 +261,7 @@
         flex: 1;
         width: 100%;
       }
-      
+
       .section-header {
         display: flex;
         align-items: center;
@@ -270,19 +270,19 @@
         margin-bottom: 20px;
         flex-wrap: wrap;
       }
-      
+
       .section-title-group {
         display: flex;
         align-items: baseline;
         gap: 16px;
       }
-      
+
       .section-title {
         font-family: 'DM Serif Display', serif;
         font-size: 28px;
         color: var(--text);
       }
-      
+
       .section-meta {
         font-family: 'DM Mono', monospace;
         font-size: 11px;
@@ -362,7 +362,7 @@
         display: flex;
         flex-direction: column;
       }
-      
+
       .project-card:hover {
         transform: translateY(-4px);
         border-color: var(--gold-dim);
@@ -379,7 +379,7 @@
         justify-content: center;
         flex-shrink: 0;
       }
-      
+
       .project-card-thumb img {
         width: 100%;
         height: 100%;
@@ -388,11 +388,11 @@
         transition: transform 0.4s ease;
         display: block;
       }
-      
+
       .project-card:hover .project-card-thumb img {
         transform: scale(1.05);
       }
-      
+
       .project-card-thumb-placeholder {
         position: absolute;
         inset: 0;
@@ -439,7 +439,7 @@
         align-items: center;
         gap: 8px;
       }
-      
+
       .project-card-icon {
         width: 24px;
         height: 24px;
@@ -452,13 +452,13 @@
         justify-content: center;
         overflow: hidden;
       }
-      
+
       .project-card-icon img {
         width: 100%;
         height: 100%;
         object-fit: cover;
       }
-      
+
       .project-card-icon svg {
         opacity: 0.4;
       }
@@ -584,8 +584,8 @@
         <a href="/suggestions" class="nav-pill">Suggestions</a>
       </div>
     </nav>
-
-    <!-- ═══ MAIN ═══ -->
+    
+<!-- ═══ MAIN ═══ -->
     <main>
       <div class="container">
         <section class="section">
@@ -596,7 +596,14 @@
             </div>
             <div class="filter-controls">
               <button class="shuffle-btn" onclick="shuffleProjects()">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
                   <path d="M3 9h14V5M21 5h-14v4" />
                   <path d="M3 15h14v4M21 19H7v-4" />
                 </svg>
@@ -622,8 +629,8 @@
         </section>
       </div>
     </main>
-
-    <!-- ═══ JS ═══ -->
+    
+<!-- ═══ JS ═══ -->
     <script>
       let currentFilter = "random";
       let allProjects = [];
