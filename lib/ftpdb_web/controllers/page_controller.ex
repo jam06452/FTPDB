@@ -4,4 +4,8 @@ defmodule FtpdbWeb.PageController do
   def home(conn, _params) do
     render(conn, :home)
   end
+
+  def project(conn, %{"id" => id}) do
+    render(conn, :project, project_id: id)
+  end
 end

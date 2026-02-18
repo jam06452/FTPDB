@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Project — FTPDB</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&family=Cabinet+Grotesk:wght@400;500;700;900&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --bg:        #0d0f14;
+      --surface:   #161a22;
+      --surface2:  #1e2330;
+      --border:    rgba(255,255,255,0.07);
+      --gold:      #e8b455;
+      --gold-dim:  #a07a2e;
+      --text:      #eeeae0;
+      --muted:     #7a8099;
+      --accent:    #4f8ef7;
+      --danger:    #e05b5b;
+      --r-sm:  6px;
+      --r-md:  12px;
+      --r-lg:  18px;
+      --transition: 0.22s cubic-bezier(.4,0,.2,1);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Cabinet Grotesk', sans-serif;
+      font-size: 15px;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+    a { color: inherit; text-decoration: none; }
+    img { display: block; max-width: 100%; }
+
+    /* ─── NAVBAR ─── */
+    .navbar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(13,15,20,0.88);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 28px;
+      height: 58px;
+      display: flex;
+      align-items: center;
+      gap: 24px;
+    }
+    .nav-logo {
+      font-family: 'DM Serif Display', serif;
+      font-size: 22px;
+      color: var(--gold);
+      letter-spacing: -0.5px;
+      border: 2px solid var(--gold);
+      border-radius: var(--r-sm);
+      padding: 2px 10px;
+      flex-shrink: 0;
+    }
+    .nav-back {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-family: 'DM Mono', monospace;
+      font-size: 12px;
+      color: var(--muted);
+      padding: 5px 12px;
+      border: 1px solid var(--border);
+      border-radius: 50px;
+      background: var(--surface);
+      cursor: pointer;
+      transition: color var(--transition), border-color var(--transition);
+    }
+    .nav-back:hover { color: var(--text); border-color: var(--gold-dim); }
+    .nav-spacer { flex: 1; }
+
+    /* ─── HERO CAROUSEL ─── */
+    .hero {
+      position: relative;
+      margin: 32px auto 0;
+      max-width: 1100px;
+      padding: 0 28px;
+      border-radius: var(--r-lg);
+      border: 1px solid var(--border);
+      background: var(--surface);
+      min-height: 360px;
+      overflow: hidden;
+    }
+
+    .hero-banner {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 0;
+      align-items: stretch;
+    }
+
+    .hero-banner-image-area {
+      position: relative;
+      background: var(--surface2);
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .hero-img {
+      width: 100%;
+      height: auto;
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      object-position: center;
+      display: block;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      z-index: 1;
+    }
+    .hero-img.loaded { opacity: 1; }
+    .hero-placeholder {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'DM Mono', monospace;
+      font-size: 12px;
+      color: var(--muted);
+      letter-spacing: 0.1em;
+      background: linear-gradient(135deg, var(--surface2) 25%, transparent 25%, transparent 75%, var(--surface2) 75%, var(--surface2)),
+                  linear-gradient(135deg, var(--surface2) 25%, transparent 25%, transparent 75%, var(--surface2) 75%, var(--surface2));
+      background-size: 30px 30px;
+      background-position: 0 0, 15px 15px;
+      background-color: var(--surface2);
+      z-index: 0;
+    }
+
+    /* Right: info panel */
+    .hero-info {
+      padding: 28px 32px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 12px;
+      border-left: 1px solid var(--border);
+      height: auto;
+    }
+    .hero-channel {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      color: var(--gold);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+    .hero-title {
+      font-family: 'DM Serif Display', serif;
+      font-size: 32px;
+      line-height: 1.15;
+      color: var(--text);
+    }
+    .hero-author-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .hero-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      object-fit: cover;
+      flex-shrink: 0;
+      border: 1px solid var(--border);
+    }
+    .hero-author-name {
+      font-family: 'DM Mono', monospace;
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .hero-divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 0;
+    }
+    .hero-stats {
+      display: flex;
+      gap: 24px;
+    }
+    .hero-stat {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .hero-stat-lbl {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .hero-stat-val {
+      font-family: 'DM Serif Display', serif;
+      font-size: 22px;
+      color: var(--gold);
+      line-height: 1;
+    }
+    .hero-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--gold);
+      color: #0d0f14;
+      border: none;
+      border-radius: var(--r-sm);
+      padding: 10px 22px;
+      font-weight: 700;
+      font-size: 13px;
+      cursor: pointer;
+      align-self: flex-start;
+      transition: opacity var(--transition), transform var(--transition);
+      margin-top: auto;
+      text-decoration: none;
+    }
+    .hero-cta:hover { opacity: 0.9; transform: translateY(-1px); }
+
+    /* Carousel controls */
+    .hero-arrow {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 10;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: rgba(13,15,20,0.7);
+      border: 1px solid var(--border);
+      backdrop-filter: blur(8px);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text);
+      transition: background var(--transition);
+    }
+    .hero-arrow:hover { background: rgba(232,180,85,0.2); border-color: var(--gold-dim); }
+    .hero-arrow.prev { left: 16px; }
+    .hero-arrow.next { right: 16px; }
+
+    /* ─── LAYOUT ─── */
+    .page { max-width: 1100px; margin: 32px auto 0; padding: 0 28px 80px; }
+
+    /* ─── DEVLOG COUNT PILL ─── */
+    .devlog-header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 36px 0 28px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 0;
+    }
+    .devlog-title {
+      font-family: 'DM Serif Display', serif;
+      font-size: 22px;
+      color: var(--text);
+    }
+    .devlog-count {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      color: var(--gold);
+      background: rgba(232,180,85,0.1);
+      border: 1px solid rgba(232,180,85,0.25);
+      border-radius: 50px;
+      padding: 3px 12px;
+      letter-spacing: 0.06em;
+    }
+
+    /* ─── TIMELINE ─── */
+    .timeline {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      padding-left: 32px;
+    }
+    .timeline::before {
+      content: '';
+      position: absolute;
+      left: 11px;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: var(--border);
+    }
+
+    /* ─── DEVLOG CARD ─── */
+    .devlog-entry {
+      position: relative;
+      padding: 28px 0 0 28px;
+      opacity: 0;
+      transform: translateY(12px);
+      animation: fadeUp 0.4s ease forwards;
+      width: 100%;
+    }
+
+    /* Timeline dot */
+    .devlog-entry::before {
+      content: '';
+      position: absolute;
+      left: -21px;
+      top: 36px;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--surface2);
+      border: 2px solid var(--muted);
+      transition: border-color var(--transition), background var(--transition);
+    }
+    .devlog-entry:hover::before {
+      border-color: var(--gold);
+      background: var(--gold);
+    }
+
+    .devlog-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r-md);
+      overflow: hidden;
+      transition: border-color var(--transition), box-shadow var(--transition), transform var(--transition);
+    }
+    .devlog-card:hover {
+      border-color: rgba(232,180,85,0.2);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+      transform: translateX(3px);
+    }
+
+    /* Screenshot strip if present */
+    .devlog-screenshot {
+      width: 100%;
+      aspect-ratio: 16/7;
+      object-fit: cover;
+      object-position: center;
+      display: block;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .devlog-body {
+      padding: 20px 22px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .devlog-text {
+      font-size: 14px;
+      line-height: 1.72;
+      color: var(--text);
+      /* API HOOK: render markdown body */
+    }
+    /* Clamp long devlogs */
+    .devlog-text.clamped {
+      display: -webkit-box;
+      -webkit-line-clamp: 5;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .devlog-expand-btn {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      color: var(--accent);
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 0;
+      align-self: flex-start;
+      letter-spacing: 0.04em;
+    }
+    .devlog-expand-btn:hover { text-decoration: underline; }
+
+    .devlog-footer {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 10px 22px 14px;
+      border-top: 1px solid var(--border);
+    }
+    .devlog-meta-time {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      color: var(--muted);
+      margin-right: auto;
+    }
+    .devlog-pill {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 50px;
+      padding: 4px 11px;
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+    .devlog-pill svg { opacity: 0.6; flex-shrink: 0; }
+
+    /* ─── SKELETON ─── */
+    @keyframes shimmer {
+      0%   { background-position: -600px 0; }
+      100% { background-position:  600px 0; }
+    }
+    .skeleton {
+      background: linear-gradient(90deg, var(--surface2) 25%, #252a38 50%, var(--surface2) 75%);
+      background-size: 600px 100%;
+      animation: shimmer 1.4s infinite linear;
+      border-radius: 4px;
+    }
+
+    /* ─── EMPTY / ERROR STATES ─── */
+    .state-box {
+      text-align: center;
+      padding: 60px 0;
+      font-family: 'DM Mono', monospace;
+      font-size: 13px;
+      color: var(--muted);
+      letter-spacing: 0.06em;
+    }
+
+    /* ─── FADE-UP ─── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(14px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .fade-up { animation: fadeUp 0.45s ease both; }
+
+    /* ─── RESPONSIVE ─── */
+    @media (max-width: 768px) {
+      .hero { margin: 16px; padding: 0; }
+      .hero-banner { grid-template-columns: 1fr; }
+      .hero-info { border-left: none; border-top: 1px solid var(--border); padding: 28px 20px; }
+      .hero-title { font-size: 22px; }
+      .page { padding: 0 16px 60px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ═══ NAVBAR ═══ -->
+  <nav class="navbar">
+    <a href="/" class="nav-logo">FTPDB</a>
+    <a href="/" class="nav-back">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <path d="M15 18l-6-6 6-6"/>
+      </svg>
+      Back
+    </a>
+    <div class="nav-spacer"></div>
+  </nav>
+
+  <!-- ═══ HERO CAROUSEL ═══ -->
+  <div class="hero" id="hero">
+    <div class="hero-banner" id="heroBanner">
+      <%!-- Image area --%>
+      <div class="hero-banner-image-area" id="heroBannerImageArea">
+        <div class="hero-placeholder skeleton" id="heroPlaceholder">PROJECT IMAGE</div>
+      </div>
+
+      <%!-- Info panel --%>
+      <div class="hero-info">
+        <span class="hero-channel" id="heroChannel">&nbsp;</span>
+        <h1 class="hero-title" id="heroTitle">
+          <span class="skeleton" style="display:inline-block;width:200px;height:32px;border-radius:6px;">&nbsp;</span>
+        </h1>
+        <div class="hero-author-row" id="heroAuthorRow">
+          <div class="skeleton" style="width:36px;height:36px;border-radius:50%;flex-shrink:0"></div>
+          <span class="hero-author-name skeleton" style="width:100px;height:13px;border-radius:3px;display:block"></span>
+        </div>
+        <hr class="hero-divider" />
+        <div class="hero-stats" id="heroStats">
+          <div class="hero-stat">
+            <span class="hero-stat-val" id="statHours">—</span>
+            <span class="hero-stat-lbl">Hrs Spent</span>
+          </div>
+          <div class="hero-stat">
+            <span class="hero-stat-val" id="statDevlogs">—</span>
+            <span class="hero-stat-lbl">Devlogs</span>
+          </div>
+        </div>
+        <a class="hero-cta" id="heroCta" href="#" target="_blank" rel="noopener" style="display:none">
+          View Project
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </a>
+      </div>
+    </div>
+
+    <%!-- Carousel arrows --%>
+    <button class="hero-arrow prev" onclick="heroSlideCarousel(-1)" aria-label="Previous" style="display:none" id="heroArrowPrev">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg>
+    </button>
+    <button class="hero-arrow next" onclick="heroSlideCarousel(1)" aria-label="Next" style="display:none" id="heroArrowNext">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
+    </button>
+  </div>
+
+  <!-- ═══ DEVLOG FEED ═══ -->
+  <main class="page">
+    <div class="devlog-header">
+      <h2 class="devlog-title">Devlogs</h2>
+      <span class="devlog-count" id="devlogCount">Loading…</span>
+    </div>
+
+    <div class="timeline" id="timeline">
+      <%!-- Skeleton entries while loading --%>
+      <div class="devlog-entry" style="animation-delay:0.05s">
+        <div class="devlog-card">
+          <div class="devlog-body">
+            <div class="skeleton" style="height:14px;width:90%;border-radius:4px"></div>
+            <div class="skeleton" style="height:14px;width:75%;border-radius:4px"></div>
+            <div class="skeleton" style="height:14px;width:82%;border-radius:4px"></div>
+          </div>
+          <div class="devlog-footer">
+            <span class="skeleton" style="width:80px;height:11px;border-radius:4px"></span>
+            <span class="skeleton" style="width:50px;height:24px;border-radius:50px"></span>
+            <span class="skeleton" style="width:50px;height:24px;border-radius:50px"></span>
+          </div>
+        </div>
+      </div>
+      <div class="devlog-entry" style="animation-delay:0.12s">
+        <div class="devlog-card">
+          <div class="devlog-body">
+            <div class="skeleton" style="height:14px;width:85%;border-radius:4px"></div>
+            <div class="skeleton" style="height:14px;width:60%;border-radius:4px"></div>
+          </div>
+          <div class="devlog-footer">
+            <span class="skeleton" style="width:80px;height:11px;border-radius:4px"></span>
+          </div>
+        </div>
+      </div>
+      <div class="devlog-entry" style="animation-delay:0.19s">
+        <div class="devlog-card">
+          <div class="devlog-body">
+            <div class="skeleton" style="height:14px;width:92%;border-radius:4px"></div>
+            <div class="skeleton" style="height:14px;width:70%;border-radius:4px"></div>
+            <div class="skeleton" style="height:14px;width:55%;border-radius:4px"></div>
+          </div>
+          <div class="devlog-footer">
+            <span class="skeleton" style="width:80px;height:11px;border-radius:4px"></span>
+            <span class="skeleton" style="width:50px;height:24px;border-radius:50px"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer style="border-top:1px solid var(--border);padding:28px;text-align:center;font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);letter-spacing:.06em">
+    FTPDB &nbsp;·&nbsp; FTP Database &nbsp;·&nbsp; <span id="footerYear"></span>
+  </footer>
+
+  <script>
+    const PROJECT_ID = "<%= @project_id %>";
+
+    /* ──────────────────────────────
+       UTILS
+    ────────────────────────────── */
+    function fmtDuration(seconds) {
+      if (!seconds) return "—";
+      const h = Math.floor(seconds / 3600);
+      const m = Math.floor((seconds % 3600) / 60);
+      if (h > 0) return m > 0 ? `${h}h ${m}m` : `${h}h`;
+      return `${m}m`;
+    }
+
+    function fmtDate(iso) {
+      if (!iso) return "—";
+      const d = new Date(iso);
+      return d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+    }
+
+    function escapeHtml(str) {
+      if (!str) return "";
+      return str
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    /* ──────────────────────────────
+       RENDER PROJECT HEADER
+    ────────────────────────────── */
+    /* ──────────────────────────────
+       RENDER PROJECT HEADER
+    ────────────────────────────── */
+    function renderHero(raw) {
+      if (!raw) return;
+      // API returns an array; unwrap if needed
+      const project = Array.isArray(raw) ? raw[0] : raw;
+      if (!project) return;
+
+      // Banner image
+      const placeholder = document.getElementById("heroPlaceholder");
+      const imageArea = document.getElementById("heroBannerImageArea");
+      if (project.banner_url) {
+        const img = document.createElement("img");
+        img.src = project.banner_url;
+        img.alt = project.title || "Project";
+        img.className = "hero-img";
+        
+        img.onload = () => { 
+          console.log("Image loaded successfully");
+          placeholder.style.display = "none";
+          img.classList.add("loaded");
+        };
+        
+        img.onerror = () => { 
+          placeholder.style.display = "flex";
+          console.error("Failed to load banner image:", project.banner_url);
+        };
+        
+        // Clear any existing images first
+        const existingImg = imageArea.querySelector(".hero-img");
+        if (existingImg) existingImg.remove();
+        
+        imageArea.appendChild(img);
+      } else {
+        placeholder.style.display = "flex";
+      }
+
+      // Channel + title
+      document.getElementById("heroChannel").textContent = project.ship_status ? `#${project.ship_status}` : "";
+      document.getElementById("heroTitle").textContent = project.title || "Untitled Project";
+      document.title = `${project.title || "Project"} — FTPDB`;
+
+      // Author row
+      const authorEl = document.getElementById("heroAuthorRow");
+      if (project.display_name || project.avatar_url) {
+        const avatarHtml = project.avatar_url
+          ? `<img class="hero-avatar" src="${escapeHtml(project.avatar_url)}" alt="${escapeHtml(project.display_name || "")}" />`
+          : `<div style="width:36px;height:36px;border-radius:50%;background:var(--surface2);flex-shrink:0"></div>`;
+        authorEl.innerHTML = `${avatarHtml}<span class="hero-author-name">${escapeHtml(project.display_name || "")}</span>`;
+      }
+
+      // Stats — highlight hrs spent
+      const hrsEl = document.getElementById("statHours");
+      hrsEl.textContent = project.total_hours != null ? `${project.total_hours}` : "—";
+
+      // CTA button
+      const ctaEl = document.getElementById("heroCta");
+      const ctaHref = project.repo_url || project.demo_url;
+      if (ctaHref) {
+        ctaEl.href = escapeHtml(ctaHref);
+        ctaEl.target = "_blank";
+        ctaEl.rel = "noopener";
+        ctaEl.style.display = "inline-flex";
+      }
+      // devlogs count — leave as populated by renderDevlogs
+    }
+
+    function heroSlideCarousel(dir) {
+      // Single project carousel - no-op for now
+      // Could add gallery functionality if multiple screenshots are added
+      console.log('Carousel control clicked:', dir);
+    }
+
+    /* ──────────────────────────────
+       RENDER DEVLOGS
+    ────────────────────────────── */
+    function renderDevlogs(devlogs) {
+      const timeline = document.getElementById("timeline");
+      const countEl  = document.getElementById("devlogCount");
+      const statEl   = document.getElementById("statDevlogs");
+
+      countEl.textContent = `${devlogs.length} entr${devlogs.length === 1 ? "y" : "ies"}`;
+      statEl.textContent  = devlogs.length;
+
+      if (devlogs.length === 0) {
+        timeline.innerHTML = `<div class="state-box">No devlogs yet.</div>`;
+        return;
+      }
+
+      timeline.innerHTML = devlogs.map((log, i) => {
+        const hasScreenshot = log.attachments && log.attachments.length > 0 && log.attachments[0];
+        const body = escapeHtml(log.body || "No content.");
+        const long = body.length > 400;
+
+        return `
+          <div class="devlog-entry" style="animation-delay:${(i * 0.06).toFixed(2)}s" id="entry-${i}">
+            <div class="devlog-card">
+              ${hasScreenshot ? `<img class="devlog-screenshot" src="${escapeHtml(log.attachments[0])}" alt="Devlog screenshot" loading="lazy" onerror="this.remove()" />` : ""}
+              <div class="devlog-body">
+                <p class="devlog-text${long ? " clamped" : ""}" id="devlog-text-${i}">${body}</p>
+                ${long ? `<button class="devlog-expand-btn" onclick="toggleExpand(${i})">Read more ↓</button>` : ""}
+              </div>
+              <div class="devlog-footer">
+                <span class="devlog-meta-time">${fmtDate(log.created_at)}</span>
+                ${log.duration_seconds ? `
+                  <span class="devlog-pill">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>
+                    </svg>
+                    ${fmtDuration(log.duration_seconds)}
+                  </span>` : ""}
+                <span class="devlog-pill">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                  </svg>
+                  ${log.likes_count || 0}
+                </span>
+                <span class="devlog-pill">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                  </svg>
+                  ${log.comments_count || 0}
+                </span>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    /* ──────────────────────────────
+       EXPAND / COLLAPSE
+    ────────────────────────────── */
+    function toggleExpand(i) {
+      const el  = document.getElementById(`devlog-text-${i}`);
+      const btn = el.nextElementSibling;
+      const expanded = !el.classList.contains("clamped");
+      el.classList.toggle("clamped", expanded);
+      btn.textContent = expanded ? "Read more ↓" : "Show less ↑";
+    }
+
+    /* ──────────────────────────────
+       LOAD DATA
+    ────────────────────────────── */
+    async function loadProject() {
+      try {
+        const res     = await fetch(`/api/project_info/${PROJECT_ID}`);
+        const project = await res.json();
+        renderHero(project);
+      } catch (e) {
+        console.warn("Could not load project header:", e);
+      }
+    }
+
+    async function loadDevlogs() {
+      try {
+        const res  = await fetch(`/api/devlogs/${PROJECT_ID}`);
+        const data = await res.json();
+        const devlogs = Array.isArray(data) ? data : Object.values(data);
+        renderDevlogs(devlogs);
+      } catch (e) {
+        document.getElementById("timeline").innerHTML =
+          `<div class="state-box">Failed to load devlogs.</div>`;
+        document.getElementById("devlogCount").textContent = "Error";
+      }
+    }
+
+    /* ──────────────────────────────
+       INIT
+    ────────────────────────────── */
+    document.getElementById("footerYear").textContent = new Date().getFullYear();
+    document.addEventListener("DOMContentLoaded", () => {
+      loadProject();
+      loadDevlogs();
+    });
+  </script>
+</body>
+</html>
