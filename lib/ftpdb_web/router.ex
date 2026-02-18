@@ -19,6 +19,7 @@ defmodule FtpdbWeb.Router do
 
     get "/", PageController, :home
     get "/project/:id", PageController, :project
+    get "/user/:user_id", PageController, :user
     get "/suggestions", PageController, :suggestions
     get "/projects", PageController, :projects
   end
@@ -35,6 +36,7 @@ defmodule FtpdbWeb.Router do
     get "/devlogs/:id", ApiController, :devlogs
     get "/project_info/:id", ApiController, :project_info
     get "/user_info/:id", ApiController, :user_info
+    get "/user_projects/:user_id", ApiController, :user_projects
     get "/search", ApiController, :search
 
     post "/suggest", ApiController, :suggest

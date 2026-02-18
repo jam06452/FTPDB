@@ -67,8 +67,23 @@ defmodule FtpdbWeb.ApiController do
     json(conn, List.first(user_info))
   end
 
-  def search(conn, %{"q" => query}) do
-    json(conn, %{projects: Ftpdb.DB.search_projects(query), users: Ftpdb.DB.search_users(query)})
+  def search(conn, %{"q" => query} = params) do
+    min_hours =
+      case params["min_hours"] do
+        nil ->
+          0
+
+        hours_str ->
+          case Integer.parse(hours_str) do
+            {hours, _} when hours >= 0 -> hours
+            _ -> 0
+          end
+      end
+
+    json(conn, %{
+      projects: Ftpdb.DB.search_projects(query),
+      users: Ftpdb.DB.search_users(query, min_hours)
+    })
   end
 
   def search(conn, _params) do
@@ -90,5 +105,10 @@ defmodule FtpdbWeb.ApiController do
 
   def random_projects(conn, _params) do
     json(conn, Ftpdb.DB.random_projects("random"))
+  end
+
+  def user_projects(conn, %{"user_id" => user_id}) do
+    projects = Ftpdb.DB.get_user_projects(user_id)
+    json(conn, projects)
   end
 end
