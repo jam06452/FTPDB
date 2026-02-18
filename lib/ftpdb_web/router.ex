@@ -18,6 +18,7 @@ defmodule FtpdbWeb.Router do
     pipe_through :browser
 
     get "/", PageController, :home
+    get "/project/:id", PageController, :project
   end
 
   scope "/api", FtpdbWeb do
@@ -28,6 +29,9 @@ defmodule FtpdbWeb.Router do
     get "/fan_favourites", ApiController, :fan_favourites
     get "/top_all_time", ApiController, :top_all_time
     get "/most_time_spent", ApiController, :most_time_spent
+    get "/devlogs/:id", ApiController, :devlogs
+    get "/project_info/:id", ApiController, :project_info
+    get "/user_info/:id", ApiController, :user_info
   end
 
   # Other scopes may use custom stacks.

@@ -20,4 +20,16 @@ defmodule FtpdbWeb.ApiController do
   def most_time_spent(conn, _params) do
     json(conn, Ftpdb.DB.most_time_spent())
   end
+
+  def devlogs(conn, %{"id" => id}) do
+    json(conn, Ftpdb.DB.get_devlogs(id))
+  end
+
+  def project_info(conn, %{"id" => id}) do
+    json(conn, Ftpdb.DB.get_project_info(id))
+  end
+
+  def user_info(conn, %{"id" => id}) do
+    json(conn, Ftpdb.DB.extended_user_info(id))
+  end
 end

@@ -121,7 +121,10 @@ defmodule Ftpdb.DB do
       |> Supabase.PostgREST.execute()
 
     response.body
-    |> Enum.map(fn item -> %{body: item["body"], duration_seconds: item["duration_seconds"], likes_count: item["likes_count"], comments_count: item["comments_count"]} end)
+    |> Enum.map(fn item ->
+      total_hours = div(item["duration_seconds"], 3600)
+      %{body: item["body"], total_hours: total_hours, likes_count: item["likes_count"], comments_count: item["comments_count"]}
+    end)
   end
 
   def get_user_id(project_id) do
@@ -146,5 +149,38 @@ defmodule Ftpdb.DB do
 
       response.body
       |> Enum.map(fn item -> %{display_name: item["display_name"], avatar_url: item["avatar_url"]} end)
+  end
+
+  def get_project_info(project_id) do
+    {:ok, response} =
+      Supabase.PostgREST.from(client(), "projects")
+      |> Supabase.PostgREST.select(["title", "description", "repo_url", "demo_url", "ship_status", "stat_total_duration_seconds", "banner_url"])
+      |> Supabase.PostgREST.eq("id", project_id)
+      |> Map.put(:method, :get)
+      |> Supabase.PostgREST.execute()
+
+    response.body
+    |> Enum.map(fn item ->
+      total_hours = div(item["stat_total_duration_seconds"], 3600)
+      user_id = get_user_id(project_id)
+      [user_info] = get_user_info(user_id)
+      %{title: item["title"], description: item["description"], repo_url: item["repo_url"], demo_url: item["demo_url"], ship_status: item["ship_status"], total_hours: total_hours, banner_url: item["banner_url"]}
+      |> Map.merge(user_info)
+    end)
+  end
+
+  def extended_user_info(user_id) do
+    {:ok, response} =
+      Supabase.PostgREST.from(client(), "users")
+      |> Supabase.PostgREST.select(["id", "display_name", "avatar_url", "total_time", "slack_id"])
+      |> Supabase.PostgREST.eq("id", user_id)
+      |> Map.put(:method, :get)
+      |> Supabase.PostgREST.execute()
+
+    response.body
+    |> Enum.map(fn item ->
+      total_hours = div(item["total_time"], 3600)
+      %{id: to_string(item["id"]), display_name: item["display_name"], avatar_url: item["avatar_url"], total_hours: total_hours, slack_id: item["slack_id"]}
+    end)
   end
 end
