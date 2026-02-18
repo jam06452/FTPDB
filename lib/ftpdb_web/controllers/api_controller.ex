@@ -42,7 +42,7 @@ defmodule FtpdbWeb.ApiController do
     json(conn, [])
   end
 
-  def suggest(conn, %{"display_name" => display_name, "suggestion" => suggestion_text}) do
-    json(conn, Ftpdb.Slack.suggest(display_name, suggestion_text))
+  def suggest(conn, %{"category" => category, "display_name" => display_name, "message" => message, "title" => title}) do
+    json(conn, Ftpdb.Slack.suggest(category, display_name, message, title))
   end
 end

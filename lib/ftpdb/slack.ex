@@ -1,5 +1,5 @@
 defmodule Ftpdb.Slack do
-  def suggest(display_name, suggestion_text) do
+  def suggest(category, display_name, message, title) do
 
     config = Application.get_env(:ftpdb, :slack)
     my_id = config[:id]
@@ -9,17 +9,17 @@ defmodule Ftpdb.Slack do
 
     body = %{
       channel: my_id,
-      text: "New suggestion from #{display_name}",
+      text: "New #{category} from #{display_name}",
       blocks: [
         %{
           type: "header",
-          text: %{type: "plain_text", text: "📬 New Suggestion Received"}
+          text: %{type: "plain_text", text: "📬 New #{String.capitalize(category)} Received"}
         },
         %{
           type: "section",
           text: %{
             type: "mrkdwn",
-            text: "*User:* `#{display_name}`\n*Suggestion:* \n>#{suggestion_text}"
+            text: "*User:* `#{display_name}`\n*Title:* `#{title}`\n*Category:* `#{category}`\n*Message:* \n>#{message}"
           }
         },
         %{
