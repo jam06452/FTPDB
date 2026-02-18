@@ -264,7 +264,7 @@ defmodule Ftpdb.DB do
     end
   end
 
-  def search_users(query) when is_binary(query) do
+  def search_users(query, min_hours \\ 0) when is_binary(query) do
     cleaned_query = String.trim(query)
 
     if String.length(cleaned_query) == 0 do
@@ -281,9 +281,11 @@ defmodule Ftpdb.DB do
           "total_time"
         ])
         |> Supabase.PostgREST.ilike("display_name", search_term)
-        |> Supabase.PostgREST.limit(10)
+        |> Supabase.PostgREST.limit(100)
         |> Map.put(:method, :get)
         |> Supabase.PostgREST.execute()
+
+      min_seconds = min_hours * 3600
 
       response.body
       |> Enum.map(fn item ->
@@ -294,9 +296,13 @@ defmodule Ftpdb.DB do
           id: to_string(item["id"]),
           display_name: item["display_name"],
           avatar_url: item["avatar_url"],
-          total_hours: total_hours
+          total_hours: total_hours,
+          total_time: total_time
         }
       end)
+      |> Enum.filter(fn user -> user.total_time >= min_seconds end)
+      |> Enum.sort_by(fn user -> -user.total_hours end)
+      |> Enum.take(10)
     end
   end
 
@@ -350,6 +356,55 @@ defmodule Ftpdb.DB do
 
       _ ->
         projects |> Enum.shuffle() |> Enum.take(50)
+    end
+  end
+
+  def get_user_projects(user_id) do
+    {:ok, response} =
+      Supabase.PostgREST.from(client(), "user_projects")
+      |> Supabase.PostgREST.select(["project_id"])
+      |> Supabase.PostgREST.eq("user_id", user_id)
+      |> Map.put(:method, :get)
+      |> Supabase.PostgREST.execute()
+
+    project_ids =
+      response.body
+      |> Enum.map(fn item -> item["project_id"] end)
+
+    if Enum.empty?(project_ids) do
+      []
+    else
+      {:ok, response} =
+        Supabase.PostgREST.from(client(), "projects")
+        |> Supabase.PostgREST.select([
+          "id",
+          "title",
+          "banner_url",
+          "stat_total_duration_seconds",
+          "stat_total_likes"
+        ])
+        |> Map.put(:method, :get)
+        |> Supabase.PostgREST.execute()
+
+      # Filter locally and sort by hours
+      all_projects = response.body || []
+
+      project_ids_set = MapSet.new(project_ids)
+
+      all_projects
+      |> Enum.filter(fn item -> MapSet.member?(project_ids_set, item["id"]) end)
+      |> Enum.map(fn item ->
+        duration = item["stat_total_duration_seconds"] || 0
+
+        %{
+          id: to_string(item["id"]),
+          title: item["title"],
+          banner_url: item["banner_url"],
+          total_hours: div(duration, 3600),
+          total_likes: item["stat_total_likes"] || 0
+        }
+      end)
+      |> Enum.sort_by(fn p -> -p.total_hours end)
     end
   end
 end
