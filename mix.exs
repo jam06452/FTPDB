@@ -64,7 +64,8 @@ defmodule Ftpdb.MixProject do
       {:dns_cluster, "~> 0.2.0"},
       {:bandit, "~> 1.5"},
       {:supabase_potion, "~> 0.6"},
-      {:supabase_postgrest, "~> 1.0"}
+      {:supabase_postgrest, "~> 1.0"},
+      {:cachex, "~> 4.0"}
     ]
   end
 

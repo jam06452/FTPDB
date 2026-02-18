@@ -154,20 +154,6 @@ defmodule Ftpdb.DB do
     user_id
   end
 
-  def get_user_info(user_id) do
-    {:ok, response} =
-      Supabase.PostgREST.from(client(), "users")
-      |> Supabase.PostgREST.select(["display_name", "avatar_url"])
-      |> Supabase.PostgREST.eq("id", user_id)
-      |> Map.put(:method, :get)
-      |> Supabase.PostgREST.execute()
-
-    response.body
-    |> Enum.map(fn item ->
-      %{display_name: item["display_name"], avatar_url: item["avatar_url"]}
-    end)
-  end
-
   def get_project_info(project_id) do
     {:ok, response} =
       Supabase.PostgREST.from(client(), "projects")
@@ -205,7 +191,7 @@ defmodule Ftpdb.DB do
     end)
   end
 
-  def extended_user_info(user_id) do
+  def get_user_info(user_id) do
     {:ok, response} =
       Supabase.PostgREST.from(client(), "users")
       |> Supabase.PostgREST.select(["id", "display_name", "avatar_url", "total_time", "slack_id"])
@@ -218,7 +204,7 @@ defmodule Ftpdb.DB do
       total_hours = div(item["total_time"], 3600)
 
       %{
-        id: to_string(item["id"]),
+        user_id: to_string(item["id"]),
         display_name: item["display_name"],
         avatar_url: item["avatar_url"],
         total_hours: total_hours,
@@ -289,21 +275,22 @@ defmodule Ftpdb.DB do
       |> Map.put(:method, :get)
       |> Supabase.PostgREST.execute()
 
-    projects = response.body
-    |> Enum.map(fn item ->
-      user_id = get_user_id(item["id"])
-      [user_info] = get_user_info(user_id)
+    projects =
+      response.body
+      |> Enum.map(fn item ->
+        user_id = get_user_id(item["id"])
+        [user_info] = get_user_info(user_id)
 
-      %{
-        id: to_string(item["id"]),
-        title: item["title"],
-        banner_url: item["banner_url"],
-        hot_score: item["stat_hot_score"] || 0,
-        likes: item["stat_total_likes"] || 0,
-        total_hours: div(item["stat_total_duration_seconds"], 3600)
-      }
-      |> Map.merge(user_info)
-    end)
+        %{
+          id: to_string(item["id"]),
+          title: item["title"],
+          banner_url: item["banner_url"],
+          hot_score: item["stat_hot_score"] || 0,
+          likes: item["stat_total_likes"] || 0,
+          total_hours: div(item["stat_total_duration_seconds"], 3600)
+        }
+        |> Map.merge(user_info)
+      end)
 
     # Apply filtering and sorting
     case filter do
