@@ -111,6 +111,19 @@ defmodule Ftpdb.DB do
     end)
   end
 
+  def get_devlogs(project_id) do
+    {:ok, response} =
+      Supabase.PostgREST.from(client(), "devlogs")
+      |> Supabase.PostgREST.select(["body", "duration_seconds", "likes_count", "comments_count"])
+      |> Supabase.PostgREST.eq("project_id", project_id)
+      |> Supabase.PostgREST.order("created_at", desc: true)
+      |> Map.put(:method, :get)
+      |> Supabase.PostgREST.execute()
+
+    response.body
+    |> Enum.map(fn item -> %{body: item["body"], duration_seconds: item["duration_seconds"], likes_count: item["likes_count"], comments_count: item["comments_count"]} end)
+  end
+
   def get_user_id(project_id) do
     {:ok, response} =
       Supabase.PostgREST.from(client(), "user_projects")
