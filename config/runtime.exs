@@ -22,10 +22,11 @@ config :ftpdb,
     key: System.get_env("SUPABASE_SERVICE_ROLE_KEY") || System.get_env("SUPABASE_KEY")
   ]
 
-config :ftpdb, slack: [
-  id: System.get_env("SLACK_ID"),
-  token: System.get_env("SLACK_TOKEN")
-]
+config :ftpdb,
+  slack: [
+    id: System.get_env("SLACK_ID"),
+    token: System.get_env("SLACK_TOKEN")
+  ]
 
 if System.get_env("PHX_SERVER") do
   config :ftpdb, FtpdbWeb.Endpoint, server: true

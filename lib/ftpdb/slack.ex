@@ -1,6 +1,5 @@
 defmodule Ftpdb.Slack do
   def suggest(category, display_name, message, title) do
-
     config = Application.get_env(:ftpdb, :slack)
     my_id = config[:id]
     token = config[:token]
@@ -19,7 +18,8 @@ defmodule Ftpdb.Slack do
           type: "section",
           text: %{
             type: "mrkdwn",
-            text: "*User:* `#{display_name}`\n*Title:* `#{title}`\n*Category:* `#{category}`\n*Message:* \n>#{message}"
+            text:
+              "*User:* `#{display_name}`\n*Title:* `#{title}`\n*Category:* `#{category}`\n*Message:* \n>#{message}"
           }
         },
         %{
