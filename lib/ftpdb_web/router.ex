@@ -32,6 +32,7 @@ defmodule FtpdbWeb.Router do
     get "/devlogs/:id", ApiController, :devlogs
     get "/project_info/:id", ApiController, :project_info
     get "/user_info/:id", ApiController, :user_info
+    get "/search", ApiController, :search
   end
 
   # Other scopes may use custom stacks.

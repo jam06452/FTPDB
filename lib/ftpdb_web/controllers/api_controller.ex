@@ -32,4 +32,13 @@ defmodule FtpdbWeb.ApiController do
   def user_info(conn, %{"id" => id}) do
     json(conn, Ftpdb.DB.extended_user_info(id))
   end
+
+  def search(conn, %{"q" => query}) do
+    results = Ftpdb.DB.search_projects(query)
+    json(conn, results)
+  end
+
+  def search(conn, _params) do
+    json(conn, [])
+  end
 end

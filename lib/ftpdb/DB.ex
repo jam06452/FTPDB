@@ -21,11 +21,13 @@ defmodule Ftpdb.DB do
       user_id = get_user_id(item["id"])
       [user_info] = get_user_info(user_id)
 
-      {to_string(item["id"]), %{
-        title: item["title"],
-        banner_url: item["banner_url"],
-        total_hours: div(item["stat_total_duration_seconds"], 3600)
-      } |> Map.merge(user_info)}
+      {to_string(item["id"]),
+       %{
+         title: item["title"],
+         banner_url: item["banner_url"],
+         total_hours: div(item["stat_total_duration_seconds"], 3600)
+       }
+       |> Map.merge(user_info)}
     end)
   end
 
@@ -67,11 +69,12 @@ defmodule Ftpdb.DB do
       user_id = get_user_id(item["id"])
       [user_info] = get_user_info(user_id)
 
-      {to_string(item["id"]), %{title: item["title"], banner_url: item["banner_url"]} |> Map.merge(user_info)}
+      {to_string(item["id"]),
+       %{title: item["title"], banner_url: item["banner_url"]} |> Map.merge(user_info)}
     end)
   end
 
-    def top_all_time do
+  def top_all_time do
     {:ok, response} =
       Supabase.PostgREST.from(client(), "projects")
       |> Supabase.PostgREST.select(["title", "id", "stat_all_time_rank", "banner_url"])
@@ -107,7 +110,13 @@ defmodule Ftpdb.DB do
     response.body
     |> Enum.map(fn item ->
       total_hours = div(item["total_time"], 3600)
-      %{id: to_string(item["id"]), display_name: item["display_name"], avatar_url: item["avatar_url"], total_hours: total_hours}
+
+      %{
+        id: to_string(item["id"]),
+        display_name: item["display_name"],
+        avatar_url: item["avatar_url"],
+        total_hours: total_hours
+      }
     end)
   end
 
@@ -123,7 +132,13 @@ defmodule Ftpdb.DB do
     response.body
     |> Enum.map(fn item ->
       total_hours = div(item["duration_seconds"], 3600)
-      %{body: item["body"], total_hours: total_hours, likes_count: item["likes_count"], comments_count: item["comments_count"]}
+
+      %{
+        body: item["body"],
+        total_hours: total_hours,
+        likes_count: item["likes_count"],
+        comments_count: item["comments_count"]
+      }
     end)
   end
 
@@ -147,14 +162,25 @@ defmodule Ftpdb.DB do
       |> Map.put(:method, :get)
       |> Supabase.PostgREST.execute()
 
-      response.body
-      |> Enum.map(fn item -> %{display_name: item["display_name"], avatar_url: item["avatar_url"]} end)
+    response.body
+    |> Enum.map(fn item ->
+      %{display_name: item["display_name"], avatar_url: item["avatar_url"]}
+    end)
   end
 
   def get_project_info(project_id) do
     {:ok, response} =
       Supabase.PostgREST.from(client(), "projects")
-      |> Supabase.PostgREST.select(["title", "description", "repo_url", "demo_url", "ship_status", "stat_total_duration_seconds", "stat_total_likes", "banner_url"])
+      |> Supabase.PostgREST.select([
+        "title",
+        "description",
+        "repo_url",
+        "demo_url",
+        "ship_status",
+        "stat_total_duration_seconds",
+        "stat_total_likes",
+        "banner_url"
+      ])
       |> Supabase.PostgREST.eq("id", project_id)
       |> Map.put(:method, :get)
       |> Supabase.PostgREST.execute()
@@ -164,7 +190,17 @@ defmodule Ftpdb.DB do
       total_hours = div(item["stat_total_duration_seconds"], 3600)
       user_id = get_user_id(project_id)
       [user_info] = get_user_info(user_id)
-      %{title: item["title"], description: item["description"], repo_url: item["repo_url"], demo_url: item["demo_url"], ship_status: item["ship_status"], total_hours: total_hours, total_likes: item["stat_total_likes"], banner_url: item["banner_url"]}
+
+      %{
+        title: item["title"],
+        description: item["description"],
+        repo_url: item["repo_url"],
+        demo_url: item["demo_url"],
+        ship_status: item["ship_status"],
+        total_hours: total_hours,
+        total_likes: item["stat_total_likes"],
+        banner_url: item["banner_url"]
+      }
       |> Map.merge(user_info)
     end)
   end
@@ -180,7 +216,60 @@ defmodule Ftpdb.DB do
     response.body
     |> Enum.map(fn item ->
       total_hours = div(item["total_time"], 3600)
-      %{id: to_string(item["id"]), display_name: item["display_name"], avatar_url: item["avatar_url"], total_hours: total_hours, slack_id: item["slack_id"]}
+
+      %{
+        id: to_string(item["id"]),
+        display_name: item["display_name"],
+        avatar_url: item["avatar_url"],
+        total_hours: total_hours,
+        slack_id: item["slack_id"]
+      }
     end)
+  end
+
+  def search_projects(query) when is_binary(query) do
+    cleaned_query = String.trim(query)
+
+    if String.length(cleaned_query) == 0 do
+      []
+    else
+      search_term = "%#{cleaned_query}%"
+
+      {:ok, response} =
+        Supabase.PostgREST.from(client(), "projects")
+        |> Supabase.PostgREST.select([
+          "id",
+          "title",
+          "banner_url",
+          "stat_hot_score",
+          "stat_total_likes"
+        ])
+        |> Supabase.PostgREST.ilike("title", search_term)
+        |> Supabase.PostgREST.limit(10)
+        |> Map.put(:method, :get)
+        |> Supabase.PostgREST.execute()
+
+      response.body
+      |> Enum.map(fn item ->
+        user_id = get_user_id(item["id"])
+        [user_info] = get_user_info(user_id)
+
+        %{
+          id: to_string(item["id"]),
+          title: item["title"],
+          banner_url: item["banner_url"],
+          hot_score: item["stat_hot_score"] || 0,
+          likes: item["stat_total_likes"] || 0
+        }
+        |> Map.merge(user_info)
+      end)
+      |> Enum.sort_by(fn item ->
+        # Sort by a weighted combination: 60% hot score, 40% likes
+        # Normalize likes to be within reasonable range (divide by 100)
+        hot = item.hot_score * 0.6
+        likes = item.likes / 100 * 0.4
+        -(hot + likes)
+      end)
+    end
   end
 end
