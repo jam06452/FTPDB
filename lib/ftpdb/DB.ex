@@ -154,7 +154,7 @@ defmodule Ftpdb.DB do
   def get_project_info(project_id) do
     {:ok, response} =
       Supabase.PostgREST.from(client(), "projects")
-      |> Supabase.PostgREST.select(["title", "description", "repo_url", "demo_url", "ship_status", "stat_total_duration_seconds", "banner_url"])
+      |> Supabase.PostgREST.select(["title", "description", "repo_url", "demo_url", "ship_status", "stat_total_duration_seconds", "stat_total_likes", "banner_url"])
       |> Supabase.PostgREST.eq("id", project_id)
       |> Map.put(:method, :get)
       |> Supabase.PostgREST.execute()
@@ -164,7 +164,7 @@ defmodule Ftpdb.DB do
       total_hours = div(item["stat_total_duration_seconds"], 3600)
       user_id = get_user_id(project_id)
       [user_info] = get_user_info(user_id)
-      %{title: item["title"], description: item["description"], repo_url: item["repo_url"], demo_url: item["demo_url"], ship_status: item["ship_status"], total_hours: total_hours, banner_url: item["banner_url"]}
+      %{title: item["title"], description: item["description"], repo_url: item["repo_url"], demo_url: item["demo_url"], ship_status: item["ship_status"], total_hours: total_hours, total_likes: item["stat_total_likes"], banner_url: item["banner_url"]}
       |> Map.merge(user_info)
     end)
   end

@@ -487,6 +487,10 @@
             <span class="hero-stat-val" id="statDevlogs">—</span>
             <span class="hero-stat-lbl">Devlogs</span>
           </div>
+          <div class="hero-stat">
+            <span class="hero-stat-val" id="statLikes">—</span>
+            <span class="hero-stat-lbl">Total Likes</span>
+          </div>
         </div>
         <a class="hero-cta" id="heroCta" href="#" target="_blank" rel="noopener" style="display:none">
           View Project
@@ -645,6 +649,10 @@
       // Stats — highlight hrs spent
       const hrsEl = document.getElementById("statHours");
       hrsEl.textContent = project.total_hours != null ? `${project.total_hours}` : "—";
+
+      // Stats — total likes
+      const likesEl = document.getElementById("statLikes");
+      likesEl.textContent = project.total_likes != null ? `${project.total_likes}` : "—";
 
       // CTA button
       const ctaEl = document.getElementById("heroCta");
