@@ -19,10 +19,11 @@ defmodule FtpdbWeb.Router do
 
     get "/", PageController, :home
     get "/project/:id", PageController, :project
+    get "/suggestions", PageController, :suggestions
   end
 
   scope "/api", FtpdbWeb do
-    pipe_through :browser
+    pipe_through :api
 
     get "/hot", ApiController, :hot
     get "/top_this_week", ApiController, :top_this_week
@@ -33,6 +34,8 @@ defmodule FtpdbWeb.Router do
     get "/project_info/:id", ApiController, :project_info
     get "/user_info/:id", ApiController, :user_info
     get "/search", ApiController, :search
+
+    post "/suggest", ApiController, :suggest
   end
 
   # Other scopes may use custom stacks.

@@ -8,4 +8,8 @@ defmodule FtpdbWeb.PageController do
   def project(conn, %{"id" => id}) do
     render(conn, :project, project_id: id)
   end
+
+  def suggestions(conn, _params) do
+    render(conn, :suggestions)
+  end
 end

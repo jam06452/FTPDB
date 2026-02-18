@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Suggestions — FTPDB</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&family=Cabinet+Grotesk:wght@400;500;700;900&display=swap"
+      rel="stylesheet"
+    />
+
+    <style>
+      :root {
+        --bg:        #0d0f14;
+        --surface:   #161a22;
+        --surface2:  #1e2330;
+        --border:    rgba(255,255,255,0.07);
+        --gold:      #e8b455;
+        --gold-dim:  #a07a2e;
+        --text:      #eeeae0;
+        --muted:     #7a8099;
+        --accent:    #4f8ef7;
+        --danger:    #e05b5b;
+        --success:   #4ade80;
+
+        --r-sm:  6px;
+        --r-md:  12px;
+        --r-lg:  18px;
+
+        --transition: 0.22s cubic-bezier(.4,0,.2,1);
+      }
+
+      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+      html { scroll-behavior: smooth; }
+
+      body {
+        background: var(--bg);
+        color: var(--text);
+        font-family: 'Cabinet Grotesk', sans-serif;
+        font-size: 15px;
+        line-height: 1.6;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      a { color: inherit; text-decoration: none; }
+      img { display: block; max-width: 100%; }
+
+      /* ─── NAVBAR ─── */
+      .navbar {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        background: rgba(13,15,20,0.88);
+        backdrop-filter: blur(16px);
+        border-bottom: 1px solid var(--border);
+        padding: 0 28px;
+        height: 58px;
+        display: flex;
+        align-items: center;
+        gap: 24px;
+      }
+
+      .nav-logo {
+        font-family: 'DM Serif Display', serif;
+        font-size: 22px;
+        color: var(--gold);
+        letter-spacing: -0.5px;
+        white-space: nowrap;
+        border: 2px solid var(--gold);
+        border-radius: var(--r-sm);
+        padding: 2px 10px;
+        flex-shrink: 0;
+        cursor: pointer;
+      }
+
+      .nav-logo:hover {
+        opacity: 0.9;
+      }
+
+      .nav-spacer { flex: 1; }
+
+      /* ─── LAYOUT ─── */
+      .container { max-width: 800px; margin: 0 auto; padding: 0 28px; }
+      .section { padding: 52px 0; }
+
+      /* ─── FORM STYLES ─── */
+      .form-container {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--r-lg);
+        padding: 40px;
+      }
+
+      .form-header {
+        margin-bottom: 32px;
+      }
+
+      .form-title {
+        font-family: 'DM Serif Display', serif;
+        font-size: 32px;
+        margin-bottom: 12px;
+        color: var(--text);
+      }
+
+      .form-subtitle {
+        font-size: 14px;
+        color: var(--muted);
+        line-height: 1.6;
+      }
+
+      .form-group {
+        margin-bottom: 24px;
+      }
+
+      .form-label {
+        display: block;
+        font-weight: 600;
+        font-size: 14px;
+        margin-bottom: 8px;
+        color: var(--text);
+      }
+
+      .form-input,
+      .form-textarea {
+        width: 100%;
+        padding: 11px 14px;
+        background: var(--surface2);
+        border: 1px solid var(--border);
+        border-radius: var(--r-md);
+        color: var(--text);
+        font-family: 'DM Mono', monospace;
+        font-size: 13px;
+        outline: none;
+        transition: border-color var(--transition), box-shadow var(--transition);
+      }
+
+      .form-input::placeholder,
+      .form-textarea::placeholder {
+        color: var(--muted);
+      }
+
+      .form-input:focus,
+      .form-textarea:focus {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px rgba(79, 142, 247, 0.1);
+      }
+
+      .form-textarea {
+        font-family: 'Cabinet Grotesk', sans-serif;
+        resize: vertical;
+        min-height: 120px;
+      }
+
+      .form-meta {
+        font-family: 'DM Mono', monospace;
+        font-size: 11px;
+        color: var(--muted);
+        margin-top: 6px;
+      }
+
+      .form-actions {
+        display: flex;
+        gap: 12px;
+        margin-top: 32px;
+      }
+
+      .btn {
+        padding: 11px 24px;
+        border-radius: var(--r-md);
+        border: none;
+        font-weight: 600;
+        font-size: 13px;
+        cursor: pointer;
+        transition: all var(--transition);
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .btn-primary {
+        background: var(--gold);
+        color: #0d0f14;
+      }
+
+      .btn-primary:hover {
+        opacity: 0.9;
+        transform: translateY(-1px);
+      }
+
+      .btn-primary:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      .btn-secondary {
+        background: var(--surface2);
+        border: 1px solid var(--border);
+        color: var(--text);
+      }
+
+      .btn-secondary:hover {
+        border-color: var(--gold-dim);
+        color: var(--gold);
+      }
+
+      /* Alert messages */
+      .alert {
+        padding: 14px 16px;
+        border-radius: var(--r-md);
+        margin-bottom: 24px;
+        font-size: 13px;
+        border: 1px solid;
+        display: flex;
+        gap: 10px;
+        align-items: flex-start;
+      }
+
+      .alert-success {
+        background: rgba(74, 222, 128, 0.1);
+        border-color: rgba(74, 222, 128, 0.3);
+        color: #4ade80;
+      }
+
+      .alert-error {
+        background: rgba(224, 91, 91, 0.1);
+        border-color: rgba(224, 91, 91, 0.3);
+        color: #e05b5b;
+      }
+
+      .alert-icon {
+        flex-shrink: 0;
+        width: 16px;
+        height: 16px;
+        margin-top: 2px;
+      }
+
+      /* ─── FOOTER ─── */
+      footer {
+        border-top: 1px solid var(--border);
+        padding: 28px;
+        text-align: center;
+        font-family: 'DM Mono', monospace;
+        font-size: 11px;
+        color: var(--muted);
+        letter-spacing: 0.06em;
+      }
+
+      /* ─── FADE IN ─── */
+      @keyframes fadeUp {
+        from { opacity: 0; transform: translateY(16px); }
+        to   { opacity: 1; transform: translateY(0); }
+      }
+      .fade-up { animation: fadeUp 0.5s ease both; }
+
+      /* ─── RESPONSIVE ─── */
+      @media (max-width: 640px) {
+        .container { padding: 0 16px; }
+        .form-container { padding: 28px; }
+        .form-title { font-size: 24px; }
+        .form-actions { flex-direction: column; }
+        .btn { width: 100%; justify-content: center; }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- ═══ NAVBAR ═══ -->
+    <nav class="navbar">
+      <a href="/" class="nav-logo">FTPDB</a>
+      <div class="nav-spacer"></div>
+    </nav>
+    
+<!-- ═══ MAIN ═══ -->
+    <main>
+      <div class="container">
+        <section class="section fade-up">
+          <div class="form-container">
+            <div class="form-header">
+              <h1 class="form-title">Send us your suggestions</h1>
+              <p class="form-subtitle">
+                Have an idea to improve FTPDB or found a bug? We'd love to hear from you.
+                Fill out the form below and we'll get back to you as soon as possible.
+              </p>
+            </div>
+
+            <div id="alertContainer"></div>
+
+            <form id="suggestionsForm">
+              <div class="form-group">
+                <label for="displayName" class="form-label">Display Name</label>
+                <input
+                  type="text"
+                  id="displayName"
+                  name="displayName"
+                  class="form-input"
+                  placeholder="Your name"
+                  required
+                />
+                <div class="form-meta">How you'd like to be identified</div>
+              </div>
+
+              <div class="form-group">
+                <label for="category" class="form-label">Category</label>
+                <select id="category" name="category" class="form-input" required>
+                  <option value="">Select a category…</option>
+                  <option value="feature">Feature Request</option>
+                  <option value="bug">Bug Report</option>
+                  <option value="improvement">Improvement</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="title" class="form-label">Title</label>
+                <input
+                  type="text"
+                  id="title"
+                  name="title"
+                  class="form-input"
+                  placeholder="What's your suggestion about?"
+                  required
+                />
+              </div>
+
+              <div class="form-group">
+                <label for="message" class="form-label">Message</label>
+                <textarea
+                  id="message"
+                  name="message"
+                  class="form-textarea"
+                  placeholder="Tell us more details about your suggestion or issue…"
+                  required
+                ></textarea>
+                <div class="form-meta">Max 1000 characters</div>
+              </div>
+
+              <div class="form-actions">
+                <button type="submit" class="btn btn-primary" id="submitBtn">
+                  Submit Suggestion
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                  >
+                    <path d="M5 12h14M12 5l7 7-7 7" />
+                  </svg>
+                </button>
+                <a href="/" class="btn btn-secondary">
+                  Back to Home
+                </a>
+              </div>
+            </form>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <footer>
+      FTPDB &nbsp;·&nbsp; FTP Database &nbsp;·&nbsp; <span id="footerYear"></span>
+    </footer>
+
+    <script>
+      // Set footer year
+      document.getElementById('footerYear').textContent = new Date().getFullYear();
+
+      const form = document.getElementById('suggestionsForm');
+      const alertContainer = document.getElementById('alertContainer');
+      const submitBtn = document.getElementById('submitBtn');
+
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        // Disable submit button
+        submitBtn.disabled = true;
+        const originalText = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<span style="display: inline-flex; align-items: center; gap: 8px;">Submitting...</span>';
+
+        // Collect form data
+        const formData = {
+          display_name: document.getElementById('displayName').value,
+          category: document.getElementById('category').value,
+          title: document.getElementById('title').value,
+          message: document.getElementById('message').value,
+        };
+
+        try {
+          const response = await fetch('/api/suggest', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(formData),
+          });
+
+          if (response.ok) {
+            // Success
+            showAlert('success', 'Thank you! Your suggestion has been received. We\'ll review it shortly.');
+            form.reset();
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalText;
+
+            // Optional: redirect after 2 seconds
+            setTimeout(() => {
+              // window.location.href = '/';
+            }, 2000);
+          } else {
+            const error = await response.json();
+            showAlert('error', error.message || 'Failed to submit suggestion. Please try again.');
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalText;
+          }
+        } catch (err) {
+          console.error('Error:', err);
+          showAlert('error', 'An error occurred. Please try again later.');
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = originalText;
+        }
+      });
+
+      function showAlert(type, message) {
+        alertContainer.innerHTML = `
+          <div class="alert alert-${type}">
+            <svg class="alert-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              ${type === 'success' 
+                ? '<polyline points="20 6 9 17 4 12"></polyline>'
+                : '<circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line>'}
+            </svg>
+            <div>${message}</div>
+          </div>
+        `;
+      }
+    </script>
+  </body>
+</html>

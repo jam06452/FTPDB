@@ -230,6 +230,11 @@
         border-color: var(--gold-dim);
       }
 
+      .nav-pills a.nav-pill {
+        display: inline-flex;
+        align-items: center;
+      }
+
       /* ─── LAYOUT ─── */
       .container { max-width: 1240px; margin: 0 auto; padding: 0 28px; }
       .section { padding: 52px 0; }
@@ -792,6 +797,7 @@
         <button class="nav-pill active" onclick="filterSection('top-week')">Top This Week</button>
         <button class="nav-pill" onclick="filterSection('hot')">Hot</button>
         <button class="nav-pill" onclick="filterSection('updates')">Updates</button>
+        <a href="/suggestions" class="nav-pill">Suggestions</a>
       </div>
     </nav>
     

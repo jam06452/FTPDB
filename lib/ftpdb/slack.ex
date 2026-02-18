@@ -1,0 +1,44 @@
+defmodule Ftpdb.Slack do
+  def suggest(display_name, suggestion_text) do
+
+    config = Application.get_env(:ftpdb, :slack)
+    my_id = config[:id]
+    token = config[:token]
+
+    url = "https://slack.com/api/chat.postMessage"
+
+    body = %{
+      channel: my_id,
+      text: "New suggestion from #{display_name}",
+      blocks: [
+        %{
+          type: "header",
+          text: %{type: "plain_text", text: "📬 New Suggestion Received"}
+        },
+        %{
+          type: "section",
+          text: %{
+            type: "mrkdwn",
+            text: "*User:* `#{display_name}`\n*Suggestion:* \n>#{suggestion_text}"
+          }
+        },
+        %{
+          type: "context",
+          elements: [
+            %{type: "mrkdwn", text: "Submitted via Webapp Suggestions Form"}
+          ]
+        }
+      ]
+    }
+
+    Req.post(url,
+      auth: {:bearer, token},
+      json: body
+    )
+    |> case do
+      {:ok, %{status: 200, body: %{"ok" => true}}} -> :ok
+      {:ok, %{body: %{"error" => error}}} -> {:error, error}
+      {:error, reason} -> {:error, reason}
+    end
+  end
+end
