@@ -20,12 +20,13 @@ defmodule Ftpdb.DB do
     |> Map.new(fn item ->
       user_id = get_user_id(item["id"])
       [user_info] = get_user_info(user_id)
+      duration = item["stat_total_duration_seconds"] || 0
 
       {to_string(item["id"]),
        %{
          title: item["title"],
          banner_url: item["banner_url"],
-         total_hours: div(item["stat_total_duration_seconds"], 3600)
+         total_hours: div(duration, 3600)
        }
        |> Map.merge(user_info)}
     end)
@@ -109,7 +110,8 @@ defmodule Ftpdb.DB do
 
     response.body
     |> Enum.map(fn item ->
-      total_hours = div(item["total_time"], 3600)
+      total_time = item["total_time"] || 0
+      total_hours = div(total_time, 3600)
 
       %{
         id: to_string(item["id"]),
@@ -131,7 +133,8 @@ defmodule Ftpdb.DB do
 
     response.body
     |> Enum.map(fn item ->
-      total_hours = div(item["duration_seconds"], 3600)
+      duration = item["duration_seconds"] || 0
+      total_hours = div(duration, 3600)
 
       %{
         body: item["body"],
@@ -173,7 +176,8 @@ defmodule Ftpdb.DB do
 
     response.body
     |> Enum.map(fn item ->
-      total_hours = div(item["stat_total_duration_seconds"], 3600)
+      duration = item["stat_total_duration_seconds"] || 0
+      total_hours = div(duration, 3600)
       user_id = get_user_id(project_id)
       [user_info] = get_user_info(user_id)
 
@@ -201,7 +205,8 @@ defmodule Ftpdb.DB do
 
     response.body
     |> Enum.map(fn item ->
-      total_hours = div(item["total_time"], 3600)
+      total_time = item["total_time"] || 0
+      total_hours = div(total_time, 3600)
 
       %{
         user_id: to_string(item["id"]),
@@ -280,6 +285,7 @@ defmodule Ftpdb.DB do
       |> Enum.map(fn item ->
         user_id = get_user_id(item["id"])
         [user_info] = get_user_info(user_id)
+        duration = item["stat_total_duration_seconds"] || 0
 
         %{
           id: to_string(item["id"]),
@@ -287,7 +293,7 @@ defmodule Ftpdb.DB do
           banner_url: item["banner_url"],
           hot_score: item["stat_hot_score"] || 0,
           likes: item["stat_total_likes"] || 0,
-          total_hours: div(item["stat_total_duration_seconds"], 3600)
+          total_hours: div(duration, 3600)
         }
         |> Map.merge(user_info)
       end)
