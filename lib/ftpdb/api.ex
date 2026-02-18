@@ -10,20 +10,20 @@ defmodule Ftpdb.DB do
   def hot do
     {:ok, response} =
       Supabase.PostgREST.from(client(), "projects")
-      |> Supabase.PostgREST.select(["title", "id"])
+      |> Supabase.PostgREST.select(["title", "id", "banner_url"])
       |> Supabase.PostgREST.order("stat_hot_score", desc: true)
       |> Supabase.PostgREST.limit(10)
       |> Map.put(:method, :get)
       |> Supabase.PostgREST.execute()
 
     response.body
-    |> Map.new(fn item -> {to_string(item["id"]), item["title"]} end)
+    |> Map.new(fn item -> {to_string(item["id"]), %{title: item["title"], banner_url: item["banner_url"]}} end)
   end
 
   def top_this_week do
     {:ok, response} =
       Supabase.PostgREST.from(client(), "projects")
-      |> Supabase.PostgREST.select(["title", "id", "stat_weekly_rank"])
+      |> Supabase.PostgREST.select(["title", "id", "stat_weekly_rank", "banner_url"])
       |> Supabase.PostgREST.order("stat_weekly_rank", asc: true)
       |> Supabase.PostgREST.limit(10)
       |> Map.put(:method, :get)
@@ -31,27 +31,27 @@ defmodule Ftpdb.DB do
 
     response.body
     |> Enum.map(fn item ->
-      %{id: to_string(item["id"]), title: item["title"], rank: item["stat_weekly_rank"]}
+      %{id: to_string(item["id"]), title: item["title"], rank: item["stat_weekly_rank"], banner_url: item["banner_url"]}
     end)
   end
 
   def fan_favourites do
     {:ok, response} =
       Supabase.PostgREST.from(client(), "projects")
-      |> Supabase.PostgREST.select(["title", "id"])
+      |> Supabase.PostgREST.select(["title", "id", "banner_url"])
       |> Supabase.PostgREST.order("stat_total_likes", desc: true)
       |> Supabase.PostgREST.limit(10)
       |> Map.put(:method, :get)
       |> Supabase.PostgREST.execute()
 
     response.body
-    |> Map.new(fn item -> {to_string(item["id"]), item["title"]} end)
+    |> Map.new(fn item -> {to_string(item["id"]), %{title: item["title"], banner_url: item["banner_url"]}} end)
   end
 
     def top_all_time do
     {:ok, response} =
       Supabase.PostgREST.from(client(), "projects")
-      |> Supabase.PostgREST.select(["title", "id", "stat_all_time_rank"])
+      |> Supabase.PostgREST.select(["title", "id", "stat_all_time_rank", "banner_url"])
       |> Supabase.PostgREST.order("stat_all_time_rank", asc: true)
       |> Supabase.PostgREST.limit(10)
       |> Map.put(:method, :get)
@@ -59,7 +59,7 @@ defmodule Ftpdb.DB do
 
     response.body
     |> Enum.map(fn item ->
-      %{id: to_string(item["id"]), title: item["title"], rank: item["stat_all_time_rank"]}
+      %{id: to_string(item["id"]), title: item["title"], rank: item["stat_all_time_rank"], banner_url: item["banner_url"]}
     end)
   end
 

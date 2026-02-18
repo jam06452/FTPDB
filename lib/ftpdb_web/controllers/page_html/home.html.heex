@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>HCPDB — Hub for Code Projects Database</title>
+  <title>FTPDB — FTP Database</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&family=Cabinet+Grotesk:wght@400;500;700;900&display=swap" rel="stylesheet" />
@@ -186,22 +186,27 @@
     .banner-slide {
       min-width: 100%;
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: 1.5fr 1fr;
       gap: 0;
     }
 
     .banner-image-area {
       position: relative;
-      min-height: 360px;
+      aspect-ratio: 21/9;
       background: var(--surface2);
       overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       /* API HOOK: set background-image to project screenshot */
     }
     .banner-image-area img {
       width: 100%;
       height: 100%;
       object-fit: cover;
+      object-position: center;
       opacity: 0.85;
+      display: block;
     }
     .banner-image-placeholder {
       position: absolute;
@@ -213,6 +218,10 @@
       font-family: 'DM Mono', monospace;
       font-size: 12px;
       letter-spacing: 0.1em;
+      background: linear-gradient(135deg, var(--surface2) 25%, transparent 25%, transparent 75%, var(--surface2) 75%, var(--surface2)), linear-gradient(135deg, var(--surface2) 25%, transparent 25%, transparent 75%, var(--surface2) 75%, var(--surface2));
+      background-size: 30px 30px;
+      background-position: 0 0, 15px 15px;
+      background-color: var(--surface2);
     }
 
     .banner-info {
@@ -343,7 +352,7 @@
     /* ─── CARD GRIDS ─── */
     .card-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
       gap: 16px;
     }
 
@@ -364,17 +373,22 @@
     }
 
     .project-card-thumb {
-      aspect-ratio: 16/9;
+      aspect-ratio: 21/9;
       background: var(--surface2);
       overflow: hidden;
       position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       /* API HOOK: background-image thumbnail */
     }
     .project-card-thumb img {
       width: 100%;
       height: 100%;
       object-fit: cover;
+      object-position: center;
       transition: transform 0.4s ease;
+      display: block;
     }
     .project-card:hover .project-card-thumb img { transform: scale(1.05); }
     .project-card-thumb-placeholder {
@@ -387,6 +401,10 @@
       font-size: 10px;
       color: var(--muted);
       letter-spacing: 0.08em;
+      background: linear-gradient(135deg, var(--surface2) 25%, transparent 25%, transparent 75%, var(--surface2) 75%, var(--surface2)), linear-gradient(135deg, var(--surface2) 25%, transparent 25%, transparent 75%, var(--surface2) 75%, var(--surface2));
+      background-size: 20px 20px;
+      background-position: 0 0, 10px 10px;
+      background-color: var(--surface2);
     }
 
     .project-card-rank {
@@ -472,12 +490,23 @@
     .hcard:hover { transform: translateY(-3px); border-color: var(--gold-dim); }
 
     .hcard-thumb {
-      aspect-ratio: 16/9;
+      aspect-ratio: 21/9;
       background: var(--surface2);
       position: relative;
       overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
-    .hcard-thumb img { width: 100%; height: 100%; object-fit: cover; }
+    .hcard-thumb img { 
+      width: 100%; 
+      height: 100%; 
+      object-fit: cover; 
+      object-position: center;
+      display: block;
+      transition: transform 0.4s ease;
+    }
+    .hcard:hover .hcard-thumb img { transform: scale(1.08); }
     .hcard-thumb-placeholder {
       position: absolute;
       inset: 0;
@@ -487,6 +516,10 @@
       font-family: 'DM Mono', monospace;
       font-size: 10px;
       color: var(--muted);
+      background: linear-gradient(135deg, var(--surface2) 25%, transparent 25%, transparent 75%, var(--surface2) 75%, var(--surface2)), linear-gradient(135deg, var(--surface2) 25%, transparent 25%, transparent 75%, var(--surface2) 75%, var(--surface2));
+      background-size: 20px 20px;
+      background-position: 0 0, 10px 10px;
+      background-color: var(--surface2);
     }
 
     .hcard-body {
@@ -612,6 +645,8 @@
       border-radius: 4px;
     }
 
+    .hidden { display: none !important; }
+
     /* ─── FADE IN ─── */
     @keyframes fadeUp {
       from { opacity: 0; transform: translateY(16px); }
@@ -626,6 +661,7 @@
     @media (max-width: 768px) {
       .banner-slide { grid-template-columns: 1fr; }
       .banner-info { border-left: none; border-top: 1px solid var(--border); }
+      .banner-image-area { aspect-ratio: auto; min-height: 240px; }
       .nav-pills { display: none; }
       .banner-project-name { font-size: 24px; }
     }
@@ -635,7 +671,7 @@
 
   <!-- ═══ NAVBAR ═══ -->
   <nav class="navbar">
-    <span class="nav-logo">HCPDB</span>
+    <span class="nav-logo">FTPDB</span>
 
     <button class="nav-menu-btn" aria-label="Menu" onclick="toggleMenu()">
       <span></span><span></span><span></span>
@@ -944,7 +980,7 @@
   </main>
 
   <footer>
-    HCPDB &nbsp;·&nbsp; Hub for Code Projects Database &nbsp;·&nbsp;
+    FTPDB &nbsp;·&nbsp; FTP Database &nbsp;·&nbsp;
     <span id="footerYear"></span>
   </footer>
 
@@ -1026,14 +1062,14 @@
     async function loadFeaturedBanner() {
       const res  = await fetch('/api/hot');
       const data = await res.json();
-      const projects = Array.isArray(data) ? data : Object.entries(data).map(([id, title]) => ({id, title}));
+      const projects = Array.isArray(data) ? data : Object.entries(data).map(([id, item]) => ({id, ...item}));
       renderBannerSlides(projects);
     }
 
     async function loadTopWeek() {
       const res  = await fetch('/api/top_this_week');
       const data = await res.json();
-      const projects = Array.isArray(data) ? data : Object.entries(data).map(([id, title]) => ({id, title}));
+      const projects = Array.isArray(data) ? data : Object.entries(data).map(([id, item]) => ({id, ...item}));
       renderProjectCards(document.getElementById('topWeekGrid'), projects);
       // document.getElementById('weekLabel').textContent = `Week of ${data.week_label}`;
     }
@@ -1041,14 +1077,14 @@
     async function loadFanFavourites() {
       const res  = await fetch('/api/fan_favourites');
       const data = await res.json();
-      const projects = Array.isArray(data) ? data : Object.entries(data).map(([id, title]) => ({id, title}));
+      const projects = Array.isArray(data) ? data : Object.entries(data).map(([id, item]) => ({id, ...item}));
       renderHCards(document.getElementById('fanFavGrid'), projects);
     }
 
     async function loadTopAllTime() {
       const res  = await fetch('/api/top_all_time');
       const data = await res.json();
-      const projects = Array.isArray(data) ? data : Object.entries(data).map(([id, title]) => ({id, title}));
+      const projects = Array.isArray(data) ? data : Object.entries(data).map(([id, item]) => ({id, ...item}));
       renderHCards(document.getElementById('topAllTimeGrid'), projects);
     }
 
@@ -1071,7 +1107,7 @@
       track.innerHTML = projects.map(p => `
         <div class="banner-slide" data-project-id="${p.id}">
           <div class="banner-image-area">
-            <div class="banner-image-placeholder">PROJECT IMAGE</div>
+            ${p.banner_url && p.banner_url.trim() ? `<img src="${p.banner_url}" alt="${p.title || 'Project'}" style="width: 100%; height: 100%; object-fit: cover; object-position: center;" loading="eager" onerror="this.style.display='none'" />` : ''}<div class="banner-image-placeholder ${p.banner_url && p.banner_url.trim() ? 'hidden' : ''}">PROJECT IMAGE</div>
           </div>
           <div class="banner-info">
             <span class="banner-project-id">#${p.slack_channel || 'general'}</span>
@@ -1119,7 +1155,7 @@
       container.innerHTML = projects.map((p, i) => `
         <div class="project-card" onclick="viewProject('${p.id}')" data-project-id="${p.id}">
           <div class="project-card-thumb">
-            <div class="project-card-thumb-placeholder">THUMBNAIL</div>
+            ${p.banner_url && p.banner_url.trim() ? `<img src="${p.banner_url}" alt="${p.title || 'Project'}" style="width: 100%; height: 100%; object-fit: cover; object-position: center;" loading="lazy" onerror="this.parentElement.querySelector('.project-card-thumb-placeholder').style.display='flex'" />` : ''}<div class="project-card-thumb-placeholder ${p.banner_url && p.banner_url.trim() ? 'hidden' : ''}">THUMBNAIL</div>
           </div>
           <span class="project-card-rank">${i + 1}</span>
           <div class="project-card-body">
@@ -1143,7 +1179,7 @@
       container.innerHTML = projects.map(p => `
         <div class="hcard" onclick="viewProject('${p.id}')" data-project-id="${p.id}">
           <div class="hcard-thumb">
-            <div class="hcard-thumb-placeholder">THUMBNAIL</div>
+            ${p.banner_url && p.banner_url.trim() ? `<img src="${p.banner_url}" alt="${p.title || 'Project'}" style="width: 100%; height: 100%; object-fit: cover; object-position: center;" loading="lazy" onerror="this.parentElement.querySelector('.hcard-thumb-placeholder').style.display='flex'" />` : ''}<div class="hcard-thumb-placeholder ${p.banner_url && p.banner_url.trim() ? 'hidden' : ''}">THUMBNAIL</div>
           </div>
           <div class="hcard-body">
             <div class="hcard-icon">
