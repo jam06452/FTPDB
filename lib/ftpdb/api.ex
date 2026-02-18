@@ -126,12 +126,12 @@ defmodule Ftpdb.DB do
   def get_user_info(user_id) do
     {:ok, response} =
       Supabase.PostgREST.from(client(), "users")
-      |> Supabase.PostgREST.select(["id", "display_name", "avatar_url"])
+      |> Supabase.PostgREST.select(["display_name", "avatar_url"])
       |> Supabase.PostgREST.eq("id", user_id)
       |> Map.put(:method, :get)
       |> Supabase.PostgREST.execute()
 
       response.body
-      |> Enum.map(fn item -> %{id: item["id"], display_name: item["display_name"], avatar_url: item["avatar_url"]} end)
+      |> Enum.map(fn item -> %{display_name: item["display_name"], avatar_url: item["avatar_url"]} end)
   end
 end
