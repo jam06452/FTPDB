@@ -272,4 +272,55 @@ defmodule Ftpdb.DB do
       end)
     end
   end
+
+  def random_projects(filter) do
+    # Get all active projects and filter/sort them
+    {:ok, response} =
+      Supabase.PostgREST.from(client(), "projects")
+      |> Supabase.PostgREST.select([
+        "id",
+        "title",
+        "banner_url",
+        "stat_hot_score",
+        "stat_total_likes",
+        "stat_total_duration_seconds"
+      ])
+      |> Supabase.PostgREST.limit(100)
+      |> Map.put(:method, :get)
+      |> Supabase.PostgREST.execute()
+
+    projects = response.body
+    |> Enum.map(fn item ->
+      user_id = get_user_id(item["id"])
+      [user_info] = get_user_info(user_id)
+
+      %{
+        id: to_string(item["id"]),
+        title: item["title"],
+        banner_url: item["banner_url"],
+        hot_score: item["stat_hot_score"] || 0,
+        likes: item["stat_total_likes"] || 0,
+        total_hours: div(item["stat_total_duration_seconds"], 3600)
+      }
+      |> Map.merge(user_info)
+    end)
+
+    # Apply filtering and sorting
+    case filter do
+      "most_liked" ->
+        projects |> Enum.sort_by(fn p -> -p.likes end) |> Enum.take(50)
+
+      "hottest" ->
+        projects |> Enum.sort_by(fn p -> -p.hot_score end) |> Enum.take(50)
+
+      "most_active" ->
+        projects |> Enum.sort_by(fn p -> -p.total_hours end) |> Enum.take(50)
+
+      "random" ->
+        projects |> Enum.shuffle() |> Enum.take(50)
+
+      _ ->
+        projects |> Enum.shuffle() |> Enum.take(50)
+    end
+  end
 end

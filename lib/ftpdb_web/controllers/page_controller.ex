@@ -12,4 +12,8 @@ defmodule FtpdbWeb.PageController do
   def suggestions(conn, _params) do
     render(conn, :suggestions)
   end
+
+  def projects(conn, _params) do
+    render(conn, :projects)
+  end
 end

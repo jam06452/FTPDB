@@ -50,4 +50,12 @@ defmodule FtpdbWeb.ApiController do
       }) do
     json(conn, Ftpdb.Slack.suggest(category, display_name, message, title))
   end
+
+  def random_projects(conn, %{"filter" => filter}) do
+    json(conn, Ftpdb.DB.random_projects(filter))
+  end
+
+  def random_projects(conn, _params) do
+    json(conn, Ftpdb.DB.random_projects("random"))
+  end
 end

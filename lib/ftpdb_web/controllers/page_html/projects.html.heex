@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Projects — FTPDB</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&family=Cabinet+Grotesk:wght@400;500;700;900&display=swap"
+      rel="stylesheet"
+    />
+
+    <style>
+      /* ─── TOKENS ─── */
+      :root {
+        --bg:        #0d0f14;
+        --surface:   #161a22;
+        --surface2:  #1e2330;
+        --border:    rgba(255,255,255,0.07);
+        --gold:      #e8b455;
+        --gold-dim:  #a07a2e;
+        --text:      #eeeae0;
+        --muted:     #7a8099;
+        --accent:    #4f8ef7;
+        --danger:    #e05b5b;
+
+        --r-sm:  6px;
+        --r-md:  12px;
+        --r-lg:  18px;
+
+        --transition: 0.22s cubic-bezier(.4,0,.2,1);
+      }
+
+      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+      html { scroll-behavior: smooth; }
+
+      body {
+        background: var(--bg);
+        color: var(--text);
+        font-family: 'Cabinet Grotesk', sans-serif;
+        font-size: 15px;
+        line-height: 1.6;
+        -webkit-font-smoothing: antialiased;
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+      }
+
+      main {
+        flex: 1;
+        overflow-y: auto;
+        width: 100%;
+      }
+
+      a { color: inherit; text-decoration: none; }
+      img { display: block; max-width: 100%; }
+
+      /* ─── NAVBAR ─── */
+      .navbar {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        background: rgba(13,15,20,0.88);
+        backdrop-filter: blur(16px);
+        border-bottom: 1px solid var(--border);
+        padding: 0 28px;
+        height: 58px;
+        display: flex;
+        align-items: center;
+        gap: 24px;
+      }
+
+      .nav-logo {
+        font-family: 'DM Serif Display', serif;
+        font-size: 22px;
+        color: var(--gold);
+        letter-spacing: -0.5px;
+        white-space: nowrap;
+        border: 2px solid var(--gold);
+        border-radius: var(--r-sm);
+        padding: 2px 10px;
+        flex-shrink: 0;
+      }
+
+      .nav-menu-btn {
+        background: none;
+        border: none;
+        color: var(--text);
+        cursor: pointer;
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        padding: 4px;
+      }
+      .nav-menu-btn span {
+        display: block;
+        width: 22px;
+        height: 2px;
+        background: var(--text);
+        border-radius: 2px;
+        transition: var(--transition);
+      }
+
+      .nav-search {
+        flex: 1;
+        max-width: 480px;
+        position: relative;
+      }
+      .nav-search input {
+        width: 100%;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 50px;
+        padding: 7px 40px 7px 16px;
+        color: var(--text);
+        font-family: 'DM Mono', monospace;
+        font-size: 13px;
+        outline: none;
+        transition: border-color var(--transition);
+      }
+      .nav-search input::placeholder { color: var(--muted); }
+      .nav-search input:focus { border-color: var(--accent); }
+      .nav-search-icon {
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--muted);
+        pointer-events: none;
+      }
+
+      .search-autocomplete {
+        position: absolute;
+        top: calc(100% + 8px);
+        left: 0;
+        right: 0;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--r-md);
+        max-height: 320px;
+        overflow-y: auto;
+        display: none;
+        z-index: 1000;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+      }
+
+      .search-autocomplete.active {
+        display: block;
+      }
+
+      .search-autocomplete-item {
+        padding: 10px 14px;
+        border-bottom: 1px solid var(--border);
+        cursor: pointer;
+        transition: background-color var(--transition);
+        display: flex;
+        gap: 10px;
+        align-items: center;
+      }
+
+      .search-autocomplete-item:last-child {
+        border-bottom: none;
+      }
+
+      .search-autocomplete-item:hover {
+        background: var(--surface2);
+      }
+
+      .search-autocomplete-item-icon {
+        width: 32px;
+        height: 32px;
+        flex-shrink: 0;
+        border-radius: 4px;
+        background: var(--surface2);
+        border: 1px solid var(--border);
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .search-autocomplete-item-icon img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .search-autocomplete-item-content {
+        flex: 1;
+        min-width: 0;
+      }
+
+      .search-autocomplete-item-title {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .search-autocomplete-item-meta {
+        font-family: 'DM Mono', monospace;
+        font-size: 11px;
+        color: var(--muted);
+      }
+
+      .search-autocomplete-empty {
+        padding: 20px 14px;
+        text-align: center;
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .nav-pills {
+        display: flex;
+        gap: 6px;
+        margin-left: auto;
+      }
+      .nav-pill {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 50px;
+        padding: 5px 14px;
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--muted);
+        cursor: pointer;
+        transition: color var(--transition), border-color var(--transition);
+        white-space: nowrap;
+      }
+      .nav-pill:hover, .nav-pill.active {
+        color: var(--gold);
+        border-color: var(--gold-dim);
+      }
+
+      .nav-pills a.nav-pill {
+        display: inline-flex;
+        align-items: center;
+      }
+
+      /* ─── LAYOUT ─── */
+      .container { 
+        width: 100%;
+        max-width: 100%;
+        padding: 32px 20px;
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        box-sizing: border-box;
+        margin: 0;
+      }
+      .section { 
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        width: 100%;
+      }
+      
+      .section-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+      }
+      
+      .section-title-group {
+        display: flex;
+        align-items: baseline;
+        gap: 16px;
+      }
+      
+      .section-title {
+        font-family: 'DM Serif Display', serif;
+        font-size: 28px;
+        color: var(--text);
+      }
+      
+      .section-meta {
+        font-family: 'DM Mono', monospace;
+        font-size: 11px;
+        color: var(--muted);
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      /* ─── FILTER CONTROLS ─── */
+      .filter-controls {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+      }
+
+      .shuffle-btn {
+        background: var(--gold);
+        color: #0d0f14;
+        border: none;
+        border-radius: var(--r-sm);
+        padding: 8px 16px;
+        font-weight: 700;
+        font-size: 12px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        transition: opacity var(--transition), transform var(--transition);
+      }
+
+      .shuffle-btn:hover {
+        opacity: 0.9;
+        transform: translateY(-1px);
+      }
+
+      .filter-dropdown {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--r-sm);
+        padding: 8px 14px;
+        color: var(--text);
+        font-size: 13px;
+        cursor: pointer;
+        transition: border-color var(--transition);
+        font-family: 'Cabinet Grotesk', sans-serif;
+      }
+
+      .filter-dropdown:hover {
+        border-color: var(--gold-dim);
+      }
+
+      .filter-dropdown:focus {
+        outline: none;
+        border-color: var(--accent);
+      }
+
+      /* ─── CARD GRIDS ─── */
+      .card-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 16px;
+        width: 100%;
+        flex: 1;
+        align-content: start;
+      }
+
+      /* Project card */
+      .project-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--r-md);
+        overflow: hidden;
+        cursor: pointer;
+        transition: transform var(--transition), border-color var(--transition), box-shadow var(--transition);
+        position: relative;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+      }
+      
+      .project-card:hover {
+        transform: translateY(-4px);
+        border-color: var(--gold-dim);
+        box-shadow: 0 12px 40px rgba(0,0,0,0.4);
+      }
+
+      .project-card-thumb {
+        aspect-ratio: 16/9;
+        background: var(--surface2);
+        overflow: hidden;
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+      }
+      
+      .project-card-thumb img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center;
+        transition: transform 0.4s ease;
+        display: block;
+      }
+      
+      .project-card:hover .project-card-thumb img {
+        transform: scale(1.05);
+      }
+      
+      .project-card-thumb-placeholder {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: 'DM Mono', monospace;
+        font-size: 10px;
+        color: var(--muted);
+        letter-spacing: 0.08em;
+        background: linear-gradient(135deg, var(--surface2) 25%, transparent 25%, transparent 75%, var(--surface2) 75%, var(--surface2)), linear-gradient(135deg, var(--surface2) 25%, transparent 25%, transparent 75%, var(--surface2) 75%, var(--surface2));
+        background-size: 20px 20px;
+        background-position: 0 0, 10px 10px;
+        background-color: var(--surface2);
+      }
+
+      .project-card-rank {
+        position: absolute;
+        top: 8px;
+        left: 8px;
+        background: var(--gold);
+        color: #0d0f14;
+        font-family: 'DM Mono', monospace;
+        font-size: 11px;
+        font-weight: 500;
+        border-radius: 4px;
+        padding: 2px 6px;
+        z-index: 2;
+        min-width: 24px;
+        text-align: center;
+      }
+
+      .project-card-body {
+        padding: 14px 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        flex-grow: 1;
+        font-size: 14px;
+      }
+
+      .project-card-slack {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      
+      .project-card-icon {
+        width: 24px;
+        height: 24px;
+        border-radius: 4px;
+        background: var(--surface2);
+        border: 1px solid var(--border);
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+      }
+      
+      .project-card-icon img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      
+      .project-card-icon svg {
+        opacity: 0.4;
+      }
+
+      .project-card-name {
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--text);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .project-card-meta {
+        font-family: 'DM Mono', monospace;
+        font-size: 12px;
+        color: var(--muted);
+        display: flex;
+        gap: 6px;
+        align-items: center;
+      }
+
+      .project-card-stats {
+        font-family: 'DM Mono', monospace;
+        font-size: 12px;
+        color: var(--muted);
+        margin-top: auto;
+        padding-top: 8px;
+        border-top: 1px solid var(--border);
+      }
+
+      /* ─── EMPTY STATE ─── */
+      .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: var(--muted);
+      }
+
+      .empty-state-title {
+        font-size: 18px;
+        font-weight: 700;
+        margin-bottom: 8px;
+        color: var(--text);
+      }
+
+      /* ─── SKELETON ANIMATION ─── */
+      @keyframes shimmer {
+        0%   { background-position: -600px 0; }
+        100% { background-position: 600px 0; }
+      }
+      .skeleton {
+        background: linear-gradient(90deg, var(--surface2) 25%, #252a38 50%, var(--surface2) 75%);
+        background-size: 600px 100%;
+        animation: shimmer 1.4s infinite linear;
+        border-radius: 4px;
+      }
+
+      .hidden { display: none !important; }
+
+      /* ─── RESPONSIVE ─── */
+      @media (max-width: 768px) {
+        .section-header {
+          flex-direction: column;
+          align-items: flex-start;
+          width: 100%;
+        }
+        .filter-controls {
+          width: 100%;
+          flex-wrap: wrap;
+        }
+        .container {
+          padding: 16px 12px;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .card-grid {
+          grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+          gap: 8px;
+        }
+        .section-title {
+          font-size: 22px;
+        }
+        .container {
+          padding: 12px 8px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- ═══ NAVBAR ═══ -->
+    <nav class="navbar">
+      <a href="/" class="nav-logo">FTPDB</a>
+
+      <button class="nav-menu-btn" aria-label="Menu" onclick="toggleMenu()">
+        <span></span><span></span><span></span>
+      </button>
+
+      <div class="nav-search">
+        <input
+          type="search"
+          id="searchInput"
+          placeholder="Search projects…"
+          oninput="handleSearch(this.value)"
+        />
+        <svg
+          class="nav-search-icon"
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
+        </svg>
+        <div class="search-autocomplete" id="searchAutocomplete"></div>
+      </div>
+
+      <div class="nav-pills">
+        <a href="/" class="nav-pill">Home</a>
+        <a href="/projects" class="nav-pill active">Projects</a>
+        <a href="/suggestions" class="nav-pill">Suggestions</a>
+      </div>
+    </nav>
+
+    <!-- ═══ MAIN ═══ -->
+    <main>
+      <div class="container">
+        <section class="section">
+          <div class="section-header">
+            <div class="section-title-group">
+              <h1 class="section-title">Explore Projects</h1>
+              <span class="section-meta" id="projectCount">Loading…</span>
+            </div>
+            <div class="filter-controls">
+              <button class="shuffle-btn" onclick="shuffleProjects()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M3 9h14V5M21 5h-14v4" />
+                  <path d="M3 15h14v4M21 19H7v-4" />
+                </svg>
+                Shuffle
+              </button>
+              <select class="filter-dropdown" id="filterSelect" onchange="applyFilter(this.value)">
+                <option value="random">Random</option>
+                <option value="most_liked">Most Liked</option>
+                <option value="hottest">Hottest</option>
+                <option value="most_active">Most Active</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="card-grid" id="projectsGrid">
+            <!-- Projects will be loaded here -->
+          </div>
+
+          <div class="empty-state" id="emptyState" style="display: none;">
+            <div class="empty-state-title">No projects found</div>
+            <p>Try adjusting your filters</p>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <!-- ═══ JS ═══ -->
+    <script>
+      let currentFilter = "random";
+      let allProjects = [];
+      let displayedCount = 0;
+      const itemsPerLoad = 50;
+      let isLoadingMore = false;
+
+      /* ──────────────────────────────────────────────
+         LOAD PROJECTS WITH PAGINATION
+      ────────────────────────────────────────────── */
+      async function loadProjects() {
+        try {
+          const res = await fetch(`/api/random_projects?filter=${currentFilter}`);
+          const projects = await res.json();
+          allProjects = projects;
+          displayedCount = 0;
+          renderProjectsBatch();
+          updateProjectCount(projects.length);
+        } catch (err) {
+          console.error("Failed to load projects:", err);
+          showEmptyState();
+        }
+      }
+
+      function renderProjectsBatch() {
+        const grid = document.getElementById("projectsGrid");
+        const startIndex = displayedCount;
+        const endIndex = Math.min(displayedCount + itemsPerLoad, allProjects.length);
+        const projectsToAdd = allProjects.slice(startIndex, endIndex);
+
+        if (projectsToAdd.length === 0) {
+          if (displayedCount === 0) {
+            showEmptyState();
+          }
+          return;
+        }
+
+        hideEmptyState();
+
+        if (displayedCount === 0) {
+          grid.innerHTML = "";
+        }
+
+        projectsToAdd.forEach((p, index) => {
+          const card = document.createElement("div");
+          card.className = "project-card";
+          card.onclick = () => viewProject(p.id);
+          card.setAttribute("data-project-id", p.id);
+          card.innerHTML = `
+            <div class="project-card-thumb">
+              ${p.banner_url && p.banner_url.trim()
+                ? `<img src="${p.banner_url}" alt="${p.title || 'Project'}" loading="lazy" onerror="this.style.display='none'" />`
+                : ""}
+              <div class="project-card-thumb-placeholder ${p.banner_url && p.banner_url.trim() ? "hidden" : ""}">
+                NO IMAGE
+              </div>
+              <span class="project-card-rank">${displayedCount + index + 1}</span>
+            </div>
+            <div class="project-card-body">
+              <div class="project-card-slack">
+                <div class="project-card-icon">
+                  ${p.avatar_url && p.avatar_url.trim()
+                    ? `<img src="${p.avatar_url}" alt="${p.display_name || 'User'}" />`
+                    : `<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><rect width="4" height="4" x="3" y="3" rx="1"/></svg>`}
+                </div>
+                <div>
+                  <div class="project-card-name">${p.title || "Untitled"}</div>
+                  <div class="project-card-meta">${p.display_name || "Unknown"}</div>
+                </div>
+              </div>
+              <div class="project-card-stats">
+                ❤️ ${p.likes || 0} · 🔥 ${Math.round(p.hot_score || 0)} · ⏱️ ${p.total_hours || 0}h
+              </div>
+            </div>
+          `;
+          grid.appendChild(card);
+        });
+
+        displayedCount = endIndex;
+        isLoadingMore = false;
+      }
+
+      function shuffleProjects() {
+        currentFilter = "random";
+        document.getElementById("filterSelect").value = "random";
+        loadProjects();
+      }
+
+      function applyFilter(filter) {
+        currentFilter = filter;
+        loadProjects();
+      }
+
+      function updateProjectCount(count) {
+        const countEl = document.getElementById("projectCount");
+        countEl.textContent = count > 0 ? `— ${count} projects` : "— No projects";
+      }
+
+      function showEmptyState() {
+        document.getElementById("projectsGrid").style.display = "none";
+        document.getElementById("emptyState").style.display = "block";
+      }
+
+      function hideEmptyState() {
+        document.getElementById("projectsGrid").style.display = "grid";
+        document.getElementById("emptyState").style.display = "none";
+      }
+
+      /* ──────────────────────────────────────────────
+         INFINITE SCROLL
+      ────────────────────────────────────────────── */
+      function setupInfiniteScroll() {
+        const main = document.querySelector("main");
+        main.addEventListener("scroll", () => {
+          const scrollTop = main.scrollTop;
+          const scrollHeight = main.scrollHeight;
+          const clientHeight = main.clientHeight;
+          
+          // When user is within 400px of bottom
+          if (scrollHeight - (scrollTop + clientHeight) < 400 && !isLoadingMore && displayedCount < allProjects.length) {
+            isLoadingMore = true;
+            renderProjectsBatch();
+          }
+        });
+      }
+
+      /* ──────────────────────────────────────────────
+         SEARCH
+      ────────────────────────────────────────────── */
+      let searchTimer;
+      const searchInput = document.getElementById("searchInput");
+      const searchAutocomplete = document.getElementById("searchAutocomplete");
+
+      function handleSearch(query) {
+        clearTimeout(searchTimer);
+
+        if (!query.trim()) {
+          searchAutocomplete.classList.remove("active");
+          return;
+        }
+
+        searchTimer = setTimeout(() => {
+          fetchSearchResults(query);
+        }, 200);
+      }
+
+      async function fetchSearchResults(query) {
+        try {
+          const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
+          const results = await res.json();
+          renderSearchResults(results);
+        } catch (err) {
+          console.error("Search error:", err);
+          searchAutocomplete.innerHTML = '<div class="search-autocomplete-empty">Error searching</div>';
+        }
+      }
+
+      function renderSearchResults(results) {
+        if (!results || results.length === 0) {
+          searchAutocomplete.innerHTML = '<div class="search-autocomplete-empty">No projects found</div>';
+          searchAutocomplete.classList.add("active");
+          return;
+        }
+
+        searchAutocomplete.innerHTML = results.map(project => `
+          <div class="search-autocomplete-item" onclick="selectProject('${project.id}')">
+            <div class="search-autocomplete-item-icon">
+              ${project.avatar_url && project.avatar_url.trim()
+                ? `<img src="${project.avatar_url}" alt="${project.display_name || 'User'}" />`
+                : '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" opacity="0.4"><rect width="4" height="4" x="3" y="3" rx="1"/></svg>'}
+            </div>
+            <div class="search-autocomplete-item-content">
+              <div class="search-autocomplete-item-title">${project.title || project.name || "Untitled"}</div>
+              <div class="search-autocomplete-item-meta">${project.display_name || "general"}</div>
+            </div>
+          </div>
+        `).join("");
+
+        searchAutocomplete.classList.add("active");
+      }
+
+      function selectProject(id) {
+        searchInput.value = "";
+        searchAutocomplete.classList.remove("active");
+        viewProject(id);
+      }
+
+      document.addEventListener("click", (e) => {
+        if (!searchInput.contains(e.target) && !searchAutocomplete.contains(e.target)) {
+          searchAutocomplete.classList.remove("active");
+        }
+      });
+
+      searchInput.addEventListener("focus", () => {
+        if (searchInput.value.trim() && searchAutocomplete.querySelector(".search-autocomplete-item")) {
+          searchAutocomplete.classList.add("active");
+        }
+      });
+
+      /* ──────────────────────────────────────────────
+         NAVIGATION
+      ────────────────────────────────────────────── */
+      function viewProject(id) {
+        window.location.href = `/project/${id}`;
+      }
+
+      function toggleMenu() {
+        console.log("toggleMenu()");
+      }
+
+      /* ──────────────────────────────────────────────
+         INIT
+      ────────────────────────────────────────────── */
+      document.addEventListener("DOMContentLoaded", () => {
+        loadProjects();
+        setupInfiniteScroll();
+      });
+    </script>
+  </body>
+</html>
