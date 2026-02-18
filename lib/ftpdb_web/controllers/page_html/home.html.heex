@@ -192,7 +192,7 @@
 
     .banner-image-area {
       position: relative;
-      aspect-ratio: 21/9;
+      aspect-ratio: 16/9;
       background: var(--surface2);
       overflow: hidden;
       display: flex;
@@ -256,15 +256,17 @@
     .banner-slack-icon {
       width: 36px;
       height: 36px;
-      border-radius: var(--r-sm);
+      border-radius: 50%;
       background: var(--surface2);
       border: 1px solid var(--border);
       display: flex;
       align-items: center;
       justify-content: center;
       flex-shrink: 0;
+      overflow: hidden;
       /* API HOOK: replace with <img src={slackIconUrl} /> */
     }
+    .banner-slack-icon img { width: 100%; height: 100%; object-fit: cover; }
     .banner-slack-icon svg { opacity: 0.5; }
     .banner-slack-name {
       font-family: 'DM Mono', monospace;
@@ -352,7 +354,7 @@
     /* ─── CARD GRIDS ─── */
     .card-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      grid-template-columns: repeat(5, 1fr);
       gap: 16px;
     }
 
@@ -373,7 +375,7 @@
     }
 
     .project-card-thumb {
-      aspect-ratio: 21/9;
+      aspect-ratio: 16/9;
       background: var(--surface2);
       overflow: hidden;
       position: relative;
@@ -490,7 +492,7 @@
     .hcard:hover { transform: translateY(-3px); border-color: var(--gold-dim); }
 
     .hcard-thumb {
-      aspect-ratio: 21/9;
+      aspect-ratio: 16/9;
       background: var(--surface2);
       position: relative;
       overflow: hidden;
@@ -1114,9 +1116,9 @@
             <h2 class="banner-project-name">${p.title || p.name || 'Untitled'}</h2>
             <div class="banner-slack-row">
               <div class="banner-slack-icon">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M5.042 15.165…"/></svg>
+                ${p.avatar_url ? `<img src="${p.avatar_url}" alt="${p.display_name || 'User'}" />` : '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M5.042 15.165…"/></svg>'}
               </div>
-              <span class="banner-slack-name">${p.slack_channel || 'general'}</span>
+              <span class="banner-slack-name">${p.display_name || 'general'}</span>
             </div>
             <div class="banner-stats">
               <div class="banner-stat">
@@ -1124,7 +1126,7 @@
                 <span class="banner-stat-lbl">Rating</span>
               </div>
               <div class="banner-stat">
-                <span class="banner-stat-val">—</span>
+                <span class="banner-stat-val">${p.total_hours || '—'}</span>
                 <span class="banner-stat-lbl">Hrs Spent</span>
               </div>
               <div class="banner-stat">
@@ -1161,11 +1163,11 @@
           <div class="project-card-body">
             <div class="project-card-slack">
               <div class="project-card-icon">
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><rect width="4" height="4" x="3" y="3" rx="1"/><rect width="4" height="4" x="17" y="3" rx="1"/><rect width="4" height="4" x="3" y="17" rx="1"/><rect width="4" height="4" x="17" y="17" rx="1"/></svg>
+                ${p.avatar_url ? `<img src="${p.avatar_url}" alt="${p.display_name || 'User'}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 4px;" loading="lazy" />` : '<svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><rect width="4" height="4" x="3" y="3" rx="1"/><rect width="4" height="4" x="17" y="3" rx="1"/><rect width="4" height="4" x="3" y="17" rx="1"/><rect width="4" height="4" x="17" y="17" rx="1"/></svg>'}
               </div>
               <span class="project-card-name">${p.title || p.name || 'Untitled'}</span>
             </div>
-            <span class="project-card-meta">#${p.slack_channel || 'general'} · ★ ${p.rank || '—'}</span>
+            <span class="project-card-meta">${p.display_name || 'general'} · ★ ${p.rank || '—'}</span>
           </div>
         </div>
       `).join('');
@@ -1183,11 +1185,11 @@
           </div>
           <div class="hcard-body">
             <div class="hcard-icon">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><rect width="4" height="4" x="3" y="3" rx="1"/><rect width="4" height="4" x="17" y="17" rx="1"/></svg>
+              ${p.avatar_url ? `<img src="${p.avatar_url}" alt="${p.display_name || 'User'}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 4px;" loading="lazy" />` : '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><rect width="4" height="4" x="3" y="3" rx="1"/><rect width="4" height="4" x="17" y="17" rx="1"/></svg>'}
             </div>
             <div>
               <div class="hcard-name">${p.title || p.name || 'Untitled'}</div>
-              <div class="hcard-sub">#${p.slack_channel || 'general'}</div>
+              <div class="hcard-sub">${p.display_name || 'general'}</div>
             </div>
           </div>
         </div>
