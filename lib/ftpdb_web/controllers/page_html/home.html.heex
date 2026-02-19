@@ -1,1889 +1,1420 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>FTPDB — FTP Database</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&family=Cabinet+Grotesk:wght@400;500;700;900&display=swap"
-      rel="stylesheet"
-    />
+<Layouts.app flash={@flash}>
+  <style>
+    /* ─── LAYOUT ─── */
+    .container { max-width: 1240px; margin: 0 auto; padding: 0 28px; }
+    .section { padding: 52px 0; }
+    .section-header {
+      display: flex;
+      align-items: baseline;
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+    .section-title {
+      font-family: 'DM Serif Display', serif;
+      font-size: 26px;
+      color: var(--text);
+    }
+    .section-meta {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
 
-    <style>
-      /* ─── TOKENS ─── */
-      :root {
-        --bg:        #0d0f14;
-        --surface:   #161a22;
-        --surface2:  #1e2330;
-        --border:    rgba(255,255,255,0.07);
-        --gold:      #e8b455;
-        --gold-dim:  #a07a2e;
-        --text:      #eeeae0;
-        --muted:     #7a8099;
-        --accent:    #4f8ef7;
-        --danger:    #e05b5b;
+    /* ─── FEATURED BANNER CAROUSEL ─── */
+    .banner-section { padding: 32px 0 0; }
 
-        --r-sm:  6px;
-        --r-md:  12px;
-        --r-lg:  18px;
+    .banner-track-wrapper {
+      position: relative;
+      overflow: hidden;
+      border-radius: var(--r-lg);
+      border: 1px solid var(--border);
+      background: var(--surface);
+      min-height: 360px;
+    }
 
-        --transition: 0.22s cubic-bezier(.4,0,.2,1);
-      }
+    .banner-track {
+      display: flex;
+      transition: transform 0.5s cubic-bezier(.4,0,.2,1);
+      will-change: transform;
+    }
 
-      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    .banner-slide {
+      min-width: 100%;
+      display: grid;
+      grid-template-columns: 1.5fr 1fr;
+      gap: 0;
+    }
 
-      html { scroll-behavior: smooth; }
+    .banner-image-area {
+      position: relative;
+      aspect-ratio: 16/9;
+      background: var(--surface2);
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      /* API HOOK: set background-image to project screenshot */
+    }
+    .banner-image-area img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center;
+      opacity: 0.85;
+      display: block;
+    }
+    .banner-image-placeholder {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--muted);
+      font-family: 'DM Mono', monospace;
+      font-size: 12px;
+      letter-spacing: 0.1em;
+      background: linear-gradient(135deg, var(--surface2) 25%, transparent 25%, transparent 75%, var(--surface2) 75%, var(--surface2)), linear-gradient(135deg, var(--surface2) 25%, transparent 25%, transparent 75%, var(--surface2) 75%, var(--surface2));
+      background-size: 30px 30px;
+      background-position: 0 0, 15px 15px;
+      background-color: var(--surface2);
+    }
 
-      body {
-        background: var(--bg);
-        color: var(--text);
-        font-family: 'Cabinet Grotesk', sans-serif;
-        font-size: 15px;
-        line-height: 1.6;
-        -webkit-font-smoothing: antialiased;
-      }
+    .banner-info {
+      padding: 40px 40px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 16px;
+      border-left: 1px solid var(--border);
+    }
 
-      a { color: inherit; text-decoration: none; }
-      img { display: block; max-width: 100%; }
+    .banner-project-id {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      color: var(--gold);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
 
-      <%= FtpdbWeb.NavbarComponent.navbar_styles() |> Phoenix.HTML.raw() %>
+    .banner-project-name {
+      font-family: 'DM Serif Display', serif;
+      font-size: 32px;
+      line-height: 1.15;
+      color: var(--text);
+    }
 
-      /* ─── LAYOUT ─── */
-      .container { max-width: 1240px; margin: 0 auto; padding: 0 28px; }
-      .section { padding: 52px 0; }
-      .section-header {
-        display: flex;
-        align-items: baseline;
-        gap: 16px;
-        margin-bottom: 28px;
-      }
-      .section-title {
-        font-family: 'DM Serif Display', serif;
-        font-size: 26px;
-        color: var(--text);
-      }
-      .section-meta {
-        font-family: 'DM Mono', monospace;
-        font-size: 11px;
-        color: var(--muted);
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-      }
+    .banner-slack-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .banner-slack-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      overflow: hidden;
+      /* API HOOK: replace with <img src={slackIconUrl} /> */
+    }
+    .banner-slack-icon img { width: 100%; height: 100%; object-fit: cover; }
+    .banner-slack-icon svg { opacity: 0.5; }
+    .banner-slack-name {
+      font-family: 'DM Mono', monospace;
+      font-size: 13px;
+      color: var(--muted);
+    }
 
-      /* ─── FEATURED BANNER CAROUSEL ─── */
-      .banner-section { padding: 32px 0 0; }
+    .banner-stats {
+      display: flex;
+      gap: 24px;
+      padding-top: 8px;
+      border-top: 1px solid var(--border);
+    }
+    .banner-stat { display: flex; flex-direction: column; gap: 2px; }
+    .banner-stat-val {
+      font-family: 'DM Serif Display', serif;
+      font-size: 22px;
+      color: var(--gold);
+    }
+    .banner-stat-lbl {
+      font-size: 11px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
 
-      .banner-track-wrapper {
-        position: relative;
-        overflow: hidden;
-        border-radius: var(--r-lg);
-        border: 1px solid var(--border);
-        background: var(--surface);
-        min-height: 360px;
-      }
+    .banner-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--gold);
+      color: #0d0f14;
+      border: none;
+      border-radius: var(--r-sm);
+      padding: 10px 22px;
+      font-weight: 700;
+      font-size: 13px;
+      cursor: pointer;
+      align-self: flex-start;
+      transition: opacity var(--transition), transform var(--transition);
+    }
+    .banner-btn:hover { opacity: 0.9; transform: translateY(-1px); }
 
-      .banner-track {
-        display: flex;
-        transition: transform 0.5s cubic-bezier(.4,0,.2,1);
-        will-change: transform;
-      }
+    /* Carousel controls */
+    .banner-arrow {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 10;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: rgba(13,15,20,0.7);
+      border: 1px solid var(--border);
+      backdrop-filter: blur(8px);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text);
+      transition: background var(--transition);
+    }
+    .banner-arrow:hover { background: rgba(232,180,85,0.2); border-color: var(--gold-dim); }
+    .banner-arrow.prev { left: 16px; }
+    .banner-arrow.next { right: 16px; }
 
-      .banner-slide {
-        min-width: 100%;
-        display: grid;
-        grid-template-columns: 1.5fr 1fr;
-        gap: 0;
-      }
+    .banner-dots {
+      position: absolute;
+      bottom: 14px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 6px;
+    }
+    .banner-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--muted);
+      transition: background var(--transition), transform var(--transition);
+      cursor: pointer;
+    }
+    .banner-dot.active { background: var(--gold); transform: scale(1.3); }
 
-      .banner-image-area {
-        position: relative;
-        aspect-ratio: 16/9;
-        background: var(--surface2);
-        overflow: hidden;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        /* API HOOK: set background-image to project screenshot */
-      }
-      .banner-image-area img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        object-position: center;
-        opacity: 0.85;
-        display: block;
-      }
-      .banner-image-placeholder {
-        position: absolute;
-        inset: 0;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: var(--muted);
-        font-family: 'DM Mono', monospace;
-        font-size: 12px;
-        letter-spacing: 0.1em;
-        background: linear-gradient(135deg, var(--surface2) 25%, transparent 25%, transparent 75%, var(--surface2) 75%, var(--surface2)), linear-gradient(135deg, var(--surface2) 25%, transparent 25%, transparent 75%, var(--surface2) 75%, var(--surface2));
-        background-size: 30px 30px;
-        background-position: 0 0, 15px 15px;
-        background-color: var(--surface2);
-      }
+    /* ─── CARD GRIDS ─── */
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 16px;
+    }
 
-      .banner-info {
-        padding: 40px 40px;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        gap: 16px;
-        border-left: 1px solid var(--border);
-      }
+    /* Project card */
+    .project-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r-md);
+      overflow: hidden;
+      cursor: pointer;
+      transition: transform var(--transition), border-color var(--transition), box-shadow var(--transition);
+      position: relative;
+    }
+    .project-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--gold-dim);
+      box-shadow: 0 12px 40px rgba(0,0,0,0.4);
+    }
 
-      .banner-project-id {
-        font-family: 'DM Mono', monospace;
-        font-size: 11px;
-        color: var(--gold);
-        letter-spacing: 0.12em;
-        text-transform: uppercase;
-      }
+    .project-card-thumb {
+      aspect-ratio: 16/9;
+      background: var(--surface2);
+      overflow: hidden;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      /* API HOOK: background-image thumbnail */
+    }
+    .project-card-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center;
+      transition: transform 0.4s ease;
+      display: block;
+    }
+    .project-card:hover .project-card-thumb img { transform: scale(1.05); }
+    /* .project-card-thumb-placeholder → use shared .thumb-placeholder from app.css */
 
-      .banner-project-name {
-        font-family: 'DM Serif Display', serif;
-        font-size: 32px;
-        line-height: 1.15;
-        color: var(--text);
-      }
+    .project-card-rank {
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      background: var(--gold);
+      color: #0d0f14;
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      font-weight: 500;
+      border-radius: 4px;
+      padding: 1px 6px;
+      z-index: 2;
+    }
 
-      .banner-slack-row {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-      }
-      .banner-slack-icon {
-        width: 36px;
-        height: 36px;
-        border-radius: 50%;
-        background: var(--surface2);
-        border: 1px solid var(--border);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex-shrink: 0;
-        overflow: hidden;
-        /* API HOOK: replace with <img src={slackIconUrl} /> */
-      }
-      .banner-slack-icon img { width: 100%; height: 100%; object-fit: cover; }
-      .banner-slack-icon svg { opacity: 0.5; }
-      .banner-slack-name {
-        font-family: 'DM Mono', monospace;
-        font-size: 13px;
-        color: var(--muted);
-      }
+    .project-card-body {
+      padding: 12px 14px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
 
-      .banner-stats {
-        display: flex;
-        gap: 24px;
-        padding-top: 8px;
-        border-top: 1px solid var(--border);
-      }
-      .banner-stat { display: flex; flex-direction: column; gap: 2px; }
-      .banner-stat-val {
-        font-family: 'DM Serif Display', serif;
-        font-size: 22px;
-        color: var(--gold);
-      }
-      .banner-stat-lbl {
-        font-size: 11px;
-        color: var(--muted);
-        text-transform: uppercase;
-        letter-spacing: 0.06em;
-      }
+    .project-card-slack {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+    .project-card-icon {
+      width: 22px;
+      height: 22px;
+      border-radius: 4px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      /* API HOOK: <img src={iconUrl} /> */
+    }
+    .project-card-icon svg { opacity: 0.4; }
 
-      .banner-btn {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        background: var(--gold);
-        color: #0d0f14;
-        border: none;
-        border-radius: var(--r-sm);
-        padding: 10px 22px;
-        font-weight: 700;
-        font-size: 13px;
-        cursor: pointer;
-        align-self: flex-start;
-        transition: opacity var(--transition), transform var(--transition);
-      }
-      .banner-btn:hover { opacity: 0.9; transform: translateY(-1px); }
+    .project-card-name {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
 
-      /* Carousel controls */
-      .banner-arrow {
-        position: absolute;
-        top: 50%;
-        transform: translateY(-50%);
-        z-index: 10;
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        background: rgba(13,15,20,0.7);
-        border: 1px solid var(--border);
-        backdrop-filter: blur(8px);
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: var(--text);
-        transition: background var(--transition);
-      }
-      .banner-arrow:hover { background: rgba(232,180,85,0.2); border-color: var(--gold-dim); }
-      .banner-arrow.prev { left: 16px; }
-      .banner-arrow.next { right: 16px; }
+    .project-card-meta {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      color: var(--muted);
+    }
 
-      .banner-dots {
-        position: absolute;
-        bottom: 14px;
-        left: 50%;
-        transform: translateX(-50%);
-        display: flex;
-        gap: 6px;
-      }
-      .banner-dot {
-        width: 6px;
-        height: 6px;
-        border-radius: 50%;
-        background: var(--muted);
-        transition: background var(--transition), transform var(--transition);
-        cursor: pointer;
-      }
-      .banner-dot.active { background: var(--gold); transform: scale(1.3); }
+    /* ─── FAN FAVOURITES / TOP ALL TIME — horizontal scroll ─── */
+    .hscroll-wrapper {
+      position: relative;
+    }
+    .hscroll {
+      display: flex;
+      gap: 16px;
+      overflow-x: auto;
+      padding-bottom: 8px;
+      scrollbar-width: thin;
+      scrollbar-color: var(--surface2) transparent;
+    }
+    .hscroll::-webkit-scrollbar { height: 4px; }
+    .hscroll::-webkit-scrollbar-track { background: transparent; }
+    .hscroll::-webkit-scrollbar-thumb { background: var(--surface2); border-radius: 4px; }
 
-      /* ─── CARD GRIDS ─── */
-      .card-grid {
-        display: grid;
-        grid-template-columns: repeat(5, 1fr);
-        gap: 16px;
-      }
+    .hcard {
+      flex: 0 0 220px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r-md);
+      overflow: hidden;
+      cursor: pointer;
+      transition: transform var(--transition), border-color var(--transition);
+    }
+    .hcard:hover { transform: translateY(-3px); border-color: var(--gold-dim); }
 
-      /* Project card */
-      .project-card {
-        background: var(--surface);
-        border: 1px solid var(--border);
-        border-radius: var(--r-md);
-        overflow: hidden;
-        cursor: pointer;
-        transition: transform var(--transition), border-color var(--transition), box-shadow var(--transition);
-        position: relative;
-      }
-      .project-card:hover {
-        transform: translateY(-4px);
-        border-color: var(--gold-dim);
-        box-shadow: 0 12px 40px rgba(0,0,0,0.4);
-      }
+    .hcard-thumb {
+      aspect-ratio: 16/9;
+      background: var(--surface2);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .hcard-thumb img { 
+      width: 100%; 
+      height: 100%; 
+      object-fit: cover; 
+      object-position: center;
+      display: block;
+      transition: transform 0.4s ease;
+    }
+    .hcard:hover .hcard-thumb img { transform: scale(1.08); }
+    /* .hcard-thumb-placeholder → use shared .thumb-placeholder from app.css */
 
-      .project-card-thumb {
-        aspect-ratio: 16/9;
-        background: var(--surface2);
-        overflow: hidden;
-        position: relative;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        /* API HOOK: background-image thumbnail */
-      }
-      .project-card-thumb img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        object-position: center;
-        transition: transform 0.4s ease;
-        display: block;
-      }
-      .project-card:hover .project-card-thumb img { transform: scale(1.05); }
-      .project-card-thumb-placeholder {
-        position: absolute;
-        inset: 0;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-family: 'DM Mono', monospace;
-        font-size: 10px;
-        color: var(--muted);
-        letter-spacing: 0.08em;
-        background: linear-gradient(135deg, var(--surface2) 25%, transparent 25%, transparent 75%, var(--surface2) 75%, var(--surface2)), linear-gradient(135deg, var(--surface2) 25%, transparent 25%, transparent 75%, var(--surface2) 75%, var(--surface2));
-        background-size: 20px 20px;
-        background-position: 0 0, 10px 10px;
-        background-color: var(--surface2);
-      }
+    .hcard-body {
+      padding: 10px 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .hcard-icon {
+      width: 24px;
+      height: 24px;
+      border-radius: 4px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      /* API HOOK: <img src={iconUrl} /> */
+    }
+    .hcard-icon svg { opacity: 0.4; }
+    .hcard-name {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .hcard-sub {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      color: var(--muted);
+    }
 
-      .project-card-rank {
-        position: absolute;
-        top: 8px;
-        left: 8px;
-        background: var(--gold);
-        color: #0d0f14;
-        font-family: 'DM Mono', monospace;
-        font-size: 11px;
-        font-weight: 500;
-        border-radius: 4px;
-        padding: 1px 6px;
-        z-index: 2;
-      }
+    /* ─── MOST TIME SPENT — bubble row ─── */
+    .bubble-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 20px;
+      padding: 24px 0 8px;
+    }
+    .bubble-row::-webkit-scrollbar { display: none; }
 
-      .project-card-body {
-        padding: 12px 14px 14px;
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
-      }
+    .bubble-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+      cursor: pointer;
+      transition: transform var(--transition);
+    }
+    .bubble-item:hover { transform: translateY(-4px); }
 
-      .project-card-slack {
-        display: flex;
-        align-items: center;
-        gap: 7px;
-      }
-      .project-card-icon {
-        width: 22px;
-        height: 22px;
-        border-radius: 4px;
-        background: var(--surface2);
-        border: 1px solid var(--border);
-        flex-shrink: 0;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        /* API HOOK: <img src={iconUrl} /> */
-      }
-      .project-card-icon svg { opacity: 0.4; }
+    .bubble-avatar {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      background: var(--surface2);
+      border: 2px solid var(--border);
+      overflow: hidden;
+      position: relative;
+      transition: border-color var(--transition);
+    }
+    .bubble-item:hover .bubble-avatar { border-color: var(--gold); }
+    .bubble-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .bubble-avatar-placeholder {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      color: var(--muted);
+    }
 
-      .project-card-name {
-        font-size: 14px;
-        font-weight: 700;
-        color: var(--text);
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
+    .bubble-label {
+      text-align: center;
+    }
+    .bubble-name {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      color: var(--text);
+      white-space: nowrap;
+    }
+    .bubble-hours {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      color: var(--muted);
+    }
 
-      .project-card-meta {
-        font-family: 'DM Mono', monospace;
-        font-size: 11px;
-        color: var(--muted);
-      }
+    /* ─── DIVIDER ─── */
+    .divider {
+      height: 1px;
+      background: var(--border);
+      margin: 4px 0;
+    }
 
-      /* ─── FAN FAVOURITES / TOP ALL TIME — horizontal scroll ─── */
-      .hscroll-wrapper {
-        position: relative;
-      }
-      .hscroll {
-        display: flex;
-        gap: 16px;
-        overflow-x: auto;
-        padding-bottom: 8px;
-        scrollbar-width: thin;
-        scrollbar-color: var(--surface2) transparent;
-      }
-      .hscroll::-webkit-scrollbar { height: 4px; }
-      .hscroll::-webkit-scrollbar-track { background: transparent; }
-      .hscroll::-webkit-scrollbar-thumb { background: var(--surface2); border-radius: 4px; }
+    /* ─── FOOTER ─── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 28px;
+      text-align: center;
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: 0.06em;
+    }
 
-      .hcard {
-        flex: 0 0 220px;
-        background: var(--surface);
-        border: 1px solid var(--border);
-        border-radius: var(--r-md);
-        overflow: hidden;
-        cursor: pointer;
-        transition: transform var(--transition), border-color var(--transition);
-      }
-      .hcard:hover { transform: translateY(-3px); border-color: var(--gold-dim); }
-
-      .hcard-thumb {
-        aspect-ratio: 16/9;
-        background: var(--surface2);
-        position: relative;
-        overflow: hidden;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
-      .hcard-thumb img { 
-        width: 100%; 
-        height: 100%; 
-        object-fit: cover; 
-        object-position: center;
-        display: block;
-        transition: transform 0.4s ease;
-      }
-      .hcard:hover .hcard-thumb img { transform: scale(1.08); }
-      .hcard-thumb-placeholder {
-        position: absolute;
-        inset: 0;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-family: 'DM Mono', monospace;
-        font-size: 10px;
-        color: var(--muted);
-        background: linear-gradient(135deg, var(--surface2) 25%, transparent 25%, transparent 75%, var(--surface2) 75%, var(--surface2)), linear-gradient(135deg, var(--surface2) 25%, transparent 25%, transparent 75%, var(--surface2) 75%, var(--surface2));
-        background-size: 20px 20px;
-        background-position: 0 0, 10px 10px;
-        background-color: var(--surface2);
-      }
-
-      .hcard-body {
-        padding: 10px 12px;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-      }
-      .hcard-icon {
-        width: 24px;
-        height: 24px;
-        border-radius: 4px;
-        background: var(--surface2);
-        border: 1px solid var(--border);
-        flex-shrink: 0;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        /* API HOOK: <img src={iconUrl} /> */
-      }
-      .hcard-icon svg { opacity: 0.4; }
-      .hcard-name {
-        font-size: 13px;
-        font-weight: 700;
-        color: var(--text);
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-      .hcard-sub {
-        font-family: 'DM Mono', monospace;
-        font-size: 10px;
-        color: var(--muted);
-      }
-
-      /* ─── MOST TIME SPENT — bubble row ─── */
-      .bubble-row {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex-wrap: wrap;
-        gap: 20px;
-        padding: 24px 0 8px;
-      }
-      .bubble-row::-webkit-scrollbar { display: none; }
-
-      .bubble-item {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 10px;
-        flex-shrink: 0;
-        cursor: pointer;
-        transition: transform var(--transition);
-      }
-      .bubble-item:hover { transform: translateY(-4px); }
-
-      .bubble-avatar {
-        width: 72px;
-        height: 72px;
-        border-radius: 50%;
-        background: var(--surface2);
-        border: 2px solid var(--border);
-        overflow: hidden;
-        position: relative;
-        transition: border-color var(--transition);
-      }
-      .bubble-item:hover .bubble-avatar { border-color: var(--gold); }
-      .bubble-avatar img { width: 100%; height: 100%; object-fit: cover; }
-      .bubble-avatar-placeholder {
-        position: absolute;
-        inset: 0;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-family: 'DM Mono', monospace;
-        font-size: 10px;
-        color: var(--muted);
-      }
-
-      .bubble-label {
-        text-align: center;
-      }
-      .bubble-name {
-        font-family: 'DM Mono', monospace;
-        font-size: 11px;
-        color: var(--text);
-        white-space: nowrap;
-      }
-      .bubble-hours {
-        font-family: 'DM Mono', monospace;
-        font-size: 10px;
-        color: var(--muted);
-      }
-
-      /* ─── DIVIDER ─── */
-      .divider {
-        height: 1px;
-        background: var(--border);
-        margin: 4px 0;
-      }
-
-      /* ─── FOOTER ─── */
-      footer {
-        border-top: 1px solid var(--border);
-        padding: 28px;
-        text-align: center;
-        font-family: 'DM Mono', monospace;
-        font-size: 11px;
-        color: var(--muted);
-        letter-spacing: 0.06em;
-      }
-
-      /* ─── SKELETON ANIMATION ─── */
-      @keyframes shimmer {
-        0%   { background-position: -600px 0; }
-        100% { background-position: 600px 0; }
-      }
-      .skeleton {
-        background: linear-gradient(90deg, var(--surface2) 25%, #252a38 50%, var(--surface2) 75%);
-        background-size: 600px 100%;
-        animation: shimmer 1.4s infinite linear;
-        border-radius: 4px;
-      }
-
-      .hidden { display: none !important; }
-
-      /* ─── FADE IN ─── */
-      @keyframes fadeUp {
-        from { opacity: 0; transform: translateY(16px); }
-        to   { opacity: 1; transform: translateY(0); }
-      }
-      .fade-up { animation: fadeUp 0.5s ease both; }
-      .delay-1 { animation-delay: 0.1s; }
-      .delay-2 { animation-delay: 0.2s; }
-      .delay-3 { animation-delay: 0.3s; }
-
-      /* ─── RESPONSIVE ─── */
-      @media (max-width: 768px) {
-        .banner-slide { grid-template-columns: 1fr; }
-        .banner-info { border-left: none; border-top: 1px solid var(--border); }
-        .banner-image-area { aspect-ratio: auto; min-height: 240px; }
-        .nav-pills { display: none; }
-        .banner-project-name { font-size: 24px; }
-      }
-    </style>
-  </head>
-  <body>
-    <.navbar search_enabled pills_enabled />
-    
+    /* ─── RESPONSIVE ─── */
+    @media (max-width: 768px) {
+      .banner-slide { grid-template-columns: 1fr; }
+      .banner-info { border-left: none; border-top: 1px solid var(--border); }
+      .banner-image-area { aspect-ratio: auto; min-height: 240px; }
+      .banner-project-name { font-size: 24px; }
+    }
+  </style>
+  <.navbar search_enabled pills_enabled />
+  
 <!-- ═══ MAIN ═══ -->
-    <main>
-      <div class="container">
-        
+  <main>
+    <div class="container">
+      
 <!-- ── FEATURED BANNER CAROUSEL ── -->
-        <section class="banner-section fade-up">
-          <div class="banner-track-wrapper">
-            <div class="banner-track" id="bannerTrack">
-              <!-- API HOOK: generate .banner-slide elements from /api/hot -->
+      <section class="banner-section fade-up">
+        <div class="banner-track-wrapper">
+          <div class="banner-track" id="bannerTrack">
+            <!-- API HOOK: generate .banner-slide elements from /api/hot -->
             <!-- Template slide (repeat for each featured project): -->
 
-              <div class="banner-slide" data-project-id="PROJECT_ID_1">
-                <div class="banner-image-area">
-                  <!-- API HOOK: <img src="/api/projects/PROJECT_ID_1/screenshot" alt="…" /> -->
-                  <div class="banner-image-placeholder skeleton"></div>
-                </div>
-                <div class="banner-info">
-                  <span class="banner-project-id">
-                    <!-- API HOOK: project.id or project.channel_id -->
+            <div class="banner-slide" data-project-id="PROJECT_ID_1">
+              <div class="banner-image-area">
+                <!-- API HOOK: <img src="/api/projects/PROJECT_ID_1/screenshot" alt="…" /> -->
+                <div class="banner-image-placeholder skeleton"></div>
+              </div>
+              <div class="banner-info">
+                <span class="banner-project-id">
+                  <!-- API HOOK: project.id or project.channel_id -->
                   #channel-name
-                  </span>
-                  <h2 class="banner-project-name">
-                    <!-- API HOOK: project.name -->
+                </span>
+                <h2 class="banner-project-name">
+                  <!-- API HOOK: project.name -->
                   Project Name
-                  </h2>
-                  <div class="banner-slack-row">
-                    <div class="banner-slack-icon">
-                      <!-- API HOOK: <img src="/api/slack/icon?channel=CHANNEL_ID" width="24" height="24" alt="" /> -->
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M5.042 15.165…" />
-                      </svg>
-                    </div>
-                    <span class="banner-slack-name">
-                      <!-- API HOOK: project.slack_channel_name -->
+                </h2>
+                <div class="banner-slack-row">
+                  <div class="banner-slack-icon">
+                    <!-- API HOOK: <img src="/api/slack/icon?channel=CHANNEL_ID" width="24" height="24" alt="" /> -->
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M5.042 15.165…" />
+                    </svg>
+                  </div>
+                  <span class="banner-slack-name">
+                    <!-- API HOOK: project.slack_channel_name -->
                     slack-channel
-                    </span>
-                  </div>
-                  <div class="banner-stats">
-                    <div class="banner-stat">
-                      <span class="banner-stat-val" data-bind="project.rating">—</span>
-                      <span class="banner-stat-lbl">Rating</span>
-                    </div>
-                    <div class="banner-stat">
-                      <span class="banner-stat-val" data-bind="project.time_spent">—</span>
-                      <span class="banner-stat-lbl">Hrs Spent</span>
-                    </div>
-                    <div class="banner-stat">
-                      <span class="banner-stat-val" data-bind="project.contributors">—</span>
-                      <span class="banner-stat-lbl">Contributors</span>
-                    </div>
-                  </div>
-                  <button class="banner-btn" onclick="viewProject('PROJECT_ID_1')">
-                    View Project
-                    <svg
-                      width="14"
-                      height="14"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="2.5"
-                    >
-                      <path d="M5 12h14M12 5l7 7-7 7" />
-                    </svg>
-                  </button>
+                  </span>
                 </div>
-              </div>
-              
-<!-- Slide 2 placeholder -->
-              <div class="banner-slide" data-project-id="PROJECT_ID_2">
-                <div class="banner-image-area">
-                  <div class="banner-image-placeholder skeleton"></div>
-                </div>
-                <div class="banner-info">
-                  <span class="banner-project-id">#channel-two</span>
-                  <h2 class="banner-project-name">Another Project</h2>
-                  <div class="banner-slack-row">
-                    <div class="banner-slack-icon">
-                      <svg
-                        width="16"
-                        height="16"
-                        viewBox="0 0 24 24"
-                        fill="currentColor"
-                        opacity="0.4"
-                      >
-                        <rect width="4" height="4" x="3" y="3" rx="1" /><rect
-                          width="4"
-                          height="4"
-                          x="11"
-                          y="3"
-                          rx="1"
-                        /><rect width="4" height="4" x="17" y="3" rx="1" />
-                      </svg>
-                    </div>
-                    <span class="banner-slack-name">slack-channel-two</span>
+                <div class="banner-stats">
+                  <div class="banner-stat">
+                    <span class="banner-stat-val" data-bind="project.rating">—</span>
+                    <span class="banner-stat-lbl">Rating</span>
                   </div>
-                  <div class="banner-stats">
-                    <div class="banner-stat">
-                      <span class="banner-stat-val">—</span><span class="banner-stat-lbl">Rating</span>
-                    </div>
-                    <div class="banner-stat">
-                      <span class="banner-stat-val">—</span><span class="banner-stat-lbl">Hrs Spent</span>
-                    </div>
-                    <div class="banner-stat">
-                      <span class="banner-stat-val">—</span><span class="banner-stat-lbl">Contributors</span>
-                    </div>
+                  <div class="banner-stat">
+                    <span class="banner-stat-val" data-bind="project.time_spent">—</span>
+                    <span class="banner-stat-lbl">Hrs Spent</span>
                   </div>
-                  <button class="banner-btn" onclick="viewProject('PROJECT_ID_2')">
-                    View Project
-                    <svg
-                      width="14"
-                      height="14"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="2.5"
-                    >
-                      <path d="M5 12h14M12 5l7 7-7 7" />
-                    </svg>
-                  </button>
-                </div>
-              </div>
-              
-<!-- Slide 3 placeholder -->
-              <div class="banner-slide" data-project-id="PROJECT_ID_3">
-                <div class="banner-image-area">
-                  <div class="banner-image-placeholder skeleton"></div>
-                </div>
-                <div class="banner-info">
-                  <span class="banner-project-id">#channel-three</span>
-                  <h2 class="banner-project-name">Third Project</h2>
-                  <div class="banner-slack-row">
-                    <div class="banner-slack-icon">
-                      <svg
-                        width="16"
-                        height="16"
-                        viewBox="0 0 24 24"
-                        fill="currentColor"
-                        opacity="0.4"
-                      >
-                        <rect width="4" height="4" x="3" y="3" rx="1" /><rect
-                          width="4"
-                          height="4"
-                          x="11"
-                          y="3"
-                          rx="1"
-                        /><rect width="4" height="4" x="17" y="3" rx="1" />
-                      </svg>
-                    </div>
-                    <span class="banner-slack-name">slack-channel-three</span>
+                  <div class="banner-stat">
+                    <span class="banner-stat-val" data-bind="project.contributors">—</span>
+                    <span class="banner-stat-lbl">Contributors</span>
                   </div>
-                  <div class="banner-stats">
-                    <div class="banner-stat">
-                      <span class="banner-stat-val">—</span><span class="banner-stat-lbl">Rating</span>
-                    </div>
-                    <div class="banner-stat">
-                      <span class="banner-stat-val">—</span><span class="banner-stat-lbl">Hrs Spent</span>
-                    </div>
-                    <div class="banner-stat">
-                      <span class="banner-stat-val">—</span><span class="banner-stat-lbl">Contributors</span>
-                    </div>
-                  </div>
-                  <button class="banner-btn" onclick="viewProject('PROJECT_ID_3')">
-                    View Project
-                    <svg
-                      width="14"
-                      height="14"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="2.5"
-                    >
-                      <path d="M5 12h14M12 5l7 7-7 7" />
-                    </svg>
-                  </button>
                 </div>
-              </div>
-              
-<!-- Slide 4 placeholder -->
-              <div class="banner-slide" data-project-id="PROJECT_ID_4">
-                <div class="banner-image-area">
-                  <div class="banner-image-placeholder skeleton"></div>
-                </div>
-                <div class="banner-info">
-                  <span class="banner-project-id">#channel-four</span>
-                  <h2 class="banner-project-name">Fourth Project</h2>
-                  <div class="banner-slack-row">
-                    <div class="banner-slack-icon">
-                      <svg
-                        width="16"
-                        height="16"
-                        viewBox="0 0 24 24"
-                        fill="currentColor"
-                        opacity="0.4"
-                      >
-                        <rect width="4" height="4" x="3" y="3" rx="1" /><rect
-                          width="4"
-                          height="4"
-                          x="11"
-                          y="3"
-                          rx="1"
-                        /><rect width="4" height="4" x="17" y="3" rx="1" />
-                      </svg>
-                    </div>
-                    <span class="banner-slack-name">slack-channel-four</span>
-                  </div>
-                  <div class="banner-stats">
-                    <div class="banner-stat">
-                      <span class="banner-stat-val">—</span><span class="banner-stat-lbl">Rating</span>
-                    </div>
-                    <div class="banner-stat">
-                      <span class="banner-stat-val">—</span><span class="banner-stat-lbl">Hrs Spent</span>
-                    </div>
-                    <div class="banner-stat">
-                      <span class="banner-stat-val">—</span><span class="banner-stat-lbl">Contributors</span>
-                    </div>
-                  </div>
-                  <button class="banner-btn" onclick="viewProject('PROJECT_ID_4')">
-                    View Project
-                    <svg
-                      width="14"
-                      height="14"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="2.5"
-                    >
-                      <path d="M5 12h14M12 5l7 7-7 7" />
-                    </svg>
-                  </button>
-                </div>
-              </div>
-              
-<!-- Slide 5 placeholder -->
-              <div class="banner-slide" data-project-id="PROJECT_ID_5">
-                <div class="banner-image-area">
-                  <div class="banner-image-placeholder skeleton"></div>
-                </div>
-                <div class="banner-info">
-                  <span class="banner-project-id">#channel-five</span>
-                  <h2 class="banner-project-name">Fifth Project</h2>
-                  <div class="banner-slack-row">
-                    <div class="banner-slack-icon">
-                      <svg
-                        width="16"
-                        height="16"
-                        viewBox="0 0 24 24"
-                        fill="currentColor"
-                        opacity="0.4"
-                      >
-                        <rect width="4" height="4" x="3" y="3" rx="1" /><rect
-                          width="4"
-                          height="4"
-                          x="11"
-                          y="3"
-                          rx="1"
-                        /><rect width="4" height="4" x="17" y="3" rx="1" />
-                      </svg>
-                    </div>
-                    <span class="banner-slack-name">slack-channel-five</span>
-                  </div>
-                  <div class="banner-stats">
-                    <div class="banner-stat">
-                      <span class="banner-stat-val">—</span><span class="banner-stat-lbl">Rating</span>
-                    </div>
-                    <div class="banner-stat">
-                      <span class="banner-stat-val">—</span><span class="banner-stat-lbl">Hrs Spent</span>
-                    </div>
-                    <div class="banner-stat">
-                      <span class="banner-stat-val">—</span><span class="banner-stat-lbl">Contributors</span>
-                    </div>
-                  </div>
-                  <button class="banner-btn" onclick="viewProject('PROJECT_ID_5')">
-                    View Project
-                    <svg
-                      width="14"
-                      height="14"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="2.5"
-                    >
-                      <path d="M5 12h14M12 5l7 7-7 7" />
-                    </svg>
-                  </button>
-                </div>
-              </div>
-              
-<!-- Slide 6 placeholder -->
-              <div class="banner-slide" data-project-id="PROJECT_ID_6">
-                <div class="banner-image-area">
-                  <div class="banner-image-placeholder skeleton"></div>
-                </div>
-                <div class="banner-info">
-                  <span class="banner-project-id">#channel-six</span>
-                  <h2 class="banner-project-name">Sixth Project</h2>
-                  <div class="banner-slack-row">
-                    <div class="banner-slack-icon">
-                      <svg
-                        width="16"
-                        height="16"
-                        viewBox="0 0 24 24"
-                        fill="currentColor"
-                        opacity="0.4"
-                      >
-                        <rect width="4" height="4" x="3" y="3" rx="1" /><rect
-                          width="4"
-                          height="4"
-                          x="11"
-                          y="3"
-                          rx="1"
-                        /><rect width="4" height="4" x="17" y="3" rx="1" />
-                      </svg>
-                    </div>
-                    <span class="banner-slack-name">slack-channel-six</span>
-                  </div>
-                  <div class="banner-stats">
-                    <div class="banner-stat">
-                      <span class="banner-stat-val">—</span><span class="banner-stat-lbl">Rating</span>
-                    </div>
-                    <div class="banner-stat">
-                      <span class="banner-stat-val">—</span><span class="banner-stat-lbl">Hrs Spent</span>
-                    </div>
-                    <div class="banner-stat">
-                      <span class="banner-stat-val">—</span><span class="banner-stat-lbl">Contributors</span>
-                    </div>
-                  </div>
-                  <button class="banner-btn" onclick="viewProject('PROJECT_ID_6')">
-                    View Project
-                    <svg
-                      width="14"
-                      height="14"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="2.5"
-                    >
-                      <path d="M5 12h14M12 5l7 7-7 7" />
-                    </svg>
-                  </button>
-                </div>
-              </div>
-              
-<!-- Slide 7 placeholder -->
-              <div class="banner-slide" data-project-id="PROJECT_ID_7">
-                <div class="banner-image-area">
-                  <div class="banner-image-placeholder skeleton"></div>
-                </div>
-                <div class="banner-info">
-                  <span class="banner-project-id">#channel-seven</span>
-                  <h2 class="banner-project-name">Seventh Project</h2>
-                  <div class="banner-slack-row">
-                    <div class="banner-slack-icon">
-                      <svg
-                        width="16"
-                        height="16"
-                        viewBox="0 0 24 24"
-                        fill="currentColor"
-                        opacity="0.4"
-                      >
-                        <rect width="4" height="4" x="3" y="3" rx="1" /><rect
-                          width="4"
-                          height="4"
-                          x="11"
-                          y="3"
-                          rx="1"
-                        /><rect width="4" height="4" x="17" y="3" rx="1" />
-                      </svg>
-                    </div>
-                    <span class="banner-slack-name">slack-channel-seven</span>
-                  </div>
-                  <div class="banner-stats">
-                    <div class="banner-stat">
-                      <span class="banner-stat-val">—</span><span class="banner-stat-lbl">Rating</span>
-                    </div>
-                    <div class="banner-stat">
-                      <span class="banner-stat-val">—</span><span class="banner-stat-lbl">Hrs Spent</span>
-                    </div>
-                    <div class="banner-stat">
-                      <span class="banner-stat-val">—</span><span class="banner-stat-lbl">Contributors</span>
-                    </div>
-                  </div>
-                  <button class="banner-btn" onclick="viewProject('PROJECT_ID_7')">
-                    View Project
-                    <svg
-                      width="14"
-                      height="14"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="2.5"
-                    >
-                      <path d="M5 12h14M12 5l7 7-7 7" />
-                    </svg>
-                  </button>
-                </div>
-              </div>
-              
-<!-- Slide 8 placeholder -->
-              <div class="banner-slide" data-project-id="PROJECT_ID_8">
-                <div class="banner-image-area">
-                  <div class="banner-image-placeholder skeleton"></div>
-                </div>
-                <div class="banner-info">
-                  <span class="banner-project-id">#channel-eight</span>
-                  <h2 class="banner-project-name">Eighth Project</h2>
-                  <div class="banner-slack-row">
-                    <div class="banner-slack-icon">
-                      <svg
-                        width="16"
-                        height="16"
-                        viewBox="0 0 24 24"
-                        fill="currentColor"
-                        opacity="0.4"
-                      >
-                        <rect width="4" height="4" x="3" y="3" rx="1" /><rect
-                          width="4"
-                          height="4"
-                          x="11"
-                          y="3"
-                          rx="1"
-                        /><rect width="4" height="4" x="17" y="3" rx="1" />
-                      </svg>
-                    </div>
-                    <span class="banner-slack-name">slack-channel-eight</span>
-                  </div>
-                  <div class="banner-stats">
-                    <div class="banner-stat">
-                      <span class="banner-stat-val">—</span><span class="banner-stat-lbl">Rating</span>
-                    </div>
-                    <div class="banner-stat">
-                      <span class="banner-stat-val">—</span><span class="banner-stat-lbl">Hrs Spent</span>
-                    </div>
-                    <div class="banner-stat">
-                      <span class="banner-stat-val">—</span><span class="banner-stat-lbl">Contributors</span>
-                    </div>
-                  </div>
-                  <button class="banner-btn" onclick="viewProject('PROJECT_ID_8')">
-                    View Project
-                    <svg
-                      width="14"
-                      height="14"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="2.5"
-                    >
-                      <path d="M5 12h14M12 5l7 7-7 7" />
-                    </svg>
-                  </button>
-                </div>
-              </div>
-              
-<!-- Slide 9 placeholder -->
-              <div class="banner-slide" data-project-id="PROJECT_ID_9">
-                <div class="banner-image-area">
-                  <div class="banner-image-placeholder skeleton"></div>
-                </div>
-                <div class="banner-info">
-                  <span class="banner-project-id">#channel-nine</span>
-                  <h2 class="banner-project-name">Ninth Project</h2>
-                  <div class="banner-slack-row">
-                    <div class="banner-slack-icon">
-                      <svg
-                        width="16"
-                        height="16"
-                        viewBox="0 0 24 24"
-                        fill="currentColor"
-                        opacity="0.4"
-                      >
-                        <rect width="4" height="4" x="3" y="3" rx="1" /><rect
-                          width="4"
-                          height="4"
-                          x="11"
-                          y="3"
-                          rx="1"
-                        /><rect width="4" height="4" x="17" y="3" rx="1" />
-                      </svg>
-                    </div>
-                    <span class="banner-slack-name">slack-channel-nine</span>
-                  </div>
-                  <div class="banner-stats">
-                    <div class="banner-stat">
-                      <span class="banner-stat-val">—</span><span class="banner-stat-lbl">Rating</span>
-                    </div>
-                    <div class="banner-stat">
-                      <span class="banner-stat-val">—</span><span class="banner-stat-lbl">Hrs Spent</span>
-                    </div>
-                    <div class="banner-stat">
-                      <span class="banner-stat-val">—</span><span class="banner-stat-lbl">Contributors</span>
-                    </div>
-                  </div>
-                  <button class="banner-btn" onclick="viewProject('PROJECT_ID_9')">
-                    View Project
-                    <svg
-                      width="14"
-                      height="14"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="2.5"
-                    >
-                      <path d="M5 12h14M12 5l7 7-7 7" />
-                    </svg>
-                  </button>
-                </div>
-              </div>
-              
-<!-- Slide 10 placeholder -->
-              <div class="banner-slide" data-project-id="PROJECT_ID_10">
-                <div class="banner-image-area">
-                  <div class="banner-image-placeholder skeleton"></div>
-                </div>
-                <div class="banner-info">
-                  <span class="banner-project-id">#channel-ten</span>
-                  <h2 class="banner-project-name">Tenth Project</h2>
-                  <div class="banner-slack-row">
-                    <div class="banner-slack-icon">
-                      <svg
-                        width="16"
-                        height="16"
-                        viewBox="0 0 24 24"
-                        fill="currentColor"
-                        opacity="0.4"
-                      >
-                        <rect width="4" height="4" x="3" y="3" rx="1" /><rect
-                          width="4"
-                          height="4"
-                          x="11"
-                          y="3"
-                          rx="1"
-                        /><rect width="4" height="4" x="17" y="3" rx="1" />
-                      </svg>
-                    </div>
-                    <span class="banner-slack-name">slack-channel-ten</span>
-                  </div>
-                  <div class="banner-stats">
-                    <div class="banner-stat">
-                      <span class="banner-stat-val">—</span><span class="banner-stat-lbl">Rating</span>
-                    </div>
-                    <div class="banner-stat">
-                      <span class="banner-stat-val">—</span><span class="banner-stat-lbl">Hrs Spent</span>
-                    </div>
-                    <div class="banner-stat">
-                      <span class="banner-stat-val">—</span><span class="banner-stat-lbl">Contributors</span>
-                    </div>
-                  </div>
-                  <button class="banner-btn" onclick="viewProject('PROJECT_ID_10')">
-                    View Project
-                    <svg
-                      width="14"
-                      height="14"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="2.5"
-                    >
-                      <path d="M5 12h14M12 5l7 7-7 7" />
-                    </svg>
-                  </button>
-                </div>
+                <button class="banner-btn" onclick="viewProject('PROJECT_ID_1')">
+                  View Project
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                  >
+                    <path d="M5 12h14M12 5l7 7-7 7" />
+                  </svg>
+                </button>
               </div>
             </div>
-            <!-- /banner-track -->
-
-          <!-- Arrows -->
-            <button class="banner-arrow prev" onclick="slideCarousel(-1)" aria-label="Previous">
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2.5"
-              >
-                <path d="M15 18l-6-6 6-6" />
-              </svg>
-            </button>
-            <button class="banner-arrow next" onclick="slideCarousel(1)" aria-label="Next">
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2.5"
-              >
-                <path d="M9 18l6-6-6-6" />
-              </svg>
-            </button>
             
-<!-- Dots -->
-            <div class="banner-dots" id="bannerDots"></div>
-          </div>
-        </section>
-        
-<!-- ── TOP 10 THIS WEEK ── -->
-        <section class="section fade-up delay-1" id="top-week">
-          <div class="section-header">
-            <h2 class="section-title">Top 10 This Week</h2>
-            <span class="section-meta" id="weekLabel">— Loading…</span>
-          </div>
-          <!-- API HOOK: fetch /api/top_this_week, render .project-card for each result -->
-          <div class="card-grid" id="topWeekGrid">
-            
-<!-- Template card — repeat for each project -->
-            <div class="project-card" onclick="viewProject('ID')" data-project-id="ID">
-              <div class="project-card-thumb skeleton">
-                <!-- API HOOK: <img src="/api/projects/ID/thumbnail" alt="…" loading="lazy" /> -->
-                <div class="project-card-thumb-placeholder">THUMBNAIL</div>
+<!-- Slide 2 placeholder -->
+            <div class="banner-slide" data-project-id="PROJECT_ID_2">
+              <div class="banner-image-area">
+                <div class="banner-image-placeholder skeleton"></div>
               </div>
-              <span class="project-card-rank">1</span>
-              <div class="project-card-body">
-                <div class="project-card-slack">
-                  <div class="project-card-icon">
-                    <!-- API HOOK: <img src="/api/slack/icon?channel=CHANNEL_ID" width="16" height="16" /> -->
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
+              <div class="banner-info">
+                <span class="banner-project-id">#channel-two</span>
+                <h2 class="banner-project-name">Another Project</h2>
+                <div class="banner-slack-row">
+                  <div class="banner-slack-icon">
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                      opacity="0.4"
+                    >
                       <rect width="4" height="4" x="3" y="3" rx="1" /><rect
                         width="4"
                         height="4"
-                        x="17"
+                        x="11"
                         y="3"
                         rx="1"
-                      /><rect width="4" height="4" x="3" y="17" rx="1" /><rect
-                        width="4"
-                        height="4"
-                        x="17"
-                        y="17"
-                        rx="1"
-                      />
+                      /><rect width="4" height="4" x="17" y="3" rx="1" />
                     </svg>
                   </div>
-                  <span class="project-card-name">Project Name</span>
+                  <span class="banner-slack-name">slack-channel-two</span>
                 </div>
-                <span class="project-card-meta">
-                  <!-- API HOOK: project.slack_channel + project.score -->
-                #channel · ★ —
-                </span>
+                <div class="banner-stats">
+                  <div class="banner-stat">
+                    <span class="banner-stat-val">—</span><span class="banner-stat-lbl">Rating</span>
+                  </div>
+                  <div class="banner-stat">
+                    <span class="banner-stat-val">—</span><span class="banner-stat-lbl">Hrs Spent</span>
+                  </div>
+                  <div class="banner-stat">
+                    <span class="banner-stat-val">—</span><span class="banner-stat-lbl">Contributors</span>
+                  </div>
+                </div>
+                <button class="banner-btn" onclick="viewProject('PROJECT_ID_2')">
+                  View Project
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                  >
+                    <path d="M5 12h14M12 5l7 7-7 7" />
+                  </svg>
+                </button>
               </div>
             </div>
             
-<!-- Skeleton placeholder cards while loading -->
-            <div class="project-card">
-              <div class="project-card-thumb skeleton"></div>
-              <div class="project-card-body">
-                <span class="project-card-rank">2</span>
-                <div class="project-card-slack">
-                  <div class="project-card-icon"></div>
-                  <span
-                    class="project-card-name skeleton"
-                    style="width:80%;height:14px;display:block"
-                  >
-                  </span>
-                </div>
+<!-- Slide 3 placeholder -->
+            <div class="banner-slide" data-project-id="PROJECT_ID_3">
+              <div class="banner-image-area">
+                <div class="banner-image-placeholder skeleton"></div>
               </div>
-            </div>
-            <div class="project-card">
-              <div class="project-card-thumb skeleton"></div>
-              <div class="project-card-body"><span class="project-card-rank">3</span></div>
-            </div>
-            <div class="project-card">
-              <div class="project-card-thumb skeleton"></div>
-              <div class="project-card-body"><span class="project-card-rank">4</span></div>
-            </div>
-            <div class="project-card">
-              <div class="project-card-thumb skeleton"></div>
-              <div class="project-card-body"><span class="project-card-rank">5</span></div>
-            </div>
-          </div>
-        </section>
-
-        <div class="divider"></div>
-        
-<!-- ── FAN FAVOURITES ── -->
-        <section class="section fade-up delay-2" id="fan-favourites">
-          <div class="section-header">
-            <h2 class="section-title">Fan Favourites</h2>
-            <span class="section-meta">Community voted</span>
-          </div>
-          <!-- API HOOK: fetch /api/fan_favourites, render .hcard for each -->
-          <div class="hscroll-wrapper">
-            <div class="hscroll" id="fanFavGrid">
-              
-<!-- Template hcard -->
-              <div class="hcard" onclick="viewProject('ID')" data-project-id="ID">
-                <div class="hcard-thumb skeleton">
-                  <!-- API HOOK: <img src="/api/projects/ID/thumbnail" loading="lazy" /> -->
-                  <div class="hcard-thumb-placeholder">THUMBNAIL</div>
-                </div>
-                <div class="hcard-body">
-                  <div class="hcard-icon">
-                    <!-- API HOOK: slack icon -->
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+              <div class="banner-info">
+                <span class="banner-project-id">#channel-three</span>
+                <h2 class="banner-project-name">Third Project</h2>
+                <div class="banner-slack-row">
+                  <div class="banner-slack-icon">
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                      opacity="0.4"
+                    >
                       <rect width="4" height="4" x="3" y="3" rx="1" /><rect
                         width="4"
                         height="4"
-                        x="17"
-                        y="17"
+                        x="11"
+                        y="3"
                         rx="1"
-                      />
+                      /><rect width="4" height="4" x="17" y="3" rx="1" />
                     </svg>
                   </div>
-                  <div>
-                    <div class="hcard-name">Project Name</div>
-                    <div class="hcard-sub">#channel</div>
+                  <span class="banner-slack-name">slack-channel-three</span>
+                </div>
+                <div class="banner-stats">
+                  <div class="banner-stat">
+                    <span class="banner-stat-val">—</span><span class="banner-stat-lbl">Rating</span>
+                  </div>
+                  <div class="banner-stat">
+                    <span class="banner-stat-val">—</span><span class="banner-stat-lbl">Hrs Spent</span>
+                  </div>
+                  <div class="banner-stat">
+                    <span class="banner-stat-val">—</span><span class="banner-stat-lbl">Contributors</span>
                   </div>
                 </div>
+                <button class="banner-btn" onclick="viewProject('PROJECT_ID_3')">
+                  View Project
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                  >
+                    <path d="M5 12h14M12 5l7 7-7 7" />
+                  </svg>
+                </button>
               </div>
-
-              <div class="hcard">
-                <div class="hcard-thumb skeleton"></div>
-                <div class="hcard-body">
-                  <div class="hcard-icon"></div>
-                  <div>
-                    <div class="hcard-name">Project Name</div>
-                    <div class="hcard-sub">#channel</div>
-                  </div>
-                </div>
+            </div>
+            
+<!-- Slide 4 placeholder -->
+            <div class="banner-slide" data-project-id="PROJECT_ID_4">
+              <div class="banner-image-area">
+                <div class="banner-image-placeholder skeleton"></div>
               </div>
-              <div class="hcard">
-                <div class="hcard-thumb skeleton"></div>
-                <div class="hcard-body">
-                  <div class="hcard-icon"></div>
-                  <div>
-                    <div class="hcard-name">Project Name</div>
-                    <div class="hcard-sub">#channel</div>
+              <div class="banner-info">
+                <span class="banner-project-id">#channel-four</span>
+                <h2 class="banner-project-name">Fourth Project</h2>
+                <div class="banner-slack-row">
+                  <div class="banner-slack-icon">
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                      opacity="0.4"
+                    >
+                      <rect width="4" height="4" x="3" y="3" rx="1" /><rect
+                        width="4"
+                        height="4"
+                        x="11"
+                        y="3"
+                        rx="1"
+                      /><rect width="4" height="4" x="17" y="3" rx="1" />
+                    </svg>
+                  </div>
+                  <span class="banner-slack-name">slack-channel-four</span>
+                </div>
+                <div class="banner-stats">
+                  <div class="banner-stat">
+                    <span class="banner-stat-val">—</span><span class="banner-stat-lbl">Rating</span>
+                  </div>
+                  <div class="banner-stat">
+                    <span class="banner-stat-val">—</span><span class="banner-stat-lbl">Hrs Spent</span>
+                  </div>
+                  <div class="banner-stat">
+                    <span class="banner-stat-val">—</span><span class="banner-stat-lbl">Contributors</span>
                   </div>
                 </div>
+                <button class="banner-btn" onclick="viewProject('PROJECT_ID_4')">
+                  View Project
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                  >
+                    <path d="M5 12h14M12 5l7 7-7 7" />
+                  </svg>
+                </button>
               </div>
-              <div class="hcard">
-                <div class="hcard-thumb skeleton"></div>
-                <div class="hcard-body">
-                  <div class="hcard-icon"></div>
-                  <div>
-                    <div class="hcard-name">Project Name</div>
-                    <div class="hcard-sub">#channel</div>
-                  </div>
-                </div>
+            </div>
+            
+<!-- Slide 5 placeholder -->
+            <div class="banner-slide" data-project-id="PROJECT_ID_5">
+              <div class="banner-image-area">
+                <div class="banner-image-placeholder skeleton"></div>
               </div>
-              <div class="hcard">
-                <div class="hcard-thumb skeleton"></div>
-                <div class="hcard-body">
-                  <div class="hcard-icon"></div>
-                  <div>
-                    <div class="hcard-name">Project Name</div>
-                    <div class="hcard-sub">#channel</div>
+              <div class="banner-info">
+                <span class="banner-project-id">#channel-five</span>
+                <h2 class="banner-project-name">Fifth Project</h2>
+                <div class="banner-slack-row">
+                  <div class="banner-slack-icon">
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                      opacity="0.4"
+                    >
+                      <rect width="4" height="4" x="3" y="3" rx="1" /><rect
+                        width="4"
+                        height="4"
+                        x="11"
+                        y="3"
+                        rx="1"
+                      /><rect width="4" height="4" x="17" y="3" rx="1" />
+                    </svg>
+                  </div>
+                  <span class="banner-slack-name">slack-channel-five</span>
+                </div>
+                <div class="banner-stats">
+                  <div class="banner-stat">
+                    <span class="banner-stat-val">—</span><span class="banner-stat-lbl">Rating</span>
+                  </div>
+                  <div class="banner-stat">
+                    <span class="banner-stat-val">—</span><span class="banner-stat-lbl">Hrs Spent</span>
+                  </div>
+                  <div class="banner-stat">
+                    <span class="banner-stat-val">—</span><span class="banner-stat-lbl">Contributors</span>
                   </div>
                 </div>
+                <button class="banner-btn" onclick="viewProject('PROJECT_ID_5')">
+                  View Project
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                  >
+                    <path d="M5 12h14M12 5l7 7-7 7" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+            
+<!-- Slide 6 placeholder -->
+            <div class="banner-slide" data-project-id="PROJECT_ID_6">
+              <div class="banner-image-area">
+                <div class="banner-image-placeholder skeleton"></div>
+              </div>
+              <div class="banner-info">
+                <span class="banner-project-id">#channel-six</span>
+                <h2 class="banner-project-name">Sixth Project</h2>
+                <div class="banner-slack-row">
+                  <div class="banner-slack-icon">
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                      opacity="0.4"
+                    >
+                      <rect width="4" height="4" x="3" y="3" rx="1" /><rect
+                        width="4"
+                        height="4"
+                        x="11"
+                        y="3"
+                        rx="1"
+                      /><rect width="4" height="4" x="17" y="3" rx="1" />
+                    </svg>
+                  </div>
+                  <span class="banner-slack-name">slack-channel-six</span>
+                </div>
+                <div class="banner-stats">
+                  <div class="banner-stat">
+                    <span class="banner-stat-val">—</span><span class="banner-stat-lbl">Rating</span>
+                  </div>
+                  <div class="banner-stat">
+                    <span class="banner-stat-val">—</span><span class="banner-stat-lbl">Hrs Spent</span>
+                  </div>
+                  <div class="banner-stat">
+                    <span class="banner-stat-val">—</span><span class="banner-stat-lbl">Contributors</span>
+                  </div>
+                </div>
+                <button class="banner-btn" onclick="viewProject('PROJECT_ID_6')">
+                  View Project
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                  >
+                    <path d="M5 12h14M12 5l7 7-7 7" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+            
+<!-- Slide 7 placeholder -->
+            <div class="banner-slide" data-project-id="PROJECT_ID_7">
+              <div class="banner-image-area">
+                <div class="banner-image-placeholder skeleton"></div>
+              </div>
+              <div class="banner-info">
+                <span class="banner-project-id">#channel-seven</span>
+                <h2 class="banner-project-name">Seventh Project</h2>
+                <div class="banner-slack-row">
+                  <div class="banner-slack-icon">
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                      opacity="0.4"
+                    >
+                      <rect width="4" height="4" x="3" y="3" rx="1" /><rect
+                        width="4"
+                        height="4"
+                        x="11"
+                        y="3"
+                        rx="1"
+                      /><rect width="4" height="4" x="17" y="3" rx="1" />
+                    </svg>
+                  </div>
+                  <span class="banner-slack-name">slack-channel-seven</span>
+                </div>
+                <div class="banner-stats">
+                  <div class="banner-stat">
+                    <span class="banner-stat-val">—</span><span class="banner-stat-lbl">Rating</span>
+                  </div>
+                  <div class="banner-stat">
+                    <span class="banner-stat-val">—</span><span class="banner-stat-lbl">Hrs Spent</span>
+                  </div>
+                  <div class="banner-stat">
+                    <span class="banner-stat-val">—</span><span class="banner-stat-lbl">Contributors</span>
+                  </div>
+                </div>
+                <button class="banner-btn" onclick="viewProject('PROJECT_ID_7')">
+                  View Project
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                  >
+                    <path d="M5 12h14M12 5l7 7-7 7" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+            
+<!-- Slide 8 placeholder -->
+            <div class="banner-slide" data-project-id="PROJECT_ID_8">
+              <div class="banner-image-area">
+                <div class="banner-image-placeholder skeleton"></div>
+              </div>
+              <div class="banner-info">
+                <span class="banner-project-id">#channel-eight</span>
+                <h2 class="banner-project-name">Eighth Project</h2>
+                <div class="banner-slack-row">
+                  <div class="banner-slack-icon">
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                      opacity="0.4"
+                    >
+                      <rect width="4" height="4" x="3" y="3" rx="1" /><rect
+                        width="4"
+                        height="4"
+                        x="11"
+                        y="3"
+                        rx="1"
+                      /><rect width="4" height="4" x="17" y="3" rx="1" />
+                    </svg>
+                  </div>
+                  <span class="banner-slack-name">slack-channel-eight</span>
+                </div>
+                <div class="banner-stats">
+                  <div class="banner-stat">
+                    <span class="banner-stat-val">—</span><span class="banner-stat-lbl">Rating</span>
+                  </div>
+                  <div class="banner-stat">
+                    <span class="banner-stat-val">—</span><span class="banner-stat-lbl">Hrs Spent</span>
+                  </div>
+                  <div class="banner-stat">
+                    <span class="banner-stat-val">—</span><span class="banner-stat-lbl">Contributors</span>
+                  </div>
+                </div>
+                <button class="banner-btn" onclick="viewProject('PROJECT_ID_8')">
+                  View Project
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                  >
+                    <path d="M5 12h14M12 5l7 7-7 7" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+            
+<!-- Slide 9 placeholder -->
+            <div class="banner-slide" data-project-id="PROJECT_ID_9">
+              <div class="banner-image-area">
+                <div class="banner-image-placeholder skeleton"></div>
+              </div>
+              <div class="banner-info">
+                <span class="banner-project-id">#channel-nine</span>
+                <h2 class="banner-project-name">Ninth Project</h2>
+                <div class="banner-slack-row">
+                  <div class="banner-slack-icon">
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                      opacity="0.4"
+                    >
+                      <rect width="4" height="4" x="3" y="3" rx="1" /><rect
+                        width="4"
+                        height="4"
+                        x="11"
+                        y="3"
+                        rx="1"
+                      /><rect width="4" height="4" x="17" y="3" rx="1" />
+                    </svg>
+                  </div>
+                  <span class="banner-slack-name">slack-channel-nine</span>
+                </div>
+                <div class="banner-stats">
+                  <div class="banner-stat">
+                    <span class="banner-stat-val">—</span><span class="banner-stat-lbl">Rating</span>
+                  </div>
+                  <div class="banner-stat">
+                    <span class="banner-stat-val">—</span><span class="banner-stat-lbl">Hrs Spent</span>
+                  </div>
+                  <div class="banner-stat">
+                    <span class="banner-stat-val">—</span><span class="banner-stat-lbl">Contributors</span>
+                  </div>
+                </div>
+                <button class="banner-btn" onclick="viewProject('PROJECT_ID_9')">
+                  View Project
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                  >
+                    <path d="M5 12h14M12 5l7 7-7 7" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+            
+<!-- Slide 10 placeholder -->
+            <div class="banner-slide" data-project-id="PROJECT_ID_10">
+              <div class="banner-image-area">
+                <div class="banner-image-placeholder skeleton"></div>
+              </div>
+              <div class="banner-info">
+                <span class="banner-project-id">#channel-ten</span>
+                <h2 class="banner-project-name">Tenth Project</h2>
+                <div class="banner-slack-row">
+                  <div class="banner-slack-icon">
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                      opacity="0.4"
+                    >
+                      <rect width="4" height="4" x="3" y="3" rx="1" /><rect
+                        width="4"
+                        height="4"
+                        x="11"
+                        y="3"
+                        rx="1"
+                      /><rect width="4" height="4" x="17" y="3" rx="1" />
+                    </svg>
+                  </div>
+                  <span class="banner-slack-name">slack-channel-ten</span>
+                </div>
+                <div class="banner-stats">
+                  <div class="banner-stat">
+                    <span class="banner-stat-val">—</span><span class="banner-stat-lbl">Rating</span>
+                  </div>
+                  <div class="banner-stat">
+                    <span class="banner-stat-val">—</span><span class="banner-stat-lbl">Hrs Spent</span>
+                  </div>
+                  <div class="banner-stat">
+                    <span class="banner-stat-val">—</span><span class="banner-stat-lbl">Contributors</span>
+                  </div>
+                </div>
+                <button class="banner-btn" onclick="viewProject('PROJECT_ID_10')">
+                  View Project
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                  >
+                    <path d="M5 12h14M12 5l7 7-7 7" />
+                  </svg>
+                </button>
               </div>
             </div>
           </div>
-        </section>
+          <!-- /banner-track -->
 
-        <div class="divider"></div>
-        
-<!-- ── TOP ALL TIME ── -->
-        <section class="section fade-up delay-2" id="top-all-time">
-          <div class="section-header">
-            <h2 class="section-title">Top All Time</h2>
-            <span class="section-meta">All time greats</span>
-          </div>
-          <!-- API HOOK: TODO - add /api/top_all_time endpoint -->
-          <div class="hscroll-wrapper">
-            <div class="hscroll" id="topAllTimeGrid">
-              <div class="hcard" onclick="viewProject('ID')">
-                <div class="hcard-thumb skeleton">
-                  <div class="hcard-thumb-placeholder">THUMBNAIL</div>
-                </div>
-                <div class="hcard-body">
-                  <div class="hcard-icon"></div>
-                  <div>
-                    <div class="hcard-name">Project Name</div>
-                    <div class="hcard-sub">#channel</div>
-                  </div>
-                </div>
-              </div>
-              <div class="hcard">
-                <div class="hcard-thumb skeleton"></div>
-                <div class="hcard-body">
-                  <div class="hcard-icon"></div>
-                  <div>
-                    <div class="hcard-name">Project Name</div>
-                    <div class="hcard-sub">#channel</div>
-                  </div>
-                </div>
-              </div>
-              <div class="hcard">
-                <div class="hcard-thumb skeleton"></div>
-                <div class="hcard-body">
-                  <div class="hcard-icon"></div>
-                  <div>
-                    <div class="hcard-name">Project Name</div>
-                    <div class="hcard-sub">#channel</div>
-                  </div>
-                </div>
-              </div>
-              <div class="hcard">
-                <div class="hcard-thumb skeleton"></div>
-                <div class="hcard-body">
-                  <div class="hcard-icon"></div>
-                  <div>
-                    <div class="hcard-name">Project Name</div>
-                    <div class="hcard-sub">#channel</div>
-                  </div>
-                </div>
-              </div>
-              <div class="hcard">
-                <div class="hcard-thumb skeleton"></div>
-                <div class="hcard-body">
-                  <div class="hcard-icon"></div>
-                  <div>
-                    <div class="hcard-name">Project Name</div>
-                    <div class="hcard-sub">#channel</div>
-                  </div>
-                </div>
-              </div>
+          <!-- Arrows -->
+          <button class="banner-arrow prev" onclick="slideCarousel(-1)" aria-label="Previous">
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+            >
+              <path d="M15 18l-6-6 6-6" />
+            </svg>
+          </button>
+          <button class="banner-arrow next" onclick="slideCarousel(1)" aria-label="Next">
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+            >
+              <path d="M9 18l6-6-6-6" />
+            </svg>
+          </button>
+          
+<!-- Dots -->
+          <div class="banner-dots" id="bannerDots"></div>
+        </div>
+      </section>
+      
+<!-- ── TOP 10 THIS WEEK ── -->
+      <section class="section fade-up delay-1" id="top-week">
+        <div class="section-header">
+          <h2 class="section-title">Top 10 This Week</h2>
+          <span class="section-meta" id="weekLabel">— Loading…</span>
+        </div>
+        <!-- API HOOK: fetch /api/top_this_week, render .project-card for each result -->
+        <div class="card-grid" id="topWeekGrid">
+          
+<!-- Template card — repeat for each project -->
+          <div class="project-card" onclick="viewProject('ID')" data-project-id="ID">
+            <div class="project-card-thumb skeleton">
+              <!-- API HOOK: <img src="/api/projects/ID/thumbnail" alt="…" loading="lazy" /> -->
+              <div class="project-card-thumb-placeholder">THUMBNAIL</div>
             </div>
-          </div>
-        </section>
-
-        <div class="divider"></div>
-        
-<!-- ── MOST TIME SPENT ── -->
-        <section class="section fade-up delay-3" id="most-time-spent">
-          <div class="section-header">
-            <h2 class="section-title">Most Time Spent</h2>
-            <span class="section-meta">By contributors</span>
-          </div>
-          <!-- API HOOK: TODO - add /api/top_contributors?limit=10 endpoint -->
-          <div class="bubble-row" id="bubbleRow">
-            <div class="bubble-item" data-user-id="USER_ID_1" onclick="viewUser('USER_ID_1')">
-              <div class="bubble-avatar">
-                <!-- API HOOK: <img src="/api/users/USER_ID_1/avatar" alt="…" /> -->
-                <div class="bubble-avatar-placeholder">AVT</div>
-              </div>
-              <div class="bubble-label">
-                <div class="bubble-name">
-                  <!-- API HOOK: user.display_name -->Username
-                </div>
-                <div class="bubble-hours">
-                  <!-- API HOOK: user.total_hours -->—h
-                </div>
-              </div>
-            </div>
-
-            <div class="bubble-item" data-user-id="USER_ID_2" onclick="viewUser('USER_ID_2')">
-              <div class="bubble-avatar">
-                <div class="bubble-avatar-placeholder">AVT</div>
-              </div>
-              <div class="bubble-label">
-                <div class="bubble-name">Username</div>
-                <div class="bubble-hours">—h</div>
-              </div>
-            </div>
-
-            <div class="bubble-item" data-user-id="USER_ID_3" onclick="viewUser('USER_ID_3')">
-              <div class="bubble-avatar">
-                <div class="bubble-avatar-placeholder">AVT</div>
-              </div>
-              <div class="bubble-label">
-                <div class="bubble-name">Username</div>
-                <div class="bubble-hours">—h</div>
-              </div>
-            </div>
-
-            <div class="bubble-item" data-user-id="USER_ID_4" onclick="viewUser('USER_ID_4')">
-              <div class="bubble-avatar">
-                <div class="bubble-avatar-placeholder">AVT</div>
-              </div>
-              <div class="bubble-label">
-                <div class="bubble-name">Username</div>
-                <div class="bubble-hours">—h</div>
-              </div>
-            </div>
-
-            <div class="bubble-item" data-user-id="USER_ID_5" onclick="viewUser('USER_ID_5')">
-              <div class="bubble-avatar">
-                <div class="bubble-avatar-placeholder">AVT</div>
-              </div>
-              <div class="bubble-label">
-                <div class="bubble-name">Username</div>
-                <div class="bubble-hours">—h</div>
-              </div>
-            </div>
-
-            <div class="bubble-item" data-user-id="USER_ID_6" onclick="viewUser('USER_ID_6')">
-              <div class="bubble-avatar">
-                <div class="bubble-avatar-placeholder">AVT</div>
-              </div>
-              <div class="bubble-label">
-                <div class="bubble-name">Username</div>
-                <div class="bubble-hours">—h</div>
-              </div>
-            </div>
-
-            <div class="bubble-item" data-user-id="USER_ID_7" onclick="viewUser('USER_ID_7')">
-              <div class="bubble-avatar">
-                <div class="bubble-avatar-placeholder">AVT</div>
-              </div>
-              <div class="bubble-label">
-                <div class="bubble-name">Username</div>
-                <div class="bubble-hours">—h</div>
-              </div>
-            </div>
-
-            <div class="bubble-item" data-user-id="USER_ID_8" onclick="viewUser('USER_ID_8')">
-              <div class="bubble-avatar">
-                <div class="bubble-avatar-placeholder">AVT</div>
-              </div>
-              <div class="bubble-label">
-                <div class="bubble-name">Username</div>
-                <div class="bubble-hours">—h</div>
-              </div>
-            </div>
-
-            <div class="bubble-item" data-user-id="USER_ID_9" onclick="viewUser('USER_ID_9')">
-              <div class="bubble-avatar">
-                <div class="bubble-avatar-placeholder">AVT</div>
-              </div>
-              <div class="bubble-label">
-                <div class="bubble-name">Username</div>
-                <div class="bubble-hours">—h</div>
-              </div>
-            </div>
-
-            <div class="bubble-item" data-user-id="USER_ID_10" onclick="viewUser('USER_ID_10')">
-              <div class="bubble-avatar">
-                <div class="bubble-avatar-placeholder">AVT</div>
-              </div>
-              <div class="bubble-label">
-                <div class="bubble-name">Username</div>
-                <div class="bubble-hours">—h</div>
-              </div>
-            </div>
-          </div>
-        </section>
-      </div>
-      <!-- /container -->
-    </main>
-
-    <footer>
-      FTPDB &nbsp;·&nbsp; FTP Database &nbsp;·&nbsp; <span id="footerYear"></span>
-    </footer>
-    
-<!-- ═══ JS — Carousel + API stubs ═══ -->
-    <script>
-      /* ──────────────────────────────────────────────
-         CAROUSEL
-      ────────────────────────────────────────────── */
-      let currentSlide = 0;
-      const track = document.getElementById('bannerTrack');
-      const dotsContainer = document.getElementById('bannerDots');
-      const slides = track.querySelectorAll('.banner-slide');
-      const totalSlides = slides.length;
-
-      // Generate dots dynamically based on number of slides
-      if (totalSlides > 0) {
-        for (let i = 0; i < totalSlides; i++) {
-          const dot = document.createElement('div');
-          dot.className = 'banner-dot' + (i === 0 ? ' active' : '');
-          dot.setAttribute('data-index', i);
-          dot.onclick = () => goToSlide(i);
-          dotsContainer.appendChild(dot);
-        }
-      }
-
-      function updateDots() {
-        const dots = document.querySelectorAll('.banner-dot');
-        dots.forEach((d, i) => d.classList.toggle('active', i === currentSlide));
-      }
-
-      function goToSlide(n) {
-        if (totalSlides === 0) return;
-        currentSlide = ((n % totalSlides) + totalSlides) % totalSlides;
-        track.style.transform = `translateX(-${currentSlide * 100}%)`;
-        updateDots();
-      }
-
-      function slideCarousel(dir) {
-        goToSlide(currentSlide + dir);
-      }
-
-      // Auto-advance every 6 s
-      let autoplay = setInterval(() => slideCarousel(1), 6000);
-      track.closest('.banner-track-wrapper').addEventListener('mouseenter', () => clearInterval(autoplay));
-      track.closest('.banner-track-wrapper').addEventListener('mouseleave', () => {
-        autoplay = setInterval(() => slideCarousel(1), 6000);
-      });
-
-      /* ──────────────────────────────────────────────
-         NAV PILLS
-      ────────────────────────────────────────────── */
-      document.querySelectorAll('.nav-pill').forEach(pill => {
-        pill.addEventListener('click', () => {
-          document.querySelectorAll('.nav-pill').forEach(p => p.classList.remove('active'));
-          pill.classList.add('active');
-        });
-      });
-
-      function toggleMenu() {
-        // API HOOK: open a slide-out drawer / mobile nav
-        console.log('toggleMenu()');
-      }
-
-      function filterSection(key) {
-        // API HOOK: re-fetch grid data for the active pill
-        console.log('filterSection:', key);
-      }
-
-      /* ──────────────────────────────────────────────
-         SEARCH
-      ────────────────────────────────────────────── */
-      let searchTimer;
-      const searchInput = document.getElementById('searchInput');
-      const searchAutocomplete = document.getElementById('searchAutocomplete');
-
-      function handleSearch(query) {
-        clearTimeout(searchTimer);
-        
-        if (!query.trim()) {
-          searchAutocomplete.classList.remove('active');
-          return;
-        }
-
-        searchTimer = setTimeout(() => {
-          fetchSearchResults(query);
-        }, 200);
-      }
-
-      async function fetchSearchResults(query) {
-        try {
-          const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
-          const results = await res.json();
-          renderSearchResults(results);
-        } catch (err) {
-          console.error('Search error:', err);
-          searchAutocomplete.innerHTML = '<div class="search-autocomplete-empty">Error searching</div>';
-        }
-      }
-
-      function renderSearchResults(data) {
-        const projects = data.projects || [];
-        const users = data.users || [];
-        
-        if ((!projects || projects.length === 0) && (!users || users.length === 0)) {
-          searchAutocomplete.innerHTML = '<div class="search-autocomplete-section"><div class="search-autocomplete-empty">No results found</div></div>';
-          searchAutocomplete.classList.add('active');
-          return;
-        }
-
-        let html = '';
-
-        // Render projects section
-        if (projects && projects.length > 0) {
-          html += '<div class="search-autocomplete-section">';
-          html += '<div class="search-autocomplete-section-title">Projects</div>';
-          html += projects.map(project => `
-            <div class="search-autocomplete-item" onclick="selectProject('${project.id}')">
-              <div class="search-autocomplete-item-icon">
-                ${project.avatar_url && project.avatar_url.trim() ? 
-                  `<img src="${project.avatar_url}" alt="${project.display_name || 'User'}" />` : 
-                  '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" opacity="0.4"><rect width="4" height="4" x="3" y="3" rx="1"/></svg>'}
-              </div>
-              <div class="search-autocomplete-item-content">
-                <div class="search-autocomplete-item-title">${project.title || project.name || 'Untitled'}</div>
-                <div class="search-autocomplete-item-meta">${project.display_name || 'general'}</div>
-              </div>
-            </div>
-          `).join('');
-          html += '</div>';
-        }
-
-        // Render users section
-        if (users && users.length > 0) {
-          html += '<div class="search-autocomplete-section">';
-          html += '<div class="search-autocomplete-section-title">Users</div>';
-          html += users.map(user => `
-            <div class="search-autocomplete-item" onclick="selectUser('${user.id}')">
-              <div class="search-autocomplete-item-icon">
-                ${user.avatar_url && user.avatar_url.trim() ? 
-                  `<img src="${user.avatar_url}" alt="${user.display_name || 'User'}" />` : 
-                  '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" opacity="0.4"><circle cx="12" cy="8" r="4"/><path d="M 4 20 c 0 -4 3.6 -8 8 -8 s 8 4 8 8"/></svg>'}
-              </div>
-              <div class="search-autocomplete-item-content">
-                <div class="search-autocomplete-item-title">${user.display_name || 'User'}</div>
-                <div class="search-autocomplete-item-meta">${user.total_hours || 0} hours</div>
-              </div>
-            </div>
-          `).join('');
-          html += '</div>';
-        }
-
-        searchAutocomplete.innerHTML = html;
-        searchAutocomplete.classList.add('active');
-      }
-
-      function selectProject(id) {
-        searchInput.value = '';
-        searchAutocomplete.classList.remove('active');
-        viewProject(id);
-      }
-
-      function selectUser(id) {
-        searchInput.value = '';
-        searchAutocomplete.classList.remove('active');
-        viewUser(id);
-      }
-
-      // Close autocomplete when clicking outside
-      document.addEventListener('click', (e) => {
-        if (!searchInput.contains(e.target) && !searchAutocomplete.contains(e.target)) {
-          searchAutocomplete.classList.remove('active');
-        }
-      });
-
-      // Show autocomplete on focus if there's input
-      searchInput.addEventListener('focus', () => {
-        if (searchInput.value.trim() && searchAutocomplete.querySelector('.search-autocomplete-item')) {
-          searchAutocomplete.classList.add('active');
-        }
-      });
-
-      /* ──────────────────────────────────────────────
-         NAVIGATION
-      ────────────────────────────────────────────── */
-      function viewProject(id) {
-        window.location.href = `/project/${id}`;
-      }
-
-      function viewUser(id) {
-        window.location.href = `/user/${id}`;
-      }
-
-      /* ──────────────────────────────────────────────
-         DATA LOADING — replace stubs with real fetches
-      ────────────────────────────────────────────── */
-
-      async function loadFeaturedBanner() {
-        const res  = await fetch('/api/hot');
-        const data = await res.json();
-        const projects = Array.isArray(data) ? data : Object.entries(data).map(([id, item]) => ({id, ...item}));
-        renderBannerSlides(projects);
-      }
-
-      async function loadTopWeek() {
-        const res  = await fetch('/api/top_this_week');
-        const data = await res.json();
-        const projects = Array.isArray(data) ? data : Object.entries(data).map(([id, item]) => ({id, ...item}));
-        renderProjectCards(document.getElementById('topWeekGrid'), projects);
-        // document.getElementById('weekLabel').textContent = `Week of ${data.week_label}`;
-      }
-
-      async function loadFanFavourites() {
-        const res  = await fetch('/api/fan_favourites');
-        const data = await res.json();
-        const projects = Array.isArray(data) ? data : Object.entries(data).map(([id, item]) => ({id, ...item}));
-        renderHCards(document.getElementById('fanFavGrid'), projects);
-      }
-
-      async function loadTopAllTime() {
-        const res  = await fetch('/api/top_all_time');
-        const data = await res.json();
-        const projects = Array.isArray(data) ? data : Object.entries(data).map(([id, item]) => ({id, ...item}));
-        renderHCards(document.getElementById('topAllTimeGrid'), projects);
-      }
-
-      async function loadTopContributors() {
-        const res  = await fetch('/api/most_time_spent');
-        const data = await res.json();
-        const users = Array.isArray(data) ? data : Object.values(data);
-        renderBubbles(document.getElementById('bubbleRow'), users);
-      }
-
-      /* ──────────────────────────────────────────────
-         RENDER HELPERS
-      ────────────────────────────────────────────── */
-
-      function renderBannerSlides(projects) {
-        if (!projects || projects.length === 0) return;
-        const track = document.getElementById('bannerTrack');
-        const dotsContainer = document.getElementById('bannerDots');
-        
-        track.innerHTML = projects.map(p => `
-          <div class="banner-slide" data-project-id="${p.id}">
-            <div class="banner-image-area">
-              ${p.banner_url && p.banner_url.trim() ? `<img src="${p.banner_url}" alt="${p.title || 'Project'}" style="width: 100%; height: 100%; object-fit: cover; object-position: center;" loading="eager" onerror="this.style.display='none'" />` : ''}<div class="banner-image-placeholder ${p.banner_url && p.banner_url.trim() ? 'hidden' : ''}">PROJECT IMAGE</div>
-            </div>
-            <div class="banner-info">
-              <span class="banner-project-id">#${p.slack_channel || 'general'}</span>
-              <h2 class="banner-project-name">${p.title || p.name || 'Untitled'}</h2>
-              <div class="banner-slack-row">
-                <div class="banner-slack-icon">
-                  ${p.avatar_url ? `<img src="${p.avatar_url}" alt="${p.display_name || 'User'}" />` : '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M5.042 15.165…"/></svg>'}
-                </div>
-                <span class="banner-slack-name">${p.display_name || 'general'}</span>
-              </div>
-              <div class="banner-stats">
-                <div class="banner-stat">
-                  <span class="banner-stat-val">—</span>
-                  <span class="banner-stat-lbl">Rating</span>
-                </div>
-                <div class="banner-stat">
-                  <span class="banner-stat-val">${p.total_hours || '—'}</span>
-                  <span class="banner-stat-lbl">Hrs Spent</span>
-                </div>
-                <div class="banner-stat">
-                  <span class="banner-stat-val">—</span>
-                  <span class="banner-stat-lbl">Contributors</span>
-                </div>
-              </div>
-              <button class="banner-btn" onclick="viewProject('${p.id}')">
-                View Project
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-              </button>
-            </div>
-          </div>
-        `).join('');
-        
-        dotsContainer.innerHTML = projects.map((_, i) => `
-          <div class="banner-dot${i === 0 ? ' active' : ''}" onclick="goToSlide(${i})"></div>
-        `).join('');
-        
-        goToSlide(0);
-      }
-
-      function renderProjectCards(container, projects) {
-        if (!projects || projects.length === 0) {
-          container.innerHTML = '<p class="text-center text-muted">No projects found</p>';
-          return;
-        }
-        container.innerHTML = projects.map((p, i) => `
-          <div class="project-card" onclick="viewProject('${p.id}')" data-project-id="${p.id}">
-            <div class="project-card-thumb">
-              ${p.banner_url && p.banner_url.trim() ? `<img src="${p.banner_url}" alt="${p.title || 'Project'}" style="width: 100%; height: 100%; object-fit: cover; object-position: center;" loading="lazy" onerror="this.parentElement.querySelector('.project-card-thumb-placeholder').style.display='flex'" />` : ''}<div class="project-card-thumb-placeholder ${p.banner_url && p.banner_url.trim() ? 'hidden' : ''}">THUMBNAIL</div>
-            </div>
-            <span class="project-card-rank">${i + 1}</span>
+            <span class="project-card-rank">1</span>
             <div class="project-card-body">
               <div class="project-card-slack">
                 <div class="project-card-icon">
-                  ${p.avatar_url ? `<img src="${p.avatar_url}" alt="${p.display_name || 'User'}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 4px;" loading="lazy" />` : '<svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><rect width="4" height="4" x="3" y="3" rx="1"/><rect width="4" height="4" x="17" y="3" rx="1"/><rect width="4" height="4" x="3" y="17" rx="1"/><rect width="4" height="4" x="17" y="17" rx="1"/></svg>'}
+                  <!-- API HOOK: <img src="/api/slack/icon?channel=CHANNEL_ID" width="16" height="16" /> -->
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
+                    <rect width="4" height="4" x="3" y="3" rx="1" /><rect
+                      width="4"
+                      height="4"
+                      x="17"
+                      y="3"
+                      rx="1"
+                    /><rect width="4" height="4" x="3" y="17" rx="1" /><rect
+                      width="4"
+                      height="4"
+                      x="17"
+                      y="17"
+                      rx="1"
+                    />
+                  </svg>
                 </div>
-                <span class="project-card-name">${p.title || p.name || 'Untitled'}</span>
+                <span class="project-card-name">Project Name</span>
               </div>
-              <span class="project-card-meta">${p.display_name || 'general'} · ★ ${p.rank || '—'}</span>
+              <span class="project-card-meta">
+                <!-- API HOOK: project.slack_channel + project.score -->
+                #channel · ★ —
+              </span>
             </div>
           </div>
-        `).join('');
-      }
-
-      function renderHCards(container, projects) {
-        if (!projects || projects.length === 0) {
-          container.innerHTML = '<p class="text-center text-muted">No projects found</p>';
-          return;
-        }
-        container.innerHTML = projects.map(p => `
-          <div class="hcard" onclick="viewProject('${p.id}')" data-project-id="${p.id}">
-            <div class="hcard-thumb">
-              ${p.banner_url && p.banner_url.trim() ? `<img src="${p.banner_url}" alt="${p.title || 'Project'}" style="width: 100%; height: 100%; object-fit: cover; object-position: center;" loading="lazy" onerror="this.parentElement.querySelector('.hcard-thumb-placeholder').style.display='flex'" />` : ''}<div class="hcard-thumb-placeholder ${p.banner_url && p.banner_url.trim() ? 'hidden' : ''}">THUMBNAIL</div>
-            </div>
-            <div class="hcard-body">
-              <div class="hcard-icon">
-                ${p.avatar_url ? `<img src="${p.avatar_url}" alt="${p.display_name || 'User'}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 4px;" loading="lazy" />` : '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><rect width="4" height="4" x="3" y="3" rx="1"/><rect width="4" height="4" x="17" y="17" rx="1"/></svg>'}
-              </div>
-              <div>
-                <div class="hcard-name">${p.title || p.name || 'Untitled'}</div>
-                <div class="hcard-sub">${p.display_name || 'general'}</div>
+          
+<!-- Skeleton placeholder cards while loading -->
+          <div class="project-card">
+            <div class="project-card-thumb skeleton"></div>
+            <div class="project-card-body">
+              <span class="project-card-rank">2</span>
+              <div class="project-card-slack">
+                <div class="project-card-icon"></div>
+                <span
+                  class="project-card-name skeleton"
+                  style="width:80%;height:14px;display:block"
+                >
+                </span>
               </div>
             </div>
           </div>
-        `).join('');
-      }
+          <div class="project-card">
+            <div class="project-card-thumb skeleton"></div>
+            <div class="project-card-body"><span class="project-card-rank">3</span></div>
+          </div>
+          <div class="project-card">
+            <div class="project-card-thumb skeleton"></div>
+            <div class="project-card-body"><span class="project-card-rank">4</span></div>
+          </div>
+          <div class="project-card">
+            <div class="project-card-thumb skeleton"></div>
+            <div class="project-card-body"><span class="project-card-rank">5</span></div>
+          </div>
+        </div>
+      </section>
 
-      function renderBubbles(container, users) {
-        if (!users || users.length === 0) {
-          container.innerHTML = '<p class="text-center text-muted">No contributors found</p>';
-          return;
-        }
-        container.innerHTML = users.map(u => {
-          const hours = u.total_hours || 0;
-          return `
-          <div class="bubble-item" data-user-id="${u.id}" onclick="viewUser('${u.id}')">
+      <div class="divider"></div>
+      
+<!-- ── FAN FAVOURITES ── -->
+      <section class="section fade-up delay-2" id="fan-favourites">
+        <div class="section-header">
+          <h2 class="section-title">Fan Favourites</h2>
+          <span class="section-meta">Community voted</span>
+        </div>
+        <!-- API HOOK: fetch /api/fan_favourites, render .hcard for each -->
+        <div class="hscroll-wrapper">
+          <div class="hscroll" id="fanFavGrid">
+            
+<!-- Template hcard -->
+            <div class="hcard" onclick="viewProject('ID')" data-project-id="ID">
+              <div class="hcard-thumb skeleton">
+                <!-- API HOOK: <img src="/api/projects/ID/thumbnail" loading="lazy" /> -->
+                <div class="hcard-thumb-placeholder">THUMBNAIL</div>
+              </div>
+              <div class="hcard-body">
+                <div class="hcard-icon">
+                  <!-- API HOOK: slack icon -->
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                    <rect width="4" height="4" x="3" y="3" rx="1" /><rect
+                      width="4"
+                      height="4"
+                      x="17"
+                      y="17"
+                      rx="1"
+                    />
+                  </svg>
+                </div>
+                <div>
+                  <div class="hcard-name">Project Name</div>
+                  <div class="hcard-sub">#channel</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="hcard">
+              <div class="hcard-thumb skeleton"></div>
+              <div class="hcard-body">
+                <div class="hcard-icon"></div>
+                <div>
+                  <div class="hcard-name">Project Name</div>
+                  <div class="hcard-sub">#channel</div>
+                </div>
+              </div>
+            </div>
+            <div class="hcard">
+              <div class="hcard-thumb skeleton"></div>
+              <div class="hcard-body">
+                <div class="hcard-icon"></div>
+                <div>
+                  <div class="hcard-name">Project Name</div>
+                  <div class="hcard-sub">#channel</div>
+                </div>
+              </div>
+            </div>
+            <div class="hcard">
+              <div class="hcard-thumb skeleton"></div>
+              <div class="hcard-body">
+                <div class="hcard-icon"></div>
+                <div>
+                  <div class="hcard-name">Project Name</div>
+                  <div class="hcard-sub">#channel</div>
+                </div>
+              </div>
+            </div>
+            <div class="hcard">
+              <div class="hcard-thumb skeleton"></div>
+              <div class="hcard-body">
+                <div class="hcard-icon"></div>
+                <div>
+                  <div class="hcard-name">Project Name</div>
+                  <div class="hcard-sub">#channel</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div class="divider"></div>
+      
+<!-- ── TOP ALL TIME ── -->
+      <section class="section fade-up delay-2" id="top-all-time">
+        <div class="section-header">
+          <h2 class="section-title">Top All Time</h2>
+          <span class="section-meta">All time greats</span>
+        </div>
+        <!-- API HOOK: TODO - add /api/top_all_time endpoint -->
+        <div class="hscroll-wrapper">
+          <div class="hscroll" id="topAllTimeGrid">
+            <div class="hcard" onclick="viewProject('ID')">
+              <div class="hcard-thumb skeleton">
+                <div class="hcard-thumb-placeholder">THUMBNAIL</div>
+              </div>
+              <div class="hcard-body">
+                <div class="hcard-icon"></div>
+                <div>
+                  <div class="hcard-name">Project Name</div>
+                  <div class="hcard-sub">#channel</div>
+                </div>
+              </div>
+            </div>
+            <div class="hcard">
+              <div class="hcard-thumb skeleton"></div>
+              <div class="hcard-body">
+                <div class="hcard-icon"></div>
+                <div>
+                  <div class="hcard-name">Project Name</div>
+                  <div class="hcard-sub">#channel</div>
+                </div>
+              </div>
+            </div>
+            <div class="hcard">
+              <div class="hcard-thumb skeleton"></div>
+              <div class="hcard-body">
+                <div class="hcard-icon"></div>
+                <div>
+                  <div class="hcard-name">Project Name</div>
+                  <div class="hcard-sub">#channel</div>
+                </div>
+              </div>
+            </div>
+            <div class="hcard">
+              <div class="hcard-thumb skeleton"></div>
+              <div class="hcard-body">
+                <div class="hcard-icon"></div>
+                <div>
+                  <div class="hcard-name">Project Name</div>
+                  <div class="hcard-sub">#channel</div>
+                </div>
+              </div>
+            </div>
+            <div class="hcard">
+              <div class="hcard-thumb skeleton"></div>
+              <div class="hcard-body">
+                <div class="hcard-icon"></div>
+                <div>
+                  <div class="hcard-name">Project Name</div>
+                  <div class="hcard-sub">#channel</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div class="divider"></div>
+      
+<!-- ── MOST TIME SPENT ── -->
+      <section class="section fade-up delay-3" id="most-time-spent">
+        <div class="section-header">
+          <h2 class="section-title">Most Time Spent</h2>
+          <span class="section-meta">By contributors</span>
+        </div>
+        <!-- API HOOK: TODO - add /api/top_contributors?limit=10 endpoint -->
+        <div class="bubble-row" id="bubbleRow">
+          <div class="bubble-item" data-user-id="USER_ID_1" onclick="viewUser('USER_ID_1')">
             <div class="bubble-avatar">
-              <img src="${u.avatar_url}" alt="${u.name || u.display_name}" />
+              <!-- API HOOK: <img src="/api/users/USER_ID_1/avatar" alt="…" /> -->
+              <div class="bubble-avatar-placeholder">AVT</div>
             </div>
             <div class="bubble-label">
-              <div class="bubble-name">${u.name || u.display_name}</div>
-              <div class="bubble-hours">${hours}h</div>
+              <div class="bubble-name">
+                <!-- API HOOK: user.display_name -->Username
+              </div>
+              <div class="bubble-hours">
+                <!-- API HOOK: user.total_hours -->—h
+              </div>
             </div>
           </div>
-        `;
-        }).join('');
-      }
 
-      /* ──────────────────────────────────────────────
-         INIT
-      ────────────────────────────────────────────── */
-      document.getElementById('footerYear').textContent = new Date().getFullYear();
+          <div class="bubble-item" data-user-id="USER_ID_2" onclick="viewUser('USER_ID_2')">
+            <div class="bubble-avatar">
+              <div class="bubble-avatar-placeholder">AVT</div>
+            </div>
+            <div class="bubble-label">
+              <div class="bubble-name">Username</div>
+              <div class="bubble-hours">—h</div>
+            </div>
+          </div>
 
-      // Fire all data loads on page ready
-      document.addEventListener('DOMContentLoaded', () => {
-        loadFeaturedBanner();
-        loadTopWeek();
-        loadFanFavourites();
-        loadTopAllTime();
-        loadTopContributors();
-      });
-    </script>
-  </body>
-</html>
+          <div class="bubble-item" data-user-id="USER_ID_3" onclick="viewUser('USER_ID_3')">
+            <div class="bubble-avatar">
+              <div class="bubble-avatar-placeholder">AVT</div>
+            </div>
+            <div class="bubble-label">
+              <div class="bubble-name">Username</div>
+              <div class="bubble-hours">—h</div>
+            </div>
+          </div>
+
+          <div class="bubble-item" data-user-id="USER_ID_4" onclick="viewUser('USER_ID_4')">
+            <div class="bubble-avatar">
+              <div class="bubble-avatar-placeholder">AVT</div>
+            </div>
+            <div class="bubble-label">
+              <div class="bubble-name">Username</div>
+              <div class="bubble-hours">—h</div>
+            </div>
+          </div>
+
+          <div class="bubble-item" data-user-id="USER_ID_5" onclick="viewUser('USER_ID_5')">
+            <div class="bubble-avatar">
+              <div class="bubble-avatar-placeholder">AVT</div>
+            </div>
+            <div class="bubble-label">
+              <div class="bubble-name">Username</div>
+              <div class="bubble-hours">—h</div>
+            </div>
+          </div>
+
+          <div class="bubble-item" data-user-id="USER_ID_6" onclick="viewUser('USER_ID_6')">
+            <div class="bubble-avatar">
+              <div class="bubble-avatar-placeholder">AVT</div>
+            </div>
+            <div class="bubble-label">
+              <div class="bubble-name">Username</div>
+              <div class="bubble-hours">—h</div>
+            </div>
+          </div>
+
+          <div class="bubble-item" data-user-id="USER_ID_7" onclick="viewUser('USER_ID_7')">
+            <div class="bubble-avatar">
+              <div class="bubble-avatar-placeholder">AVT</div>
+            </div>
+            <div class="bubble-label">
+              <div class="bubble-name">Username</div>
+              <div class="bubble-hours">—h</div>
+            </div>
+          </div>
+
+          <div class="bubble-item" data-user-id="USER_ID_8" onclick="viewUser('USER_ID_8')">
+            <div class="bubble-avatar">
+              <div class="bubble-avatar-placeholder">AVT</div>
+            </div>
+            <div class="bubble-label">
+              <div class="bubble-name">Username</div>
+              <div class="bubble-hours">—h</div>
+            </div>
+          </div>
+
+          <div class="bubble-item" data-user-id="USER_ID_9" onclick="viewUser('USER_ID_9')">
+            <div class="bubble-avatar">
+              <div class="bubble-avatar-placeholder">AVT</div>
+            </div>
+            <div class="bubble-label">
+              <div class="bubble-name">Username</div>
+              <div class="bubble-hours">—h</div>
+            </div>
+          </div>
+
+          <div class="bubble-item" data-user-id="USER_ID_10" onclick="viewUser('USER_ID_10')">
+            <div class="bubble-avatar">
+              <div class="bubble-avatar-placeholder">AVT</div>
+            </div>
+            <div class="bubble-label">
+              <div class="bubble-name">Username</div>
+              <div class="bubble-hours">—h</div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+    <!-- /container -->
+  </main>
+
+  <footer>
+    FTPDB &nbsp;·&nbsp; FTP Database &nbsp;·&nbsp; <span id="footerYear"></span>
+  </footer>
+</Layouts.app>
