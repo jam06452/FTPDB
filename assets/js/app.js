@@ -339,7 +339,7 @@ function initProjectsPage() {
   let currentFilter  = "random"
   let allProjects    = []
   let displayedCount = 0
-  const itemsPerLoad = 50
+  const itemsPerLoad = 100
   let isLoadingMore  = false
 
   async function loadProjects() {
