@@ -27,6 +27,7 @@ defmodule Ftpdb.DB do
         banner_url: item["banner_url"],
         total_hours: div(duration, 3600)
       }
+
       {to_string(item["id"]), Map.merge(user_info, project_map)}
     end)
   end
@@ -51,6 +52,7 @@ defmodule Ftpdb.DB do
         rank: item["stat_weekly_rank"],
         banner_url: item["banner_url"]
       }
+
       Map.merge(user_info, user_map)
     end)
   end
@@ -94,6 +96,7 @@ defmodule Ftpdb.DB do
         rank: item["stat_all_time_rank"],
         banner_url: item["banner_url"]
       }
+
       Map.merge(user_info, user_map)
     end)
   end
@@ -181,6 +184,7 @@ defmodule Ftpdb.DB do
       [user_info] = get_user_info(user_id)
 
       user_info = Map.drop(user_info, [:total_hours])
+
       project_map = %{
         title: item["title"],
         description: item["description"],
@@ -191,6 +195,7 @@ defmodule Ftpdb.DB do
         total_likes: item["stat_total_likes"],
         banner_url: item["banner_url"]
       }
+
       Map.merge(user_info, project_map)
     end)
   end
@@ -252,6 +257,7 @@ defmodule Ftpdb.DB do
           hot_score: item["stat_hot_score"] || 0,
           likes: item["stat_total_likes"] || 0
         }
+
         Map.merge(user_info, project_map)
       end)
       |> Enum.sort_by(fn item ->
@@ -337,6 +343,7 @@ defmodule Ftpdb.DB do
           likes: item["stat_total_likes"] || 0,
           total_hours: div(duration, 3600)
         }
+
         Map.merge(user_info, project_map)
       end)
 
