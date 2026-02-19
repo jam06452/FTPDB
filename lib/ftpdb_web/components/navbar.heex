@@ -1,0 +1,53 @@
+<!-- ═══ NAVBAR ═══ -->
+<nav class="navbar">
+  <a href="/" class="nav-logo">{@logo_text || "FTPDB"}</a>
+
+  <%= if @back_link do %>
+    <a href={@back_link} class="nav-back">
+      <svg
+        width="12"
+        height="12"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2.5"
+      >
+        <path d="M15 18l-6-6 6-6" />
+      </svg>
+      Back
+    </a>
+  <% end %>
+
+  <%= if @search_enabled do %>
+    <div class="nav-search">
+      <input
+        type="search"
+        id="searchInput"
+        placeholder="Search projects, channels…"
+        oninput="handleSearch(this.value)"
+      />
+      <svg
+        class="nav-search-icon"
+        width="14"
+        height="14"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+      >
+        <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
+      </svg>
+      <div class="search-autocomplete" id="searchAutocomplete"></div>
+    </div>
+  <% end %>
+
+  <%= if @pills_enabled do %>
+    <div class="nav-pills">
+      <a href="/projects" class="nav-pill">Projects</a>
+      <button class="nav-pill active" onclick="filterSection('top-week')">Top This Week</button>
+      <button class="nav-pill" onclick="filterSection('hot')">Hot</button>
+      <button class="nav-pill" onclick="filterSection('updates')">Updates</button>
+      <a href="/suggestions" class="nav-pill">Suggestions</a>
+    </div>
+  <% end %>
+</nav>

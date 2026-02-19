@@ -86,6 +86,7 @@ defmodule FtpdbWeb do
       import Phoenix.HTML
       # Core UI components
       import FtpdbWeb.CoreComponents
+      import FtpdbWeb.NavbarComponent
 
       # Common modules used in templates
       alias Phoenix.LiveView.JS
