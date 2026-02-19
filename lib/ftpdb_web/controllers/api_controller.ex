@@ -117,6 +117,11 @@ defmodule FtpdbWeb.ApiController do
     json(conn, Ftpdb.DB.random_projects())
   end
 
+  def random_devlogs(conn, _params) do
+    devlogs = Ftpdb.DB.random_devlogs()
+    json(conn, devlogs)
+  end
+
   def user_projects(conn, %{"user_id" => user_id}) do
     projects = Ftpdb.DB.get_user_projects(user_id)
     json(conn, projects)

@@ -27,6 +27,7 @@ defmodule Ftpdb.DB do
         banner_url: item["banner_url"],
         total_hours: div(duration, 3600)
       }
+
       {to_string(item["id"]), Map.merge(user_info, project_map)}
     end)
   end
@@ -51,6 +52,7 @@ defmodule Ftpdb.DB do
         rank: item["stat_weekly_rank"],
         banner_url: item["banner_url"]
       }
+
       Map.merge(user_info, user_map)
     end)
   end
@@ -166,25 +168,31 @@ defmodule Ftpdb.DB do
   def random_projects do
     {:ok, response} =
       Supabase.PostgREST.from(client(), "projects")
-      |> Supabase.PostgREST.select(["id", "title", "stat_total_duration_seconds", "stat_total_likes", "stat_hot_score"])
+      |> Supabase.PostgREST.select([
+        "id",
+        "title",
+        "stat_total_duration_seconds",
+        "stat_total_likes",
+        "stat_hot_score"
+      ])
       |> Map.put(:method, :get)
       |> Supabase.PostgREST.execute()
 
     response.body
-      |> Enum.map(fn item ->
-        user_id = get_user_id(item["id"])
-        [user_info] = get_user_info(user_id)
+    |> Enum.map(fn item ->
+      user_id = get_user_id(item["id"])
+      [user_info] = get_user_info(user_id)
 
-        project_map = %{
-          id: to_string(item["id"]),
-          title: item["title"],
-          total_hours: div(item["stat_total_duration_seconds"] || 0, 3600),
-          likes: item["stat_total_likes"] || 0,
-          hot_score: item["stat_hot_score"] || 0
-        }
+      project_map = %{
+        id: to_string(item["id"]),
+        title: item["title"],
+        total_hours: div(item["stat_total_duration_seconds"] || 0, 3600),
+        likes: item["stat_total_likes"] || 0,
+        hot_score: item["stat_hot_score"] || 0
+      }
 
-        Map.merge(user_info, project_map)
-      end)
+      Map.merge(user_info, project_map)
+    end)
   end
 
   def search_projects(query) when is_binary(query) do
@@ -363,7 +371,13 @@ defmodule Ftpdb.DB do
   def get_devlogs(project_id) do
     {:ok, response} =
       Supabase.PostgREST.from(client(), "devlogs")
-      |> Supabase.PostgREST.select(["body", "duration_seconds", "likes_count", "comments_count"])
+      |> Supabase.PostgREST.select([
+        "body",
+        "duration_seconds",
+        "comments_count",
+        "created_at",
+        "media_urls"
+      ])
       |> Supabase.PostgREST.eq("project_id", project_id)
       |> Supabase.PostgREST.order("created_at", desc: true)
       |> Map.put(:method, :get)
@@ -373,13 +387,152 @@ defmodule Ftpdb.DB do
     |> Enum.map(fn item ->
       duration = item["duration_seconds"] || 0
       total_hours = div(duration, 3600)
+      media_urls = item["media_urls"] || []
 
       %{
         body: item["body"],
         total_hours: total_hours,
-        likes_count: item["likes_count"],
-        comments_count: item["comments_count"]
+        comments_count: item["comments_count"],
+        created_at: item["created_at"],
+        media_urls: media_urls
       }
     end)
+  end
+
+  def random_devlogs do
+    result =
+      Supabase.PostgREST.from(client(), "devlogs")
+      |> Supabase.PostgREST.select([
+        "id",
+        "body",
+        "duration_seconds",
+        "comments_count",
+        "created_at",
+        "media_urls",
+        "project_id"
+      ])
+      |> Supabase.PostgREST.order("created_at", desc: true)
+      |> Supabase.PostgREST.limit(100)
+      |> Map.put(:method, :get)
+      |> Supabase.PostgREST.execute()
+
+    devlogs =
+      case result do
+        {:ok, response} ->
+          response.body || []
+
+        {:error, error} ->
+          Logger.error("Error fetching devlogs: #{inspect(error)}")
+          []
+      end
+
+    if Enum.empty?(devlogs) do
+      []
+    else
+      # Fetch all user_projects mappings in one query
+      {:ok, user_projects_response} =
+        Supabase.PostgREST.from(client(), "user_projects")
+        |> Supabase.PostgREST.select(["project_id", "user_id"])
+        |> Map.put(:method, :get)
+        |> Supabase.PostgREST.execute()
+
+      user_projects_map =
+        (user_projects_response.body || [])
+        |> Map.new(fn item -> {item["project_id"], item["user_id"]} end)
+
+      # Fetch all projects in one query
+      {:ok, projects_response} =
+        Supabase.PostgREST.from(client(), "projects")
+        |> Supabase.PostgREST.select(["id", "title"])
+        |> Map.put(:method, :get)
+        |> Supabase.PostgREST.execute()
+
+      projects_map =
+        (projects_response.body || [])
+        |> Map.new(fn item -> {item["id"], item["title"]} end)
+
+      # Fetch all users in one query
+      {:ok, users_response} =
+        Supabase.PostgREST.from(client(), "users")
+        |> Supabase.PostgREST.select(["id", "avatar_url", "display_name"])
+        |> Map.put(:method, :get)
+        |> Supabase.PostgREST.execute()
+
+      users_map =
+        (users_response.body || [])
+        |> Map.new(fn item -> {item["id"], %{"avatar_url" => item["avatar_url"], "display_name" => item["display_name"]}} end)
+
+      # Calculate weights with exponential bias towards newer devlogs
+      weighted_devlogs =
+        devlogs
+        |> Enum.with_index()
+        |> Enum.map(fn {item, index} ->
+          # Exponential decay: newer items get much higher weights
+          # weight = e^(-index/decay_rate)
+          weight = :math.exp(-index / 3.0)
+
+          duration = item["duration_seconds"] || 0
+          media_urls = item["media_urls"] || []
+          project_id = item["project_id"]
+
+          user_id = Map.get(user_projects_map, project_id)
+          project_title = Map.get(projects_map, project_id, "Unknown")
+          user_data = if user_id, do: Map.get(users_map, user_id, %{}), else: %{}
+          user_avatar = Map.get(user_data, "avatar_url", nil)
+          user_display_name =
+            case Map.get(user_data, "display_name") do
+              nil -> "Unknown User"
+              "" -> "Unknown User"
+              name -> name
+            end
+
+          devlog = %{
+            id: item["id"],
+            body: item["body"],
+            total_hours: div(duration, 3600),
+            comments_count: item["comments_count"] || 0,
+            created_at: item["created_at"],
+            media_urls: media_urls,
+            project_id: project_id,
+            project_title: project_title,
+            user_id: user_id,
+            user_avatar: user_avatar,
+            user_display_name: user_display_name,
+            weight: weight
+          }
+
+          {devlog, weight}
+        end)
+
+      if Enum.empty?(weighted_devlogs) do
+        []
+      else
+        # Perform weighted random selection
+        total_weight = weighted_devlogs |> Enum.map(fn {_, w} -> w end) |> Enum.sum()
+
+        selected_count = min(10, length(weighted_devlogs))
+
+        selected =
+          1..selected_count
+          |> Enum.reduce([], fn _i, acc ->
+            rand = :rand.uniform() * total_weight
+
+            {selected_devlog, _weight} =
+              weighted_devlogs
+              |> Enum.reduce_while({nil, 0}, fn {devlog, weight}, {_last, cum_weight} ->
+                new_cum = cum_weight + weight
+                if new_cum >= rand, do: {:halt, {devlog, new_cum}}, else: {:cont, {devlog, new_cum}}
+              end)
+
+            acc ++ [selected_devlog]
+          end)
+
+        # Deduplicate by devlog ID and return sorted by date (newest first)
+        selected
+        |> Enum.uniq_by(fn devlog -> devlog.id end)
+        |> Enum.map(fn devlog -> Map.drop(devlog, [:weight]) end)
+        |> Enum.sort_by(fn devlog -> devlog.created_at end, :desc)
+      end
+    end
   end
 end
