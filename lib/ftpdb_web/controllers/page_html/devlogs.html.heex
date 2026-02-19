@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Random Devlogs — FTPDB</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&family=Cabinet+Grotesk:wght@400;500;700;900&display=swap"
+      rel="stylesheet"
+    />
+
+    <style>
+      :root {
+        --bg:        #0d0f14;
+        --surface:   #161a22;
+        --surface2:  #1e2330;
+        --border:    rgba(255,255,255,0.07);
+        --gold:      #e8b455;
+        --gold-dim:  #a07a2e;
+        --text:      #eeeae0;
+        --muted:     #7a8099;
+        --accent:    #4f8ef7;
+        --danger:    #e05b5b;
+        --r-sm:  6px;
+        --r-md:  12px;
+        --r-lg:  18px;
+        --transition: 0.22s cubic-bezier(.4,0,.2,1);
+      }
+
+      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+      html { scroll-behavior: smooth; }
+      body {
+        background: var(--bg);
+        color: var(--text);
+        font-family: 'Cabinet Grotesk', sans-serif;
+        font-size: 15px;
+        line-height: 1.6;
+        -webkit-font-smoothing: antialiased;
+      }
+      a { color: inherit; text-decoration: none; }
+      img { display: block; max-width: 100%; }
+
+      /* ─── PAGE LAYOUT ─── */
+      .page { max-width: 1100px; margin: 16px auto 0; padding: 0 28px 80px; }
+
+      /* ─── HEADER ─── */
+      .devlog-title {
+        font-family: 'DM Serif Display', serif;
+        font-size: 28px;
+        color: var(--text);
+      }
+      .devlog-count {
+        font-family: 'DM Mono', monospace;
+        font-size: 11px;
+        color: var(--gold);
+        background: rgba(232,180,85,0.1);
+        border: 1px solid rgba(232,180,85,0.25);
+        border-radius: 50px;
+        padding: 3px 12px;
+        letter-spacing: 0.06em;
+      }
+
+      .refresh-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: var(--surface2);
+        color: var(--text);
+        border: 1px solid var(--border);
+        border-radius: var(--r-sm);
+        padding: 10px 16px;
+        font-weight: 500;
+        font-size: 13px;
+        cursor: pointer;
+        transition: all var(--transition);
+        font-family: 'Cabinet Grotesk', sans-serif;
+        white-space: nowrap;
+      }
+      .refresh-btn:hover {
+        border-color: var(--gold-dim);
+        background: rgba(232, 180, 85, 0.1);
+      }
+
+      /* ─── DEVLOG TIMELINE ─── */
+      .timeline {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        padding-left: 32px;
+      }
+      .timeline::before {
+        content: '';
+        position: absolute;
+        left: 11px;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: var(--border);
+      }
+
+      /* ─── DEVLOG ENTRY ─── */
+      .devlog-entry {
+        position: relative;
+        padding: 28px 0 0 28px;
+        opacity: 0;
+        transform: translateY(12px);
+        animation: fadeUp 0.4s ease forwards;
+        width: 100%;
+      }
+
+      /* Timeline dot */
+      .devlog-entry::before {
+        content: '';
+        position: absolute;
+        left: -21px;
+        top: 36px;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: var(--surface2);
+        border: 2px solid var(--muted);
+        transition: border-color var(--transition), background var(--transition);
+      }
+      .devlog-entry:hover::before {
+        border-color: var(--gold);
+        background: var(--gold);
+      }
+
+      .devlog-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--r-md);
+        overflow: hidden;
+        transition: border-color var(--transition), box-shadow var(--transition), transform var(--transition);
+      }
+      .devlog-card:hover {
+        border-color: rgba(232,180,85,0.2);
+        box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        transform: translateX(3px);
+      }
+
+      /* Header strip with project and author info */
+      .devlog-header-strip {
+        padding: 14px 20px;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        background: var(--surface2);
+      }
+      .devlog-project-avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 6px;
+        object-fit: cover;
+        flex-shrink: 0;
+        border: 1px solid var(--border);
+      }
+      .devlog-project-meta {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+      .devlog-project-name {
+        font-family: 'DM Mono', monospace;
+        font-size: 12px;
+        color: var(--gold);
+        letter-spacing: 0.04em;
+      }
+      .devlog-author-info {
+        font-family: 'Cabinet Grotesk', sans-serif;
+        font-size: 12px;
+        color: var(--muted);
+      }
+
+      /* Screenshot */
+      .devlog-screenshot {
+        width: 100%;
+        aspect-ratio: 16/7;
+        object-fit: cover;
+        object-position: center;
+        display: block;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .devlog-body {
+        padding: 20px 22px 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+
+      .devlog-text {
+        font-size: 14px;
+        line-height: 1.72;
+        color: var(--text);
+      }
+      .devlog-text.clamped {
+        display: -webkit-box;
+        -webkit-line-clamp: 5;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+      .devlog-expand-btn {
+        font-family: 'DM Mono', monospace;
+        font-size: 11px;
+        color: var(--accent);
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 0;
+        align-self: flex-start;
+        letter-spacing: 0.04em;
+      }
+      .devlog-expand-btn:hover { text-decoration: underline; }
+
+      .devlog-footer {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 10px 22px 14px;
+        border-top: 1px solid var(--border);
+      }
+      .devlog-meta-time {
+        font-family: 'DM Mono', monospace;
+        font-size: 11px;
+        color: var(--muted);
+        margin-right: auto;
+      }
+      .devlog-pill {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        background: var(--surface2);
+        border: 1px solid var(--border);
+        border-radius: 50px;
+        padding: 4px 11px;
+        font-family: 'DM Mono', monospace;
+        font-size: 11px;
+        color: var(--muted);
+        white-space: nowrap;
+      }
+      .devlog-pill svg { opacity: 0.6; flex-shrink: 0; }
+
+      /* ─── SKELETON ─── */
+      @keyframes shimmer {
+        0%   { background-position: -600px 0; }
+        100% { background-position:  600px 0; }
+      }
+      .skeleton {
+        background: linear-gradient(90deg, var(--surface2) 25%, #252a38 50%, var(--surface2) 75%);
+        background-size: 600px 100%;
+        animation: shimmer 1.4s infinite linear;
+        border-radius: 4px;
+      }
+
+      /* ─── EMPTY / ERROR STATES ─── */
+      .state-box {
+        text-align: center;
+        padding: 60px 0;
+        font-family: 'DM Mono', monospace;
+        font-size: 13px;
+        color: var(--muted);
+        letter-spacing: 0.06em;
+      }
+
+      /* ─── FADE-UP ─── */
+      @keyframes fadeUp {
+        from { opacity: 0; transform: translateY(14px); }
+        to   { opacity: 1; transform: translateY(0); }
+      }
+      .fade-up { animation: fadeUp 0.45s ease both; }
+
+      /* ─── CAROUSEL ─── */
+      .carousel-container {
+        position: relative;
+        width: 100%;
+        overflow: hidden;
+        border-bottom: 1px solid var(--border);
+      }
+      .carousel-slides {
+        position: relative;
+        display: flex;
+        width: 100%;
+        aspect-ratio: 16/7;
+        scroll-behavior: smooth;
+      }
+      .carousel-slide {
+        position: relative;
+        min-width: 100%;
+        flex: 1 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--surface2);
+      }
+      .carousel-slide img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center;
+        display: block;
+      }
+
+      /* Carousel controls */
+      .carousel-controls {
+        position: absolute;
+        bottom: 12px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        z-index: 10;
+      }
+      .carousel-dots {
+        display: flex;
+        gap: 6px;
+      }
+      .carousel-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.4);
+        cursor: pointer;
+        transition: background var(--transition);
+        border: none;
+        padding: 0;
+      }
+      .carousel-dot.active {
+        background: var(--gold);
+        width: 24px;
+        border-radius: 4px;
+      }
+      .carousel-dot:hover {
+        background: rgba(255, 255, 255, 0.6);
+      }
+      .carousel-arrows {
+        display: flex;
+        gap: 6px;
+      }
+      .carousel-arrow {
+        width: 32px;
+        height: 32px;
+        border-radius: 4px;
+        background: rgba(0, 0, 0, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: rgba(255, 255, 255, 0.8);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all var(--transition);
+        padding: 0;
+        font-size: 16px;
+      }
+      .carousel-arrow:hover {
+        background: rgba(0, 0, 0, 0.5);
+        border-color: rgba(255, 255, 255, 0.4);
+      }
+
+      /* ─── RESPONSIVE ─── */
+      @media (max-width: 768px) {
+        .page { padding: 0 16px 60px; }
+        .devlog-title { font-size: 22px; }
+        .devlog-header {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 16px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <.navbar back_link="/" />
+
+    <main class="page">
+      <div style="margin-bottom:32px">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:24px;padding-bottom:28px;border-bottom:1px solid var(--border)">
+          <div style="display:flex;align-items:center;gap:16px">
+            <h1 class="devlog-title">Random Devlogs</h1>
+            <span class="devlog-count" id="devlogCount">Loading…</span>
+          </div>
+          <button class="refresh-btn" onclick="refreshDevlogs()">
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8M3 8h7V1M21 12a9 9 0 0 1 -9 9 9.75 9.75 0 0 1 -6.74-2.74L3 16m18 8h-7v7" />
+            </svg>
+            Shuffle
+          </button>
+        </div>
+      </div>
+
+      <div class="timeline" id="timeline">
+        <%!-- Skeleton entries while loading --%>
+        <div class="devlog-entry" style="animation-delay:0.05s">
+          <div class="devlog-card">
+            <div class="devlog-body">
+              <div class="skeleton" style="height:14px;width:90%;border-radius:4px"></div>
+              <div class="skeleton" style="height:14px;width:75%;border-radius:4px"></div>
+              <div class="skeleton" style="height:14px;width:82%;border-radius:4px"></div>
+            </div>
+            <div class="devlog-footer">
+              <span class="skeleton" style="width:80px;height:11px;border-radius:4px"></span>
+              <span class="skeleton" style="width:50px;height:24px;border-radius:50px"></span>
+              <span class="skeleton" style="width:50px;height:24px;border-radius:50px"></span>
+            </div>
+          </div>
+        </div>
+        <div class="devlog-entry" style="animation-delay:0.12s">
+          <div class="devlog-card">
+            <div class="devlog-body">
+              <div class="skeleton" style="height:14px;width:85%;border-radius:4px"></div>
+              <div class="skeleton" style="height:14px;width:60%;border-radius:4px"></div>
+            </div>
+            <div class="devlog-footer">
+              <span class="skeleton" style="width:80px;height:11px;border-radius:4px"></span>
+            </div>
+          </div>
+        </div>
+        <div class="devlog-entry" style="animation-delay:0.19s">
+          <div class="devlog-card">
+            <div class="devlog-body">
+              <div class="skeleton" style="height:14px;width:92%;border-radius:4px"></div>
+              <div class="skeleton" style="height:14px;width:70%;border-radius:4px"></div>
+              <div class="skeleton" style="height:14px;width:55%;border-radius:4px"></div>
+            </div>
+            <div class="devlog-footer">
+              <span class="skeleton" style="width:80px;height:11px;border-radius:4px"></span>
+              <span class="skeleton" style="width:50px;height:24px;border-radius:50px"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <footer style="border-top:1px solid var(--border);padding:28px;text-align:center;font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);letter-spacing:.06em">
+      FTPDB &nbsp;·&nbsp; FTP Database &nbsp;·&nbsp; <span id="footerYear"></span>
+    </footer>
+
+    <script>
+      /* ──────────────────────────────
+         UTILS
+      ────────────────────────────── */
+      function fmtDuration(seconds) {
+        if (!seconds) return "—";
+        const h = Math.floor(seconds / 3600);
+        const m = Math.floor((seconds % 3600) / 60);
+        if (h > 0) return m > 0 ? `${h}h ${m}m` : `${h}h`;
+        return `${m}m`;
+      }
+
+      function fmtDate(iso) {
+        if (!iso) return "—";
+        const d = new Date(iso);
+        return d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+      }
+
+      function escapeHtml(str) {
+        if (!str) return "";
+        return str
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;");
+      }
+
+      /* ──────────────────────────────
+         RENDER DEVLOGS
+      ────────────────────────────── */
+      function renderDevlogs(devlogs) {
+        const timeline = document.getElementById("timeline");
+        const countEl  = document.getElementById("devlogCount");
+
+        countEl.textContent = `${devlogs.length} entr${devlogs.length === 1 ? "y" : "ies"}`;
+
+        if (devlogs.length === 0) {
+          timeline.innerHTML = `<div class="state-box">No devlogs found.</div>`;
+          return;
+        }
+
+        timeline.innerHTML = devlogs.map((log, i) => {
+          const body = escapeHtml(log.body || "No content.");
+          const long = body.length > 400;
+          const mediaUrls = log.media_urls || [];
+          const hasMedia = Array.isArray(mediaUrls) && mediaUrls.length > 0;
+
+          let carouselHtml = "";
+          if (hasMedia) {
+            const slidesHtml = mediaUrls.map((media, slideIdx) => {
+              const url = media.url ? escapeHtml(media.url) : "";
+              return `
+                <div class="carousel-slide" data-slide="${slideIdx}">
+                  <img src="${url}" alt="Devlog media ${slideIdx + 1}" loading="lazy" />
+                </div>
+              `;
+            }).join("");
+
+            const dotsHtml = mediaUrls.map((_, slideIdx) => `
+              <button class="carousel-dot${slideIdx === 0 ? " active" : ""}" data-slide="${slideIdx}" onclick="goToSlide(${i}, ${slideIdx})" title="Slide ${slideIdx + 1}"></button>
+            `).join("");
+
+            const arrowsHtml = mediaUrls.length > 1 ? `
+              <div class="carousel-arrows">
+                <button class="carousel-arrow" onclick="prevSlide(${i})" title="Previous">‹</button>
+                <button class="carousel-arrow" onclick="nextSlide(${i})" title="Next">›</button>
+              </div>
+            ` : "";
+
+            carouselHtml = `
+              <div class="carousel-container" id="carousel-${i}">
+                <div class="carousel-slides" id="carousel-slides-${i}">
+                  ${slidesHtml}
+                </div>
+                ${mediaUrls.length > 1 ? `
+                  <div class="carousel-controls">
+                    <div class="carousel-dots">
+                      ${dotsHtml}
+                    </div>
+                    ${arrowsHtml}
+                  </div>
+                ` : ""}
+              </div>
+            `;
+          }
+
+          return `
+            <div class="devlog-entry" style="animation-delay:${(i * 0.06).toFixed(2)}s" id="entry-${i}">
+              <div class="devlog-card">
+                ${carouselHtml}
+                <div class="devlog-body">
+                  <p class="devlog-text${long ? " clamped" : ""}" id="devlog-text-${i}">${body}</p>
+                  ${long ? `<button class="devlog-expand-btn" onclick="toggleExpand(${i})">Read more ↓</button>` : ""}
+                </div>
+                <div class="devlog-footer">
+                  <div style="display:flex;align-items:center;gap:8px;margin-right:auto">
+                    <span class="devlog-meta-time">${fmtDate(log.created_at)}</span>
+                    ${log.user_id ? `
+                      <a href="/user/${log.user_id}" style="display:flex;align-items:center;gap:8px;text-decoration:none;transition:opacity var(--transition)" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
+                        ${log.user_avatar ? `<img src="${escapeHtml(log.user_avatar)}" alt="${escapeHtml(log.user_display_name || 'User')}" style="width:28px;height:28px;border-radius:50%;object-fit:cover;border:1px solid var(--border);flex-shrink:0" />` : ""}
+                        ${log.user_display_name ? `<span style="font-family:'Cabinet Grotesk',sans-serif;font-size:13px;font-weight:500;color:var(--text);white-space:nowrap">${escapeHtml(log.user_display_name)}</span>` : ""}
+                      </a>
+                    ` : `
+                      <div style="display:flex;align-items:center;gap:8px">
+                        ${log.user_avatar ? `<img src="${escapeHtml(log.user_avatar)}" alt="${escapeHtml(log.user_display_name || 'User')}" style="width:28px;height:28px;border-radius:50%;object-fit:cover;border:1px solid var(--border);flex-shrink:0" />` : ""}
+                        ${log.user_display_name ? `<span style="font-family:'Cabinet Grotesk',sans-serif;font-size:13px;font-weight:500;color:var(--text);white-space:nowrap">${escapeHtml(log.user_display_name)}</span>` : ""}
+                      </div>
+                    `}
+                  </div>
+                  ${log.total_hours ? `<span class="devlog-pill" style="color:var(--gold);border-color:rgba(232,180,85,0.3);background:rgba(232,180,85,0.1)">Hours: ${log.total_hours}h</span>` : ""}
+                  ${log.project_id && log.project_title ? `<a href="/project/${log.project_id}" class="devlog-pill" style="color:var(--gold);border-color:rgba(232,180,85,0.3);background:rgba(232,180,85,0.1);cursor:pointer;text-decoration:none;transition:all var(--transition);" onmouseover="this.style.borderColor='var(--gold-dim)';this.style.background='rgba(232,180,85,0.15)'" onmouseout="this.style.borderColor='rgba(232,180,85,0.3)';this.style.background='rgba(232,180,85,0.1)'">To Project</a>` : ""}
+                  <span class="devlog-pill" style="margin-left:auto;color:var(--muted)">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                    </svg>
+                    ${log.comments_count || 0}
+                  </span>
+                </div>
+              </div>
+            </div>
+          `;
+        }).join("");
+      }
+
+      /* ──────────────────────────────
+         EXPAND / COLLAPSE
+      ────────────────────────────── */
+      function toggleExpand(i) {
+        const el  = document.getElementById(`devlog-text-${i}`);
+        const btn = el.nextElementSibling;
+        const expanded = !el.classList.contains("clamped");
+        el.classList.toggle("clamped", expanded);
+        btn.textContent = expanded ? "Read more ↓" : "Show less ↑";
+      }
+
+      /* ──────────────────────────────
+         CAROUSEL NAVIGATION
+      ────────────────────────────── */
+      function updateCarousel(entryIdx, slideIdx) {
+        const sliding = document.getElementById(`carousel-slides-${entryIdx}`);
+        if (!sliding) return;
+
+        // Scroll to the slide
+        const slideWidth = sliding.parentElement.offsetWidth;
+        sliding.scrollLeft = slideIdx * slideWidth;
+
+        // Update active dot
+        const dots = document.querySelectorAll(`#carousel-${entryIdx} .carousel-dot`);
+        dots.forEach(dot => dot.classList.remove("active"));
+        if (dots[slideIdx]) {
+          dots[slideIdx].classList.add("active");
+        }
+      }
+
+      function nextSlide(entryIdx) {
+        const carousel = document.getElementById(`carousel-${entryIdx}`);
+        if (!carousel) return;
+        const slides = carousel.querySelectorAll(".carousel-slide");
+        const currentSlide = Math.round(carousel.querySelector(".carousel-slides").scrollLeft / carousel.offsetWidth);
+        const nextSlide = (currentSlide + 1) % slides.length;
+        updateCarousel(entryIdx, nextSlide);
+      }
+
+      function prevSlide(entryIdx) {
+        const carousel = document.getElementById(`carousel-${entryIdx}`);
+        if (!carousel) return;
+        const slides = carousel.querySelectorAll(".carousel-slide");
+        const currentSlide = Math.round(carousel.querySelector(".carousel-slides").scrollLeft / carousel.offsetWidth);
+        const prevSlide = (currentSlide - 1 + slides.length) % slides.length;
+        updateCarousel(entryIdx, prevSlide);
+      }
+
+      function goToSlide(entryIdx, slideIdx) {
+        updateCarousel(entryIdx, slideIdx);
+      }
+
+      /* ──────────────────────────────
+         LOAD DATA
+      ────────────────────────────── */
+      async function loadDevlogs() {
+        try {
+          const res  = await fetch(`/api/random_devlogs`);
+          const data = await res.json();
+          const devlogs = Array.isArray(data) ? data : Object.values(data);
+          renderDevlogs(devlogs);
+        } catch (e) {
+          console.error("Could not load devlogs:", e);
+          document.getElementById("timeline").innerHTML =
+            `<div class="state-box">Failed to load devlogs.</div>`;
+          document.getElementById("devlogCount").textContent = "Error";
+        }
+      }
+
+      function refreshDevlogs() {
+        document.getElementById("timeline").innerHTML = `
+          <div class="devlog-entry" style="animation-delay:0.05s">
+            <div class="devlog-card">
+              <div class="devlog-body">
+                <div class="skeleton" style="height:14px;width:90%;border-radius:4px"></div>
+                <div class="skeleton" style="height:14px;width:75%;border-radius:4px"></div>
+              </div>
+            </div>
+          </div>
+        `;
+        loadDevlogs();
+      }
+
+      /* ──────────────────────────────
+         INIT
+      ────────────────────────────── */
+      document.getElementById("footerYear").textContent = new Date().getFullYear();
+      document.addEventListener("DOMContentLoaded", () => {
+        loadDevlogs();
+      });
+    </script>
+  </body>
+</html>
