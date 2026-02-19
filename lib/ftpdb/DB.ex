@@ -27,7 +27,6 @@ defmodule Ftpdb.DB do
         banner_url: item["banner_url"],
         total_hours: div(duration, 3600)
       }
-
       {to_string(item["id"]), Map.merge(user_info, project_map)}
     end)
   end
@@ -52,7 +51,6 @@ defmodule Ftpdb.DB do
         rank: item["stat_weekly_rank"],
         banner_url: item["banner_url"]
       }
-
       Map.merge(user_info, user_map)
     end)
   end
@@ -124,41 +122,6 @@ defmodule Ftpdb.DB do
     end)
   end
 
-  def get_devlogs(project_id) do
-    {:ok, response} =
-      Supabase.PostgREST.from(client(), "devlogs")
-      |> Supabase.PostgREST.select(["body", "duration_seconds", "likes_count", "comments_count"])
-      |> Supabase.PostgREST.eq("project_id", project_id)
-      |> Supabase.PostgREST.order("created_at", desc: true)
-      |> Map.put(:method, :get)
-      |> Supabase.PostgREST.execute()
-
-    response.body
-    |> Enum.map(fn item ->
-      duration = item["duration_seconds"] || 0
-      total_hours = div(duration, 3600)
-
-      %{
-        body: item["body"],
-        total_hours: total_hours,
-        likes_count: item["likes_count"],
-        comments_count: item["comments_count"]
-      }
-    end)
-  end
-
-  def get_user_id(project_id) do
-    {:ok, response} =
-      Supabase.PostgREST.from(client(), "user_projects")
-      |> Supabase.PostgREST.select(["user_id"])
-      |> Supabase.PostgREST.eq("project_id", project_id)
-      |> Map.put(:method, :get)
-      |> Supabase.PostgREST.execute()
-
-    [%{"user_id" => user_id}] = response.body
-    user_id
-  end
-
   def get_project_info(project_id) do
     {:ok, response} =
       Supabase.PostgREST.from(client(), "projects")
@@ -200,27 +163,28 @@ defmodule Ftpdb.DB do
     end)
   end
 
-  def get_user_info(user_id) do
+  def random_projects do
     {:ok, response} =
-      Supabase.PostgREST.from(client(), "users")
-      |> Supabase.PostgREST.select(["id", "display_name", "avatar_url", "total_time", "slack_id"])
-      |> Supabase.PostgREST.eq("id", user_id)
+      Supabase.PostgREST.from(client(), "projects")
+      |> Supabase.PostgREST.select(["id", "title", "stat_total_duration_seconds", "stat_total_likes", "stat_hot_score"])
       |> Map.put(:method, :get)
       |> Supabase.PostgREST.execute()
 
     response.body
-    |> Enum.map(fn item ->
-      total_time = item["total_time"] || 0
-      total_hours = div(total_time, 3600)
+      |> Enum.map(fn item ->
+        user_id = get_user_id(item["id"])
+        [user_info] = get_user_info(user_id)
 
-      %{
-        user_id: to_string(item["id"]),
-        display_name: item["display_name"],
-        avatar_url: item["avatar_url"],
-        total_hours: total_hours,
-        slack_id: item["slack_id"]
-      }
-    end)
+        project_map = %{
+          id: to_string(item["id"]),
+          title: item["title"],
+          total_hours: div(item["stat_total_duration_seconds"] || 0, 3600),
+          likes: item["stat_total_likes"] || 0,
+          hot_score: item["stat_hot_score"] || 0
+        }
+
+        Map.merge(user_info, project_map)
+      end)
   end
 
   def search_projects(query) when is_binary(query) do
@@ -270,6 +234,41 @@ defmodule Ftpdb.DB do
     end
   end
 
+  def get_user_id(project_id) do
+    {:ok, response} =
+      Supabase.PostgREST.from(client(), "user_projects")
+      |> Supabase.PostgREST.select(["user_id"])
+      |> Supabase.PostgREST.eq("project_id", project_id)
+      |> Map.put(:method, :get)
+      |> Supabase.PostgREST.execute()
+
+    [%{"user_id" => user_id}] = response.body
+    user_id
+  end
+
+  def get_user_info(user_id) do
+    {:ok, response} =
+      Supabase.PostgREST.from(client(), "users")
+      |> Supabase.PostgREST.select(["id", "display_name", "avatar_url", "total_time", "slack_id"])
+      |> Supabase.PostgREST.eq("id", user_id)
+      |> Map.put(:method, :get)
+      |> Supabase.PostgREST.execute()
+
+    response.body
+    |> Enum.map(fn item ->
+      total_time = item["total_time"] || 0
+      total_hours = div(total_time, 3600)
+
+      %{
+        user_id: to_string(item["id"]),
+        display_name: item["display_name"],
+        avatar_url: item["avatar_url"],
+        total_hours: total_hours,
+        slack_id: item["slack_id"]
+      }
+    end)
+  end
+
   def search_users(query, min_hours \\ 0) when is_binary(query) do
     cleaned_query = String.trim(query)
 
@@ -309,60 +308,6 @@ defmodule Ftpdb.DB do
       |> Enum.filter(fn user -> user.total_time >= min_seconds end)
       |> Enum.sort_by(fn user -> -user.total_hours end)
       |> Enum.take(10)
-    end
-  end
-
-  def random_projects(filter) do
-    # Get all active projects and filter/sort them
-    {:ok, response} =
-      Supabase.PostgREST.from(client(), "projects")
-      |> Supabase.PostgREST.select([
-        "id",
-        "title",
-        "banner_url",
-        "stat_hot_score",
-        "stat_total_likes",
-        "stat_total_duration_seconds"
-      ])
-      |> Supabase.PostgREST.limit(100)
-      |> Map.put(:method, :get)
-      |> Supabase.PostgREST.execute()
-
-    projects =
-      response.body
-      |> Enum.map(fn item ->
-        user_id = get_user_id(item["id"])
-        [user_info] = get_user_info(user_id)
-        duration = item["stat_total_duration_seconds"] || 0
-
-        project_map = %{
-          id: to_string(item["id"]),
-          title: item["title"],
-          banner_url: item["banner_url"],
-          hot_score: item["stat_hot_score"] || 0,
-          likes: item["stat_total_likes"] || 0,
-          total_hours: div(duration, 3600)
-        }
-
-        Map.merge(user_info, project_map)
-      end)
-
-    # Apply filtering and sorting
-    case filter do
-      "most_liked" ->
-        projects |> Enum.sort_by(fn p -> -p.likes end) |> Enum.take(50)
-
-      "hottest" ->
-        projects |> Enum.sort_by(fn p -> -p.hot_score end) |> Enum.take(50)
-
-      "most_active" ->
-        projects |> Enum.sort_by(fn p -> -p.total_hours end) |> Enum.take(50)
-
-      "random" ->
-        projects |> Enum.shuffle() |> Enum.take(50)
-
-      _ ->
-        projects |> Enum.shuffle() |> Enum.take(50)
     end
   end
 
@@ -413,5 +358,28 @@ defmodule Ftpdb.DB do
       end)
       |> Enum.sort_by(fn p -> -p.total_hours end)
     end
+  end
+
+  def get_devlogs(project_id) do
+    {:ok, response} =
+      Supabase.PostgREST.from(client(), "devlogs")
+      |> Supabase.PostgREST.select(["body", "duration_seconds", "likes_count", "comments_count"])
+      |> Supabase.PostgREST.eq("project_id", project_id)
+      |> Supabase.PostgREST.order("created_at", desc: true)
+      |> Map.put(:method, :get)
+      |> Supabase.PostgREST.execute()
+
+    response.body
+    |> Enum.map(fn item ->
+      duration = item["duration_seconds"] || 0
+      total_hours = div(duration, 3600)
+
+      %{
+        body: item["body"],
+        total_hours: total_hours,
+        likes_count: item["likes_count"],
+        comments_count: item["comments_count"]
+      }
+    end)
   end
 end
