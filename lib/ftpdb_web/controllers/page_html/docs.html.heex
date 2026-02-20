@@ -1,0 +1,553 @@
+<Layouts.app flash={@flash}>
+  <.navbar pills_enabled />
+
+  <main style="display: flex; width: 100%; overflow: hidden; background: var(--bg);">
+    <div
+      id="swagger-ui-wrapper"
+      style="flex: 1; overflow-y: auto; width: 100%; background: var(--bg); padding: 0;"
+    >
+    </div>
+  </main>
+
+  <link
+    rel="stylesheet"
+    type="text/css"
+    href="https://cdn.jsdelivr.net/npm/swagger-ui-dist@4/swagger-ui.css"
+  />
+
+  <script
+    src="https://cdn.jsdelivr.net/npm/swagger-ui-dist@4/swagger-ui-bundle.js"
+    charset="UTF-8"
+  >
+  </script>
+  <script
+    src="https://cdn.jsdelivr.net/npm/swagger-ui-dist@4/swagger-ui-standalone-preset.js"
+    charset="UTF-8"
+  >
+  </script>
+
+  <script>
+    window.onload = function() {
+      if (window.SwaggerUIBundle) {
+        // Create wrapper div for swagger-ui
+        const wrapper = document.getElementById('swagger-ui-wrapper');
+        const container = document.createElement('div');
+        container.id = 'swagger-ui';
+        wrapper.appendChild(container);
+        
+        const ui = SwaggerUIBundle({
+          url: "/openapi.yaml",
+          dom_id: '#swagger-ui',
+          deepLinking: true,
+          presets: [
+            SwaggerUIBundle.presets.apis
+          ],
+          plugins: [
+            SwaggerUIBundle.plugins.DownloadUrl
+          ]
+        })
+      }
+    }
+  </script>
+
+  <style>
+    main {
+      flex: 1;
+      overflow: hidden;
+      background: var(--bg);
+    }
+
+    #swagger-ui-wrapper {
+      background: var(--bg) !important;
+    }
+
+    :global(#swagger-ui) {
+      padding: 20px !important;
+      max-width: 1400px !important;
+      margin: 0 auto !important;
+    }
+
+    /* Base styling */
+    :global(.swagger-ui) {
+      background: var(--bg) !important;
+      color: var(--text) !important;
+    }
+
+    :global(.swagger-ui .topbar) {
+      background: linear-gradient(135deg, var(--surface) 0%, var(--surface2) 100%) !important;
+      border-bottom: 1px solid var(--border) !important;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4) !important;
+      padding: 16px 20px !important;
+    }
+
+    :global(.swagger-ui .topbar .topbar-wrapper) {
+      max-width: 100% !important;
+      padding: 0 !important;
+    }
+
+    :global(.swagger-ui .topbar h1) {
+      display: none !important;
+    }
+
+    /* Info section */
+    :global(.swagger-ui .info) {
+      background: transparent !important;
+      margin: 32px 0 24px 0 !important;
+      padding: 24px !important;
+      border: 1px solid var(--border) !important;
+      border-radius: var(--r-md) !important;
+      background: linear-gradient(135deg, rgba(232, 180, 85, 0.05) 0%, rgba(79, 142, 247, 0.05) 100%) !important;
+    }
+
+    :global(.swagger-ui .info .title) {
+      color: var(--gold) !important;
+      font-family: 'DM Serif Display', serif !important;
+      font-size: 36px !important;
+      margin: 0 0 12px 0 !important;
+      font-weight: 400 !important;
+      letter-spacing: -0.5px !important;
+    }
+
+    :global(.swagger-ui .info .description) {
+      color: var(--muted) !important;
+      margin-top: 8px !important;
+      font-size: 15px !important;
+      line-height: 1.6 !important;
+    }
+
+    :global(.swagger-ui .info .version) {
+      color: var(--muted) !important;
+      margin-top: 12px !important;
+    }
+
+    /* Scheme container */
+    :global(.swagger-ui .scheme-container) {
+      background: var(--bg) !important;
+      border: none !important;
+      border-radius: 0 !important;
+      padding: 0 !important;
+      margin: 0 !important;
+      box-shadow: none !important;
+    }
+
+    :global(.swagger-ui .scheme-container .topbar) {
+      background: transparent !important;
+      border: none !important;
+      box-shadow: none !important;
+      padding: 24px 0 !important;
+    }
+
+    :global(.swagger-ui .scheme-container .schemes) {
+      padding: 0 !important;
+    }
+
+    :global(.swagger-ui .scheme-container .schemes select) {
+      background: var(--surface2) !important;
+      border: 1px solid var(--border) !important;
+      color: var(--text) !important;
+      padding: 8px 12px !important;
+      border-radius: var(--r-sm) !important;
+    }
+
+    /* Operation blocks */
+    :global(.swagger-ui .opblock) {
+      background: linear-gradient(135deg, var(--surface) 0%, var(--surface2) 100%) !important;
+      border: 1px solid var(--border) !important;
+      border-radius: var(--r-md) !important;
+      margin: 16px 0 !important;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    }
+
+    :global(.swagger-ui .opblock:hover) {
+      border-color: var(--gold-dim) !important;
+      box-shadow: 0 8px 24px rgba(232, 180, 85, 0.2) !important;
+    }
+
+    :global(.swagger-ui .opblock.opblock-get > .opblock-summary) {
+      background: linear-gradient(135deg, rgba(79, 142, 247, 0.08) 0%, rgba(79, 142, 247, 0.03) 100%) !important;
+      border-color: var(--border) !important;
+      color: var(--text) !important;
+    }
+
+    :global(.swagger-ui .opblock.opblock-get > .opblock-summary:hover) {
+      background: linear-gradient(135deg, rgba(79, 142, 247, 0.12) 0%, rgba(79, 142, 247, 0.06) 100%) !important;
+    }
+
+    :global(.swagger-ui .opblock.opblock-post > .opblock-summary) {
+      background: linear-gradient(135deg, rgba(76, 175, 80, 0.08) 0%, rgba(76, 175, 80, 0.03) 100%) !important;
+    }
+
+    :global(.swagger-ui .opblock-summary) {
+      color: var(--text) !important;
+      padding: 16px 20px !important;
+      cursor: pointer !important;
+    }
+
+    :global(.swagger-ui .opblock-summary-method) {
+      background: linear-gradient(135deg, var(--accent) 0%, #3d7bc4 100%) !important;
+      color: white !important;
+      padding: 6px 14px !important;
+      border-radius: 4px !important;
+      font-weight: 700 !important;
+      min-width: 70px !important;
+      text-align: center !important;
+      box-shadow: 0 2px 6px rgba(79, 142, 247, 0.3) !important;
+    }
+
+    :global(.swagger-ui .opblock-summary-path) {
+      color: var(--text) !important;
+      font-family: 'DM Mono', monospace !important;
+      font-size: 14px !important;
+      margin: 0 16px !important;
+    }
+
+    :global(.swagger-ui .opblock-summary-description) {
+      color: var(--muted) !important;
+      font-size: 13px !important;
+    }
+
+    /* Tags */
+    :global(.swagger-ui .opblock-tag) {
+      color: var(--text) !important;
+      font-weight: 700 !important;
+      font-size: 18px !important;
+      letter-spacing: -0.3px !important;
+      border-bottom: 2px solid var(--border) !important;
+      padding: 16px 0 12px 0 !important;
+      margin: 32px 0 16px 0 !important;
+      font-family: 'DM Serif Display', serif !important;
+    }
+
+    :global(.swagger-ui .opblock-tag-section) {
+      margin: 0 !important;
+    }
+
+    :global(.swagger-ui .opblock-tag-section > label {
+      cursor: pointer !important;
+    }
+
+    /* Buttons */
+    :global(.swagger-ui .btn) {
+      border-radius: var(--r-sm) !important;
+      border: 1px solid var(--border) !important;
+      background-color: var(--surface2) !important;
+      color: var(--text) !important;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+      padding: 8px 16px !important;
+      font-weight: 600 !important;
+      cursor: pointer !important;
+    }
+
+    :global(.swagger-ui .btn:hover) {
+      background-color: var(--accent) !important;
+      border-color: var(--accent) !important;
+      color: white !important;
+      box-shadow: 0 2px 8px rgba(79, 142, 247, 0.3) !important;
+    }
+
+    :global(.swagger-ui .btn.authorize) {
+      border-color: var(--gold) !important;
+      color: var(--gold) !important;
+      background: transparent !important;
+    }
+
+    :global(.swagger-ui .btn.authorize:hover) {
+      border-color: var(--gold) !important;
+      background: rgba(232, 180, 85, 0.1) !important;
+      color: var(--gold) !important;
+    }
+
+    :global(.swagger-ui .execute-wrapper) {
+      text-align: right !important;
+      padding: 16px 0 !important;
+    }
+
+    :global(.swagger-ui .execute-wrapper button) {
+      background: linear-gradient(135deg, var(--gold) 0%, #d4a84e 100%) !important;
+      color: #0d0f14 !important;
+      border: none !important;
+      font-weight: 700 !important;
+      padding: 10px 28px !important;
+      border-radius: var(--r-sm) !important;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+      cursor: pointer !important;
+      box-shadow: 0 4px 12px rgba(232, 180, 85, 0.25) !important;
+    }
+
+    :global(.swagger-ui .execute-wrapper button:hover) {
+      opacity: 0.9 !important;
+      transform: translateY(-2px) !important;
+      box-shadow: 0 6px 16px rgba(232, 180, 85, 0.35) !important;
+    }
+
+    /* Parameters section */
+    :global(.swagger-ui .parameters) {
+      background: transparent !important;
+    }
+
+    :global(.swagger-ui .parameter__name) {
+      color: var(--text) !important;
+      font-weight: 700 !important;
+      font-family: 'DM Mono', monospace !important;
+    }
+
+    :global(.swagger-ui .parameter__type) {
+      color: var(--muted) !important;
+      font-family: 'DM Mono', monospace !important;
+    }
+
+    :global(.swagger-ui .parameter__in) {
+      color: var(--muted) !important;
+    }
+
+    :global(.swagger-ui .parameters-col_description p) {
+      color: var(--muted) !important;
+    }
+
+    :global(.swagger-ui .parameters-col_description) {
+      color: var(--text) !important;
+    }
+
+    /* Models/Schemas */
+    :global(.swagger-ui .model) {
+      background: linear-gradient(135deg, var(--surface2) 0%, var(--surface) 100%) !important;
+      border: 1px solid var(--border) !important;
+      border-radius: var(--r-md) !important;
+      padding: 16px !important;
+      margin: 12px 0 !important;
+    }
+
+    :global(.swagger-ui .model-container) {
+      background: transparent !important;
+    }
+
+    :global(.swagger-ui .models) {
+      border-top: 2px solid var(--border) !important;
+      margin-top: 32px !important;
+      padding-top: 24px !important;
+    }
+
+    :global(.swagger-ui .models > h4) {
+      color: var(--text) !important;
+      margin: 16px 0 16px 0 !important;
+      font-size: 18px !important;
+      font-weight: 700 !important;
+      font-family: 'DM Serif Display', serif !important;
+    }
+
+    :global(.swagger-ui .model-title) {
+      color: var(--gold) !important;
+      font-weight: 700 !important;
+      font-family: 'DM Mono', monospace !important;
+    }
+
+    /* Properties */
+    :global(.swagger-ui .property-row) {
+      background: transparent !important;
+      border-bottom: 1px solid var(--border) !important;
+      padding: 12px 0 !important;
+    }
+
+    :global(.swagger-ui .property-row:last-child) {
+      border-bottom: none !important;
+    }
+
+    :global(.swagger-ui .property-name) {
+      color: var(--gold) !important;
+      font-weight: 700 !important;
+      font-family: 'DM Mono', monospace !important;
+    }
+
+    :global(.swagger-ui .property-type) {
+      color: var(--muted) !important;
+      font-family: 'DM Mono', monospace !important;
+    }
+
+    :global(.swagger-ui .required) {
+      color: var(--danger) !important;
+      font-weight: 700 !important;
+    }
+
+    /* Code and pre */
+    :global(.swagger-ui code) {
+      background: var(--surface2) !important;
+      color: var(--gold) !important;
+      padding: 2px 6px !important;
+      border-radius: 4px !important;
+      font-family: 'DM Mono', monospace !important;
+      font-size: 12px !important;
+    }
+
+    :global(.swagger-ui pre) {
+      background: var(--surface2) !important;
+      border: 1px solid var(--border) !important;
+      color: var(--text) !important;
+      border-radius: var(--r-md) !important;
+      padding: 16px !important;
+      overflow-x: auto !important;
+    }
+
+    /* Forms */
+    :global(.swagger-ui textarea, .swagger-ui input[type=text], .swagger-ui input[type=password], .swagger-ui input[type=email], .swagger-ui input[type=number], .swagger-ui input[type=search]) {
+      background: var(--surface2) !important;
+      border: 1px solid var(--border) !important;
+      color: var(--text) !important;
+      border-radius: var(--r-sm) !important;
+      padding: 8px 12px !important;
+      font-family: 'DM Mono', monospace !important;
+    }
+
+    :global(.swagger-ui textarea::placeholder, .swagger-ui input::placeholder) {
+      color: var(--muted) !important;
+    }
+
+    :global(.swagger-ui textarea:focus, .swagger-ui input[type=text]:focus, .swagger-ui input[type=password]:focus, .swagger-ui input[type=email]:focus, .swagger-ui input[type=number]:focus, .swagger-ui input[type=search]:focus) {
+      border-color: var(--accent) !important;
+      outline: none !important;
+      background: var(--surface2) !important;
+      box-shadow: 0 0 0 3px rgba(79, 142, 247, 0.15) !important;
+    }
+
+    /* Tables */
+    :global(.swagger-ui table) {
+      background: transparent !important;
+    }
+
+    :global(.swagger-ui table thead) {
+      background: rgba(79, 142, 247, 0.05) !important;
+    }
+
+    :global(.swagger-ui table thead th) {
+      color: var(--gold) !important;
+      border-bottom: 2px solid var(--border) !important;
+      font-weight: 700 !important;
+      text-align: left !important;
+      padding: 12px !important;
+    }
+
+    :global(.swagger-ui table tr) {
+      border-bottom: 1px solid var(--border) !important;
+    }
+
+    :global(.swagger-ui table tr:hover) {
+      background: rgba(79, 142, 247, 0.08) !important;
+    }
+
+    :global(.swagger-ui table td, .swagger-ui table th) {
+      border: none !important;
+      padding: 12px !important;
+      background-color: transparent !important;
+      color: var(--text) !important;
+    }
+
+    /* Headers */
+    :global(.swagger-ui h2, .swagger-ui h3, .swagger-ui h4, .swagger-ui h5) {
+      color: var(--text) !important;
+      font-family: 'Cabinet Grotesk', sans-serif !important;
+    }
+
+    :global(.swagger-ui h2) {
+      font-size: 22px !important;
+      margin: 24px 0 16px 0 !important;
+      font-weight: 700 !important;
+    }
+
+    :global(.swagger-ui h3) {
+      font-size: 17px !important;
+      margin: 16px 0 12px 0 !important;
+      font-weight: 700 !important;
+    }
+
+    /* Responses */
+    :global(.swagger-ui .response) {
+      background: linear-gradient(135deg, var(--surface) 0%, var(--surface2) 100%) !important;
+      border: 1px solid var(--border) !important;
+      border-radius: var(--r-md) !important;
+      margin: 16px 0 !important;
+      padding: 16px !important;
+    }
+
+    :global(.swagger-ui .response-col) {
+      color: var(--text) !important;
+    }
+
+    :global(.swagger-ui .response-col_status) {
+      font-weight: 700 !important;
+      color: var(--gold) !important;
+      font-family: 'DM Mono', monospace !important;
+    }
+
+    :global(.swagger-ui .response-col_description) {
+      color: var(--muted) !important;
+    }
+
+    /* Content type */
+    :global(.swagger-ui .content-type) {
+      background: var(--surface2) !important;
+      border: 1px solid var(--border) !important;
+      border-radius: var(--r-sm) !important;
+      color: var(--text) !important;
+    }
+
+    :global(.swagger-ui .body-param-options .content-type) {
+      background: var(--surface2) !important;
+      border: 1px solid var(--border) !important;
+      border-radius: var(--r-sm) !important;
+      color: var(--text) !important;
+    }
+
+    /* Loading state */
+    :global(.swagger-ui .loading-container) {
+      background: transparent !important;
+    }
+
+    /* Sections */
+    :global(.swagger-ui section.models) {
+      border-top: none !important;
+    }
+
+    /* General text colors */
+    :global(.swagger-ui * > label) {
+      color: var(--text) !important;
+    }
+
+    /* Dropdowns */
+    :global(.swagger-ui select) {
+      background: var(--surface2) !important;
+      border: 1px solid var(--border) !important;
+      color: var(--text) !important;
+      border-radius: var(--r-sm) !important;
+      padding: 6px 12px !important;
+    }
+
+    :global(.swagger-ui select:hover, .swagger-ui select:focus) {
+      border-color: var(--accent) !important;
+    }
+
+    /* Tab styling */
+    :global(.swagger-ui .tab) {
+      color: var(--muted) !important;
+      border-bottom: 2px solid transparent !important;
+      cursor: pointer !important;
+      padding: 12px 16px !important;
+    }
+
+    :global(.swagger-ui .tab.active) {
+      color: var(--gold) !important;
+      border-bottom-color: var(--gold) !important;
+    }
+
+    :global(.swagger-ui .tab:hover) {
+      color: var(--text) !important;
+    }
+
+    /* Model examples */
+    :global(.swagger-ui .model-box) {
+      border: 1px solid var(--border) !important;
+      border-radius: var(--r-md) !important;
+      padding: 12px !important;
+      background: var(--surface2) !important;
+    }
+  </style>
+</Layouts.app>

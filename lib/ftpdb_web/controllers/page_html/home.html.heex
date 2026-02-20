@@ -603,71 +603,8 @@
           <span class="section-meta" id="weekLabel">— Loading…</span>
         </div>
         <!-- API HOOK: fetch /api/top_this_week, render .project-card for each result -->
-        <div class="card-grid" id="topWeekGrid">
-          
-<!-- Template card — repeat for each project -->
-          <div class="project-card" onclick="viewProject('ID')" data-project-id="ID">
-            <div class="project-card-thumb skeleton">
-              <!-- API HOOK: <img src="/api/projects/ID/thumbnail" alt="…" loading="lazy" /> -->
-              <div class="project-card-thumb-placeholder">THUMBNAIL</div>
-            </div>
-            <span class="project-card-rank">1</span>
-            <div class="project-card-body">
-              <div class="project-card-slack">
-                <div class="project-card-icon">
-                  <!-- API HOOK: <img src="/api/slack/icon?channel=CHANNEL_ID" width="16" height="16" /> -->
-                  <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
-                    <rect width="4" height="4" x="3" y="3" rx="1" /><rect
-                      width="4"
-                      height="4"
-                      x="17"
-                      y="3"
-                      rx="1"
-                    /><rect width="4" height="4" x="3" y="17" rx="1" /><rect
-                      width="4"
-                      height="4"
-                      x="17"
-                      y="17"
-                      rx="1"
-                    />
-                  </svg>
-                </div>
-                <span class="project-card-name">Project Name</span>
-              </div>
-              <span class="project-card-meta">
-                <!-- API HOOK: project.slack_channel + project.score -->
-                #channel · ★ —
-              </span>
-            </div>
-          </div>
-          
-<!-- Skeleton placeholder cards while loading -->
-          <div class="project-card">
-            <div class="project-card-thumb skeleton"></div>
-            <div class="project-card-body">
-              <span class="project-card-rank">2</span>
-              <div class="project-card-slack">
-                <div class="project-card-icon"></div>
-                <span
-                  class="project-card-name skeleton"
-                  style="width:80%;height:14px;display:block"
-                >
-                </span>
-              </div>
-            </div>
-          </div>
-          <div class="project-card">
-            <div class="project-card-thumb skeleton"></div>
-            <div class="project-card-body"><span class="project-card-rank">3</span></div>
-          </div>
-          <div class="project-card">
-            <div class="project-card-thumb skeleton"></div>
-            <div class="project-card-body"><span class="project-card-rank">4</span></div>
-          </div>
-          <div class="project-card">
-            <div class="project-card-thumb skeleton"></div>
-            <div class="project-card-body"><span class="project-card-rank">5</span></div>
-          </div>
+        <div class="hscroll-wrapper">
+          <div class="hscroll" id="topWeekGrid"></div>
         </div>
       </section>
 

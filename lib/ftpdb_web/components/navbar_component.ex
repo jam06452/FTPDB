@@ -69,6 +69,7 @@ defmodule FtpdbWeb.NavbarComponent do
           <button class="nav-pill" onclick="filterSection('hot')">Hot</button>
           <button class="nav-pill" onclick="filterSection('updates')">Updates</button>
           <a href="/suggestions" class="nav-pill">Suggestions</a>
+          <a href="/docs" class="nav-pill">Docs</a>
         </div>
       <% end %>
     </nav>

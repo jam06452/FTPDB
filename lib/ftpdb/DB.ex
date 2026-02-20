@@ -460,7 +460,10 @@ defmodule Ftpdb.DB do
 
       users_map =
         (users_response.body || [])
-        |> Map.new(fn item -> {item["id"], %{"avatar_url" => item["avatar_url"], "display_name" => item["display_name"]}} end)
+        |> Map.new(fn item ->
+          {item["id"],
+           %{"avatar_url" => item["avatar_url"], "display_name" => item["display_name"]}}
+        end)
 
       # Calculate weights with exponential bias towards newer devlogs
       weighted_devlogs =
@@ -479,6 +482,7 @@ defmodule Ftpdb.DB do
           project_title = Map.get(projects_map, project_id, "Unknown")
           user_data = if user_id, do: Map.get(users_map, user_id, %{}), else: %{}
           user_avatar = Map.get(user_data, "avatar_url", nil)
+
           user_display_name =
             case Map.get(user_data, "display_name") do
               nil -> "Unknown User"
@@ -521,7 +525,10 @@ defmodule Ftpdb.DB do
               weighted_devlogs
               |> Enum.reduce_while({nil, 0}, fn {devlog, weight}, {_last, cum_weight} ->
                 new_cum = cum_weight + weight
-                if new_cum >= rand, do: {:halt, {devlog, new_cum}}, else: {:cont, {devlog, new_cum}}
+
+                if new_cum >= rand,
+                  do: {:halt, {devlog, new_cum}},
+                  else: {:cont, {devlog, new_cum}}
               end)
 
             acc ++ [selected_devlog]
