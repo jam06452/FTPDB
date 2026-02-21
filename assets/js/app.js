@@ -177,13 +177,8 @@ function initHomePage() {
   let currentSlide = 0
   const track         = document.getElementById("bannerTrack")
   const dotsContainer = document.getElementById("bannerDots")
-  let slides          = track ? track.querySelectorAll(".banner-slide") : []
-  let totalSlides     = slides.length
-
-  function updateSlideCount() {
-    slides = track ? track.querySelectorAll(".banner-slide") : []
-    totalSlides = slides.length
-  }
+  const slides        = track ? track.querySelectorAll(".banner-slide") : []
+  const totalSlides   = slides.length
 
   if (totalSlides > 0) {
     for (let i = 0; i < totalSlides; i++) {
@@ -254,21 +249,9 @@ function initHomePage() {
         </div>
       </div>`).join("")
 
-    // Update slide count
-    updateSlideCount()
+    dotsContainer.innerHTML = projects.map((_, i) =>
+      `<div class="banner-dot${i === 0 ? " active" : ""}" onclick="goToSlide(${i})"></div>`).join("")
 
-    // Clear and recreate dots
-    dotsContainer.innerHTML = ""
-    for (let i = 0; i < totalSlides; i++) {
-      const dot = document.createElement("div")
-      dot.className = "banner-dot" + (i === 0 ? " active" : "")
-      dot.setAttribute("data-index", i)
-      dot.onclick = () => goToSlide(i)
-      dotsContainer.appendChild(dot)
-    }
-
-    // Reset carousel to first slide
-    currentSlide = 0
     goToSlide(0)
   }
 

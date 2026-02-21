@@ -684,9 +684,6 @@ footer {
 .hscroll::-webkit-scrollbar { height: 4px; }
 .hscroll::-webkit-scrollbar-track { background: transparent; }
 .hscroll::-webkit-scrollbar-thumb { background: var(--surface2); border-radius: 4px; }
-.hscroll > .project-card {
-  flex: 0 0 220px;
-}
 .hcard {
   flex: 0 0 220px;
   background: var(--surface);
