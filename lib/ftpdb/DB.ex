@@ -8,269 +8,191 @@ defmodule Ftpdb.DB do
   end
 
   def hot do
-    case Supabase.PostgREST.from(client(), "projects")
-         |> Supabase.PostgREST.select([
-           "title",
-           "id",
-           "banner_url",
-           "stat_total_duration_seconds"
-         ])
-         |> Supabase.PostgREST.order("stat_hot_score", desc: true)
-         |> Supabase.PostgREST.limit(10)
-         |> Map.put(:method, :get)
-         |> Supabase.PostgREST.execute() do
-      {:ok, response} ->
-        response.body
-        |> Enum.map(fn item ->
-          user_id = get_user_id(item["id"])
-          user_info = if user_id, do: get_user_info(user_id), else: nil
+    {:ok, response} =
+      Supabase.PostgREST.from(client(), "projects")
+      |> Supabase.PostgREST.select(["title", "id", "banner_url", "stat_total_duration_seconds"])
+      |> Supabase.PostgREST.order("stat_hot_score", desc: true)
+      |> Supabase.PostgREST.limit(10)
+      |> Map.put(:method, :get)
+      |> Supabase.PostgREST.execute()
 
-          case user_info do
-            [info] ->
-              duration = item["stat_total_duration_seconds"] || 0
+    response.body
+    |> Map.new(fn item ->
+      user_id = get_user_id(item["id"])
+      [user_info] = get_user_info(user_id)
+      duration = item["stat_total_duration_seconds"] || 0
 
-              project_map = %{
-                title: item["title"],
-                banner_url: item["banner_url"],
-                total_hours: div(duration, 3600)
-              }
+      project_map = %{
+        title: item["title"],
+        banner_url: item["banner_url"],
+        total_hours: div(duration, 3600)
+      }
 
-              {to_string(item["id"]), Map.merge(info, project_map)}
-
-            _ ->
-              nil
-          end
-        end)
-        |> Enum.filter(& &1)
-        |> Map.new()
-
-      {:error, error} ->
-        Logger.error("Failed to get hot projects: #{inspect(error)}")
-        %{}
-    end
+      {to_string(item["id"]), Map.merge(user_info, project_map)}
+    end)
   end
 
   def top_this_week do
-    case Supabase.PostgREST.from(client(), "projects")
-         |> Supabase.PostgREST.select(["title", "id", "stat_weekly_rank", "banner_url"])
-         |> Supabase.PostgREST.order("stat_weekly_rank", asc: true)
-         |> Supabase.PostgREST.limit(10)
-         |> Map.put(:method, :get)
-         |> Supabase.PostgREST.execute() do
-      {:ok, response} ->
-        response.body
-        |> Enum.map(fn item ->
-          user_id = get_user_id(item["id"])
-          user_info = if user_id, do: get_user_info(user_id), else: nil
+    {:ok, response} =
+      Supabase.PostgREST.from(client(), "projects")
+      |> Supabase.PostgREST.select(["title", "id", "stat_weekly_rank", "banner_url"])
+      |> Supabase.PostgREST.order("stat_weekly_rank", asc: true)
+      |> Supabase.PostgREST.limit(10)
+      |> Map.put(:method, :get)
+      |> Supabase.PostgREST.execute()
 
-          case user_info do
-            [info] ->
-              user_map = %{
-                id: to_string(item["id"]),
-                title: item["title"],
-                rank: item["stat_weekly_rank"],
-                banner_url: item["banner_url"]
-              }
+    response.body
+    |> Enum.map(fn item ->
+      user_id = get_user_id(item["id"])
+      [user_info] = get_user_info(user_id)
 
-              Map.merge(info, user_map)
+      user_map = %{
+        id: to_string(item["id"]),
+        title: item["title"],
+        rank: item["stat_weekly_rank"],
+        banner_url: item["banner_url"]
+      }
 
-            _ ->
-              nil
-          end
-        end)
-        |> Enum.filter(& &1)
-
-      {:error, error} ->
-        Logger.error("Failed to get top_this_week: #{inspect(error)}")
-        []
-    end
+      Map.merge(user_info, user_map)
+    end)
   end
 
   def fan_favourites do
-    case Supabase.PostgREST.from(client(), "projects")
-         |> Supabase.PostgREST.select(["title", "id", "banner_url"])
-         |> Supabase.PostgREST.order("stat_total_likes", desc: true)
-         |> Supabase.PostgREST.limit(10)
-         |> Map.put(:method, :get)
-         |> Supabase.PostgREST.execute() do
-      {:ok, response} ->
-        response.body
-        |> Enum.map(fn item ->
-          user_id = get_user_id(item["id"])
-          user_info = if user_id, do: get_user_info(user_id), else: nil
+    {:ok, response} =
+      Supabase.PostgREST.from(client(), "projects")
+      |> Supabase.PostgREST.select(["title", "id", "banner_url"])
+      |> Supabase.PostgREST.order("stat_total_likes", desc: true)
+      |> Supabase.PostgREST.limit(10)
+      |> Map.put(:method, :get)
+      |> Supabase.PostgREST.execute()
 
-          case user_info do
-            [info] ->
-              project_map = %{title: item["title"], banner_url: item["banner_url"]}
-              {to_string(item["id"]), Map.merge(info, project_map)}
+    response.body
+    |> Map.new(fn item ->
+      user_id = get_user_id(item["id"])
+      [user_info] = get_user_info(user_id)
 
-            _ ->
-              nil
-          end
-        end)
-        |> Enum.filter(& &1)
-        |> Map.new()
-
-      {:error, error} ->
-        Logger.error("Failed to get fan_favourites: #{inspect(error)}")
-        %{}
-    end
+      project_map = %{title: item["title"], banner_url: item["banner_url"]}
+      {to_string(item["id"]), Map.merge(user_info, project_map)}
+    end)
   end
 
   def top_all_time do
-    case Supabase.PostgREST.from(client(), "projects")
-         |> Supabase.PostgREST.select(["title", "id", "stat_all_time_rank", "banner_url"])
-         |> Supabase.PostgREST.order("stat_all_time_rank", asc: true)
-         |> Supabase.PostgREST.limit(10)
-         |> Map.put(:method, :get)
-         |> Supabase.PostgREST.execute() do
-      {:ok, response} ->
-        response.body
-        |> Enum.map(fn item ->
-          user_id = get_user_id(item["id"])
-          user_info = if user_id, do: get_user_info(user_id), else: nil
+    {:ok, response} =
+      Supabase.PostgREST.from(client(), "projects")
+      |> Supabase.PostgREST.select(["title", "id", "stat_all_time_rank", "banner_url"])
+      |> Supabase.PostgREST.order("stat_all_time_rank", asc: true)
+      |> Supabase.PostgREST.limit(10)
+      |> Map.put(:method, :get)
+      |> Supabase.PostgREST.execute()
 
-          case user_info do
-            [info] ->
-              user_map = %{
-                id: to_string(item["id"]),
-                title: item["title"],
-                rank: item["stat_all_time_rank"],
-                banner_url: item["banner_url"]
-              }
+    response.body
+    |> Enum.map(fn item ->
+      user_id = get_user_id(item["id"])
+      [user_info] = get_user_info(user_id)
 
-              Map.merge(info, user_map)
+      user_map = %{
+        id: to_string(item["id"]),
+        title: item["title"],
+        rank: item["stat_all_time_rank"],
+        banner_url: item["banner_url"]
+      }
 
-            _ ->
-              nil
-          end
-        end)
-        |> Enum.filter(& &1)
-
-      {:error, error} ->
-        Logger.error("Failed to get top_all_time: #{inspect(error)}")
-        []
-    end
+      Map.merge(user_info, user_map)
+    end)
   end
 
   def most_time_spent do
-    case Supabase.PostgREST.from(client(), "users")
-         |> Supabase.PostgREST.select(["id", "display_name", "avatar_url", "total_time"])
-         |> Supabase.PostgREST.order("total_time", desc: true)
-         |> Supabase.PostgREST.limit(10)
-         |> Map.put(:method, :get)
-         |> Supabase.PostgREST.execute() do
-      {:ok, response} ->
-        response.body
-        |> Enum.map(fn item ->
-          total_time = item["total_time"] || 0
-          total_hours = div(total_time, 3600)
+    {:ok, response} =
+      Supabase.PostgREST.from(client(), "users")
+      |> Supabase.PostgREST.select(["id", "display_name", "avatar_url", "total_time"])
+      |> Supabase.PostgREST.order("total_time", desc: true)
+      |> Supabase.PostgREST.limit(10)
+      |> Map.put(:method, :get)
+      |> Supabase.PostgREST.execute()
 
-          %{
-            id: to_string(item["id"]),
-            display_name: item["display_name"],
-            avatar_url: item["avatar_url"],
-            total_hours: total_hours
-          }
-        end)
+    response.body
+    |> Enum.map(fn item ->
+      total_time = item["total_time"] || 0
+      total_hours = div(total_time, 3600)
 
-      {:error, error} ->
-        Logger.error("Failed to get most_time_spent: #{inspect(error)}")
-        []
-    end
+      %{
+        id: to_string(item["id"]),
+        display_name: item["display_name"],
+        avatar_url: item["avatar_url"],
+        total_hours: total_hours
+      }
+    end)
   end
 
   def get_project_info(project_id) do
-    case Supabase.PostgREST.from(client(), "projects")
-         |> Supabase.PostgREST.select([
-           "title",
-           "description",
-           "repo_url",
-           "demo_url",
-           "ship_status",
-           "stat_total_duration_seconds",
-           "stat_total_likes",
-           "banner_url"
-         ])
-         |> Supabase.PostgREST.eq("id", project_id)
-         |> Map.put(:method, :get)
-         |> Supabase.PostgREST.execute() do
-      {:ok, response} ->
-        user_id = get_user_id(project_id)
-        user_info = if user_id, do: get_user_info(user_id), else: nil
+    {:ok, response} =
+      Supabase.PostgREST.from(client(), "projects")
+      |> Supabase.PostgREST.select([
+        "title",
+        "description",
+        "repo_url",
+        "demo_url",
+        "ship_status",
+        "stat_total_duration_seconds",
+        "stat_total_likes",
+        "banner_url"
+      ])
+      |> Supabase.PostgREST.eq("id", project_id)
+      |> Map.put(:method, :get)
+      |> Supabase.PostgREST.execute()
 
-        response.body
-        |> Enum.map(fn item ->
-          case user_info do
-            [info] ->
-              duration = item["stat_total_duration_seconds"] || 0
-              total_hours = div(duration, 3600)
-              user_info_filtered = Map.drop(info, [:total_hours])
+    response.body
+    |> Enum.map(fn item ->
+      duration = item["stat_total_duration_seconds"] || 0
+      total_hours = div(duration, 3600)
+      user_id = get_user_id(project_id)
+      [user_info] = get_user_info(user_id)
 
-              project_map = %{
-                title: item["title"],
-                description: item["description"],
-                repo_url: item["repo_url"],
-                demo_url: item["demo_url"],
-                ship_status: item["ship_status"],
-                total_hours: total_hours,
-                total_likes: item["stat_total_likes"],
-                banner_url: item["banner_url"]
-              }
+      user_info = Map.drop(user_info, [:total_hours])
 
-              Map.merge(user_info_filtered, project_map)
+      project_map = %{
+        title: item["title"],
+        description: item["description"],
+        repo_url: item["repo_url"],
+        demo_url: item["demo_url"],
+        ship_status: item["ship_status"],
+        total_hours: total_hours,
+        total_likes: item["stat_total_likes"],
+        banner_url: item["banner_url"]
+      }
 
-            _ ->
-              nil
-          end
-        end)
-        |> Enum.filter(& &1)
-
-      {:error, error} ->
-        Logger.error("Failed to get project info for project_id #{project_id}: #{inspect(error)}")
-        []
-    end
+      Map.merge(user_info, project_map)
+    end)
   end
 
   def random_projects do
-    case Supabase.PostgREST.from(client(), "projects")
-         |> Supabase.PostgREST.select([
-           "id",
-           "title",
-           "stat_total_duration_seconds",
-           "stat_total_likes",
-           "stat_hot_score"
-         ])
-         |> Map.put(:method, :get)
-         |> Supabase.PostgREST.execute() do
-      {:ok, response} ->
-        response.body
-        |> Enum.map(fn item ->
-          user_id = get_user_id(item["id"])
-          user_info = if user_id, do: get_user_info(user_id), else: nil
+    {:ok, response} =
+      Supabase.PostgREST.from(client(), "projects")
+      |> Supabase.PostgREST.select([
+        "id",
+        "title",
+        "stat_total_duration_seconds",
+        "stat_total_likes",
+        "stat_hot_score"
+      ])
+      |> Map.put(:method, :get)
+      |> Supabase.PostgREST.execute()
 
-          case user_info do
-            [info] ->
-              project_map = %{
-                id: to_string(item["id"]),
-                title: item["title"],
-                total_hours: div(item["stat_total_duration_seconds"] || 0, 3600),
-                likes: item["stat_total_likes"] || 0,
-                hot_score: item["stat_hot_score"] || 0
-              }
+    response.body
+    |> Enum.map(fn item ->
+      user_id = get_user_id(item["id"])
+      [user_info] = get_user_info(user_id)
 
-              Map.merge(info, project_map)
+      project_map = %{
+        id: to_string(item["id"]),
+        title: item["title"],
+        total_hours: div(item["stat_total_duration_seconds"] || 0, 3600),
+        likes: item["stat_total_likes"] || 0,
+        hot_score: item["stat_hot_score"] || 0
+      }
 
-            _ ->
-              nil
-          end
-        end)
-        |> Enum.filter(& &1)
-
-      {:error, error} ->
-        Logger.error("Failed to get random projects: #{inspect(error)}")
-        []
-    end
+      Map.merge(user_info, project_map)
+    end)
   end
 
   def search_projects(query) when is_binary(query) do
@@ -281,105 +203,78 @@ defmodule Ftpdb.DB do
     else
       search_term = "%#{cleaned_query}%"
 
-      case Supabase.PostgREST.from(client(), "projects")
-           |> Supabase.PostgREST.select([
-             "id",
-             "title",
-             "banner_url",
-             "stat_hot_score",
-             "stat_total_likes"
-           ])
-           |> Supabase.PostgREST.ilike("title", search_term)
-           |> Supabase.PostgREST.limit(10)
-           |> Map.put(:method, :get)
-           |> Supabase.PostgREST.execute() do
-        {:ok, response} ->
-          response.body
-          |> Enum.map(fn item ->
-            user_id = get_user_id(item["id"])
-            user_info = if user_id, do: get_user_info(user_id), else: nil
+      {:ok, response} =
+        Supabase.PostgREST.from(client(), "projects")
+        |> Supabase.PostgREST.select([
+          "id",
+          "title",
+          "banner_url",
+          "stat_hot_score",
+          "stat_total_likes"
+        ])
+        |> Supabase.PostgREST.ilike("title", search_term)
+        |> Supabase.PostgREST.limit(10)
+        |> Map.put(:method, :get)
+        |> Supabase.PostgREST.execute()
 
-            case user_info do
-              [info] ->
-                project_map = %{
-                  id: to_string(item["id"]),
-                  title: item["title"],
-                  banner_url: item["banner_url"],
-                  hot_score: item["stat_hot_score"] || 0,
-                  likes: item["stat_total_likes"] || 0
-                }
+      response.body
+      |> Enum.map(fn item ->
+        user_id = get_user_id(item["id"])
+        [user_info] = get_user_info(user_id)
 
-                Map.merge(info, project_map)
+        project_map = %{
+          id: to_string(item["id"]),
+          title: item["title"],
+          banner_url: item["banner_url"],
+          hot_score: item["stat_hot_score"] || 0,
+          likes: item["stat_total_likes"] || 0
+        }
 
-              _ ->
-                nil
-            end
-          end)
-          |> Enum.filter(& &1)
-          |> Enum.sort_by(fn item ->
-            # Sort by a weighted combination: 60% hot score, 40% likes
-            # Normalize likes to be within reasonable range (divide by 100)
-            hot = item.hot_score * 0.6
-            likes = item.likes / 100 * 0.4
-            -(hot + likes)
-          end)
-
-        {:error, error} ->
-          Logger.error("Failed to search projects for query '#{query}': #{inspect(error)}")
-          []
-      end
+        Map.merge(user_info, project_map)
+      end)
+      |> Enum.sort_by(fn item ->
+        # Sort by a weighted combination: 60% hot score, 40% likes
+        # Normalize likes to be within reasonable range (divide by 100)
+        hot = item.hot_score * 0.6
+        likes = item.likes / 100 * 0.4
+        -(hot + likes)
+      end)
     end
   end
 
   def get_user_id(project_id) do
-    case Supabase.PostgREST.from(client(), "user_projects")
-         |> Supabase.PostgREST.select(["user_id"])
-         |> Supabase.PostgREST.eq("project_id", project_id)
-         |> Map.put(:method, :get)
-         |> Supabase.PostgREST.execute() do
-      {:ok, response} ->
-        case response.body do
-          [%{"user_id" => user_id}] -> user_id
-          [] -> nil
-        end
+    {:ok, response} =
+      Supabase.PostgREST.from(client(), "user_projects")
+      |> Supabase.PostgREST.select(["user_id"])
+      |> Supabase.PostgREST.eq("project_id", project_id)
+      |> Map.put(:method, :get)
+      |> Supabase.PostgREST.execute()
 
-      {:error, error} ->
-        Logger.error("Failed to get user_id for project_id #{project_id}: #{inspect(error)}")
-        nil
-    end
+    [%{"user_id" => user_id}] = response.body
+    user_id
   end
 
   def get_user_info(user_id) do
-    case Supabase.PostgREST.from(client(), "users")
-         |> Supabase.PostgREST.select([
-           "id",
-           "display_name",
-           "avatar_url",
-           "total_time",
-           "slack_id"
-         ])
-         |> Supabase.PostgREST.eq("id", user_id)
-         |> Map.put(:method, :get)
-         |> Supabase.PostgREST.execute() do
-      {:ok, response} ->
-        response.body
-        |> Enum.map(fn item ->
-          total_time = item["total_time"] || 0
-          total_hours = div(total_time, 3600)
+    {:ok, response} =
+      Supabase.PostgREST.from(client(), "users")
+      |> Supabase.PostgREST.select(["id", "display_name", "avatar_url", "total_time", "slack_id"])
+      |> Supabase.PostgREST.eq("id", user_id)
+      |> Map.put(:method, :get)
+      |> Supabase.PostgREST.execute()
 
-          %{
-            user_id: to_string(item["id"]),
-            display_name: item["display_name"],
-            avatar_url: item["avatar_url"],
-            total_hours: total_hours,
-            slack_id: item["slack_id"]
-          }
-        end)
+    response.body
+    |> Enum.map(fn item ->
+      total_time = item["total_time"] || 0
+      total_hours = div(total_time, 3600)
 
-      {:error, error} ->
-        Logger.error("Failed to get user info for user_id #{user_id}: #{inspect(error)}")
-        []
-    end
+      %{
+        user_id: to_string(item["id"]),
+        display_name: item["display_name"],
+        avatar_url: item["avatar_url"],
+        total_hours: total_hours,
+        slack_id: item["slack_id"]
+      }
+    end)
   end
 
   def search_users(query, min_hours \\ 0) when is_binary(query) do
@@ -390,134 +285,118 @@ defmodule Ftpdb.DB do
     else
       search_term = "%#{cleaned_query}%"
 
-      case Supabase.PostgREST.from(client(), "users")
-           |> Supabase.PostgREST.select([
-             "id",
-             "display_name",
-             "avatar_url",
-             "total_time"
-           ])
-           |> Supabase.PostgREST.ilike("display_name", search_term)
-           |> Supabase.PostgREST.limit(100)
-           |> Map.put(:method, :get)
-           |> Supabase.PostgREST.execute() do
-        {:ok, response} ->
-          min_seconds = min_hours * 3600
+      {:ok, response} =
+        Supabase.PostgREST.from(client(), "users")
+        |> Supabase.PostgREST.select([
+          "id",
+          "display_name",
+          "avatar_url",
+          "total_time"
+        ])
+        |> Supabase.PostgREST.ilike("display_name", search_term)
+        |> Supabase.PostgREST.limit(100)
+        |> Map.put(:method, :get)
+        |> Supabase.PostgREST.execute()
 
-          response.body
-          |> Enum.map(fn item ->
-            total_time = item["total_time"] || 0
-            total_hours = div(total_time, 3600)
+      min_seconds = min_hours * 3600
 
-            %{
-              id: to_string(item["id"]),
-              display_name: item["display_name"],
-              avatar_url: item["avatar_url"],
-              total_hours: total_hours,
-              total_time: total_time
-            }
-          end)
-          |> Enum.filter(fn user -> user.total_time >= min_seconds end)
-          |> Enum.sort_by(fn user -> -user.total_hours end)
-          |> Enum.take(10)
+      response.body
+      |> Enum.map(fn item ->
+        total_time = item["total_time"] || 0
+        total_hours = div(total_time, 3600)
 
-        {:error, error} ->
-          Logger.error("Failed to search users for query '#{query}': #{inspect(error)}")
-          []
-      end
+        %{
+          id: to_string(item["id"]),
+          display_name: item["display_name"],
+          avatar_url: item["avatar_url"],
+          total_hours: total_hours,
+          total_time: total_time
+        }
+      end)
+      |> Enum.filter(fn user -> user.total_time >= min_seconds end)
+      |> Enum.sort_by(fn user -> -user.total_hours end)
+      |> Enum.take(10)
     end
   end
 
   def get_user_projects(user_id) do
-    case Supabase.PostgREST.from(client(), "user_projects")
-         |> Supabase.PostgREST.select(["project_id"])
-         |> Supabase.PostgREST.eq("user_id", user_id)
-         |> Map.put(:method, :get)
-         |> Supabase.PostgREST.execute() do
-      {:ok, response} ->
-        project_ids =
-          response.body
-          |> Enum.map(fn item -> item["project_id"] end)
+    {:ok, response} =
+      Supabase.PostgREST.from(client(), "user_projects")
+      |> Supabase.PostgREST.select(["project_id"])
+      |> Supabase.PostgREST.eq("user_id", user_id)
+      |> Map.put(:method, :get)
+      |> Supabase.PostgREST.execute()
 
-        if Enum.empty?(project_ids) do
-          []
-        else
-          case Supabase.PostgREST.from(client(), "projects")
-               |> Supabase.PostgREST.select([
-                 "id",
-                 "title",
-                 "banner_url",
-                 "stat_total_duration_seconds",
-                 "stat_total_likes"
-               ])
-               |> Map.put(:method, :get)
-               |> Supabase.PostgREST.execute() do
-            {:ok, projects_response} ->
-              # Filter locally and sort by hours
-              all_projects = projects_response.body || []
+    project_ids =
+      response.body
+      |> Enum.map(fn item -> item["project_id"] end)
 
-              project_ids_set = MapSet.new(project_ids)
+    if Enum.empty?(project_ids) do
+      []
+    else
+      {:ok, response} =
+        Supabase.PostgREST.from(client(), "projects")
+        |> Supabase.PostgREST.select([
+          "id",
+          "title",
+          "banner_url",
+          "stat_total_duration_seconds",
+          "stat_total_likes"
+        ])
+        |> Map.put(:method, :get)
+        |> Supabase.PostgREST.execute()
 
-              all_projects
-              |> Enum.filter(fn item -> MapSet.member?(project_ids_set, item["id"]) end)
-              |> Enum.map(fn item ->
-                duration = item["stat_total_duration_seconds"] || 0
+      # Filter locally and sort by hours
+      all_projects = response.body || []
 
-                %{
-                  id: to_string(item["id"]),
-                  title: item["title"],
-                  banner_url: item["banner_url"],
-                  total_hours: div(duration, 3600),
-                  total_likes: item["stat_total_likes"] || 0
-                }
-              end)
-              |> Enum.sort_by(fn p -> -p.total_hours end)
+      project_ids_set = MapSet.new(project_ids)
 
-            {:error, error} ->
-              Logger.error("Failed to get projects for user_id #{user_id}: #{inspect(error)}")
-              []
-          end
-        end
+      all_projects
+      |> Enum.filter(fn item -> MapSet.member?(project_ids_set, item["id"]) end)
+      |> Enum.map(fn item ->
+        duration = item["stat_total_duration_seconds"] || 0
 
-      {:error, error} ->
-        Logger.error("Failed to get user_projects for user_id #{user_id}: #{inspect(error)}")
-        []
+        %{
+          id: to_string(item["id"]),
+          title: item["title"],
+          banner_url: item["banner_url"],
+          total_hours: div(duration, 3600),
+          total_likes: item["stat_total_likes"] || 0
+        }
+      end)
+      |> Enum.sort_by(fn p -> -p.total_hours end)
     end
   end
 
   def get_devlogs(project_id) do
-    case Supabase.PostgREST.from(client(), "devlogs")
-         |> Supabase.PostgREST.select([
-           "body",
-           "duration_seconds",
-           "comments_count",
-           "created_at",
-           "media_urls"
-         ])
-         |> Supabase.PostgREST.eq("project_id", project_id)
-         |> Supabase.PostgREST.order("created_at", desc: true)
-         |> Map.put(:method, :get)
-         |> Supabase.PostgREST.execute() do
-      {:ok, response} ->
-        response.body
-        |> Enum.map(fn item ->
-          duration = item["duration_seconds"] || 0
-          total_hours = div(duration, 3600)
-          media_urls = item["media_urls"] || []
+    {:ok, response} =
+      Supabase.PostgREST.from(client(), "devlogs")
+      |> Supabase.PostgREST.select([
+        "body",
+        "duration_seconds",
+        "comments_count",
+        "created_at",
+        "media_urls"
+      ])
+      |> Supabase.PostgREST.eq("project_id", project_id)
+      |> Supabase.PostgREST.order("created_at", desc: true)
+      |> Map.put(:method, :get)
+      |> Supabase.PostgREST.execute()
 
-          %{
-            body: item["body"],
-            total_hours: total_hours,
-            comments_count: item["comments_count"],
-            created_at: item["created_at"],
-            media_urls: media_urls
-          }
-        end)
+    response.body
+    |> Enum.map(fn item ->
+      duration = item["duration_seconds"] || 0
+      total_hours = div(duration, 3600)
+      media_urls = item["media_urls"] || []
 
-      {:error, error} ->
-        Logger.error("Failed to get devlogs for project_id #{project_id}: #{inspect(error)}")
-        []
-    end
+      %{
+        body: item["body"],
+        total_hours: total_hours,
+        comments_count: item["comments_count"],
+        created_at: item["created_at"],
+        media_urls: media_urls
+      }
+    end)
   end
 
   def random_devlogs do
@@ -551,61 +430,40 @@ defmodule Ftpdb.DB do
       []
     else
       # Fetch all user_projects mappings in one query
-      user_projects_result =
+      {:ok, user_projects_response} =
         Supabase.PostgREST.from(client(), "user_projects")
         |> Supabase.PostgREST.select(["project_id", "user_id"])
         |> Map.put(:method, :get)
         |> Supabase.PostgREST.execute()
 
       user_projects_map =
-        case user_projects_result do
-          {:ok, response} ->
-            (response.body || [])
-            |> Map.new(fn item -> {item["project_id"], item["user_id"]} end)
-
-          {:error, error} ->
-            Logger.error("Error fetching user_projects: #{inspect(error)}")
-            %{}
-        end
+        (user_projects_response.body || [])
+        |> Map.new(fn item -> {item["project_id"], item["user_id"]} end)
 
       # Fetch all projects in one query
-      projects_result =
+      {:ok, projects_response} =
         Supabase.PostgREST.from(client(), "projects")
         |> Supabase.PostgREST.select(["id", "title"])
         |> Map.put(:method, :get)
         |> Supabase.PostgREST.execute()
 
       projects_map =
-        case projects_result do
-          {:ok, response} ->
-            (response.body || [])
-            |> Map.new(fn item -> {item["id"], item["title"]} end)
-
-          {:error, error} ->
-            Logger.error("Error fetching projects: #{inspect(error)}")
-            %{}
-        end
+        (projects_response.body || [])
+        |> Map.new(fn item -> {item["id"], item["title"]} end)
 
       # Fetch all users in one query
-      users_result =
+      {:ok, users_response} =
         Supabase.PostgREST.from(client(), "users")
         |> Supabase.PostgREST.select(["id", "avatar_url", "display_name"])
         |> Map.put(:method, :get)
         |> Supabase.PostgREST.execute()
 
       users_map =
-        case users_result do
-          {:ok, response} ->
-            (response.body || [])
-            |> Map.new(fn item ->
-              {item["id"],
-               %{"avatar_url" => item["avatar_url"], "display_name" => item["display_name"]}}
-            end)
-
-          {:error, error} ->
-            Logger.error("Error fetching users: #{inspect(error)}")
-            %{}
-        end
+        (users_response.body || [])
+        |> Map.new(fn item ->
+          {item["id"],
+           %{"avatar_url" => item["avatar_url"], "display_name" => item["display_name"]}}
+        end)
 
       # Calculate weights with exponential bias towards newer devlogs
       weighted_devlogs =
