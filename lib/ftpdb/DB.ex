@@ -150,7 +150,7 @@ defmodule Ftpdb.DB do
         display_name: user_info.display_name,
         avatar_url: user_info.avatar_url,
         stat_hot_score: item["stat_hot_score"] || 0,
-        stat_total_hours: div(duration, 3600),
+        total_hours: div(duration, 3600),
         stat_total_likes: item["stat_total_likes"] || 0
       }
     end)
