@@ -390,7 +390,7 @@ function initProjectsPage() {
               <div class="project-card-meta">${p.display_name || "Unknown"}</div>
             </div>
           </div>
-          <div class="project-card-stats">❤️ ${p.stat_total_likes || 0} · 🔥 ${Math.round(p.stat_hot_score || 0)} · ⏱️ ${p.stat_total_hours || 0}h</div>
+          <div class="project-card-stats">❤️ ${p.stat_total_likes || 0} · 🔥 ${Math.round(p.stat_hot_score || 0)} · ⏱️ ${p.total_hours || 0}h</div>
         </div>`
       grid.appendChild(card)
     })

@@ -36,7 +36,7 @@ defmodule Ftpdb.DB do
         display_name: user_info.display_name,
         avatar_url: user_info.avatar_url,
         stat_hot_score: item["stat_hot_score"] || 0,
-        stat_total_hours: div(duration, 3600),
+        total_hours: div(duration, 3600),
         stat_total_likes: item["stat_total_likes"] || 0
       }
 
@@ -90,7 +90,7 @@ defmodule Ftpdb.DB do
         display_name: user_info.display_name,
         avatar_url: user_info.avatar_url,
         stat_hot_score: 0,
-        stat_total_hours: user_info.total_hours || 0,
+        total_hours: user_info.total_hours || 0,
         stat_total_likes: item["stat_total_likes"] || 0
       }
     end)
@@ -204,6 +204,14 @@ defmodule Ftpdb.DB do
       |> Supabase.PostgREST.execute()
 
     response.body
+    |> Enum.map(fn item ->
+      duration = item["stat_total_duration_seconds"] || 0
+      total_hours = div(duration, 3600)
+      
+      item
+      |> Map.drop(["stat_total_duration_seconds"])
+      |> Map.put("total_hours", total_hours)
+    end)
   end
 
   def search_projects(query) when is_binary(query) do
