@@ -278,12 +278,13 @@ function initHomePage() {
 
   window.renderHCards = function(container, projects) {
     if (!projects?.length) { container.innerHTML = '<p style="color:var(--muted)">No projects found</p>'; return }
-    container.innerHTML = projects.map(p => `
+    container.innerHTML = projects.map((p, i) => `
       <div class="hcard" onclick="viewProject('${p.id}')" data-project-id="${p.id}">
         <div class="hcard-thumb">
           ${p.banner_url?.trim() ? `<img src="${p.banner_url}" alt="${p.title || "Project"}" style="width:100%;height:100%;object-fit:cover;" loading="lazy" onerror="this.style.display='none'" />` : ""}
           <div class="thumb-placeholder ${p.banner_url?.trim() ? "hidden" : ""}">THUMBNAIL</div>
         </div>
+        <span class="hcard-rank">${i + 1}</span>
         <div class="hcard-body">
           <div class="hcard-icon">
             ${p.avatar_url ? `<img src="${p.avatar_url}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:4px;" loading="lazy" />` : '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><rect width="4" height="4" x="3" y="3" rx="1"/></svg>'}
@@ -318,7 +319,7 @@ function initHomePage() {
   }
 
   async function loadFeaturedBanner()   { renderBannerSlides(await load("/api/hot")) }
-  async function loadTopWeek()          { renderProjectCards(document.getElementById("topWeekGrid"),   await load("/api/top_this_week")) }
+  async function loadTopWeek()          { renderHCards(document.getElementById("topWeekGrid"),   await load("/api/top_this_week")) }
   async function loadFanFavourites()    { renderHCards(document.getElementById("fanFavGrid"),          await load("/api/fan_favourites")) }
   async function loadTopAllTime()       { renderHCards(document.getElementById("topAllTimeGrid"),      await load("/api/top_all_time")) }
   async function loadTopContributors()  { renderBubbles(document.getElementById("bubbleRow"),          Object.values(await (await fetch("/api/most_time_spent")).json())) }
@@ -344,7 +345,7 @@ function initProjectsPage() {
 
   async function loadProjects() {
     try {
-      const res      = await fetch(`/api/random_projects?filter=${currentFilter}`)
+      const res      = await fetch(`/api/random_projects?filter=${currentFilter}&limit=25`)
       allProjects    = await res.json()
       displayedCount = 0
       renderBatch()
@@ -389,7 +390,7 @@ function initProjectsPage() {
               <div class="project-card-meta">${p.display_name || "Unknown"}</div>
             </div>
           </div>
-          <div class="project-card-stats">❤️ ${p.likes || 0} · 🔥 ${Math.round(p.hot_score || 0)} · ⏱️ ${p.total_hours || 0}h</div>
+          <div class="project-card-stats">❤️ ${p.stat_total_likes || 0} · 🔥 ${Math.round(p.stat_hot_score || 0)} · ⏱️ ${p.stat_total_hours || 0}h</div>
         </div>`
       grid.appendChild(card)
     })

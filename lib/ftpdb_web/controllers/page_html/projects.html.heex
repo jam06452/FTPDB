@@ -1,84 +1,79 @@
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link
-  href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&family=Cabinet+Grotesk:wght@400;500;700;900&display=swap"
-  rel="stylesheet"
-/>
+<Layouts.app flash={@flash}>
+  <div class="navbar">
+    <a href="/" class="nav-logo">FTPDB</a>
 
-<div class="navbar">
-  <a href="/" class="nav-logo">FTPDB</a>
+    <button class="nav-menu-btn" aria-label="Menu" onclick="toggleMenu()">
+      <span></span><span></span><span></span>
+    </button>
 
-  <button class="nav-menu-btn" aria-label="Menu" onclick="toggleMenu()">
-    <span></span><span></span><span></span>
-  </button>
+    <div class="nav-search">
+      <input
+        type="search"
+        id="searchInput"
+        placeholder="Search projects…"
+      />
+      <svg
+        class="nav-search-icon"
+        width="14"
+        height="14"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+      >
+        <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
+      </svg>
+      <div class="search-autocomplete" id="searchAutocomplete"></div>
+    </div>
 
-  <div class="nav-search">
-    <input
-      type="search"
-      id="searchInput"
-      placeholder="Search projects…"
-    />
-    <svg
-      class="nav-search-icon"
-      width="14"
-      height="14"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="2"
-    >
-      <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
-    </svg>
-    <div class="search-autocomplete" id="searchAutocomplete"></div>
+    <div class="nav-pills">
+      <a href="/" class="nav-pill">Home</a>
+      <a href="/projects" class="nav-pill active">Projects</a>
+      <a href="/suggestions" class="nav-pill">Suggestions</a>
+    </div>
   </div>
 
-  <div class="nav-pills">
-    <a href="/" class="nav-pill">Home</a>
-    <a href="/projects" class="nav-pill active">Projects</a>
-    <a href="/suggestions" class="nav-pill">Suggestions</a>
-  </div>
-</div>
-
-<main>
-  <div class="container">
-    <section class="section">
-      <div class="section-header">
-        <div class="section-title-group">
-          <h1 class="section-title">Explore Projects</h1>
-          <span class="section-meta" id="projectCount">Loading…</span>
+  <main>
+    <div class="container">
+      <section class="section">
+        <div class="section-header">
+          <div class="section-title-group">
+            <h1 class="section-title">Explore Projects</h1>
+            <span class="section-meta" id="projectCount">Loading…</span>
+          </div>
+          <div class="filter-controls">
+            <button class="shuffle-btn" onclick="shuffleProjects()">
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path d="M3 9h14V5M21 5h-14v4" />
+                <path d="M3 15h14v4M21 19H7v-4" />
+              </svg>
+              Shuffle
+            </button>
+            <select class="filter-dropdown" id="filterSelect" onchange="applyFilter(this.value)">
+              <option value="random">Random</option>
+              <option value="most_liked">Most Liked</option>
+              <option value="hottest">Hottest</option>
+              <option value="most_active">Most Active</option>
+            </select>
+          </div>
         </div>
-        <div class="filter-controls">
-          <button class="shuffle-btn" onclick="shuffleProjects()">
-            <svg
-              width="14"
-              height="14"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <path d="M3 9h14V5M21 5h-14v4" />
-              <path d="M3 15h14v4M21 19H7v-4" />
-            </svg>
-            Shuffle
-          </button>
-          <select class="filter-dropdown" id="filterSelect" onchange="applyFilter(this.value)">
-            <option value="random">Random</option>
-            <option value="most_liked">Most Liked</option>
-            <option value="hottest">Hottest</option>
-            <option value="most_active">Most Active</option>
-          </select>
+
+        <div class="card-grid" id="projectsGrid">
+          <!-- Projects will be loaded here -->
         </div>
-      </div>
 
-      <div class="card-grid" id="projectsGrid">
-        <!-- Projects will be loaded here -->
-      </div>
-
-      <div class="empty-state" id="emptyState" style="display: none;">
-        <div class="empty-state-title">No projects found</div>
-        <p>Try adjusting your filters</p>
-      </div>
-    </section>
-  </div>
-</main>
+        <div class="empty-state" id="emptyState" style="display: none;">
+          <div class="empty-state-title">No projects found</div>
+          <p>Try adjusting your filters</p>
+        </div>
+      </section>
+    </div>
+  </main>
+</Layouts.app>

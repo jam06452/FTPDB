@@ -692,8 +692,21 @@ footer {
   overflow: hidden;
   cursor: pointer;
   transition: transform var(--transition), border-color var(--transition);
+  position: relative;
 }
 .hcard:hover { transform: translateY(-3px); border-color: var(--gold-dim); }
+.hcard-rank {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  background: rgba(0,0,0,0.6);
+  color: var(--gold);
+  font-weight: 700;
+  font-size: 13px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  z-index: 10;
+}
 .hcard-thumb {
   aspect-ratio: 16/9;
   background: var(--surface2);
@@ -1127,3 +1140,4 @@ main {
     padding: 12px 8px;
   }
 }
+
