@@ -207,7 +207,7 @@ defmodule Ftpdb.DB do
     |> Enum.map(fn item ->
       duration = item["stat_total_duration_seconds"] || 0
       total_hours = div(duration, 3600)
-      
+
       item
       |> Map.drop(["stat_total_duration_seconds"])
       |> Map.put("total_hours", total_hours)
