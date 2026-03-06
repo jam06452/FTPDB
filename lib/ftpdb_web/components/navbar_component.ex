@@ -21,7 +21,26 @@ defmodule FtpdbWeb.NavbarComponent do
     <nav id="site-banner" class="navbar">
       <a href="/" class="nav-logo">{@logo_text}</a>
 
-      <div class="nav-spacer"></div>
+      <div class="nav-search">
+        <input
+          type="search"
+          id="searchInput"
+          placeholder="Search projects, users…"
+          autocomplete="off"
+        />
+        <svg
+          class="nav-search-icon"
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
+        </svg>
+        <div class="search-autocomplete" id="searchAutocomplete"></div>
+      </div>
 
       <div class="nav-pills">
         <a href="/projects" class={["nav-pill", @current_section == "projects" && "active"]}>
