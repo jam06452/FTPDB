@@ -1,37 +1,5 @@
 <Layouts.app flash={@flash}>
-  <div class="navbar">
-    <a href="/" class="nav-logo">FTPDB</a>
-
-    <button class="nav-menu-btn" aria-label="Menu" onclick="toggleMenu()">
-      <span></span><span></span><span></span>
-    </button>
-
-    <div class="nav-search">
-      <input
-        type="search"
-        id="searchInput"
-        placeholder="Search projects…"
-      />
-      <svg
-        class="nav-search-icon"
-        width="14"
-        height="14"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="2"
-      >
-        <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
-      </svg>
-      <div class="search-autocomplete" id="searchAutocomplete"></div>
-    </div>
-
-    <div class="nav-pills">
-      <a href="/" class="nav-pill">Home</a>
-      <a href="/projects" class="nav-pill active">Projects</a>
-      <a href="/suggestions" class="nav-pill">Suggestions</a>
-    </div>
-  </div>
+  <.navbar current_section="projects" />
 
   <main>
     <div class="container">

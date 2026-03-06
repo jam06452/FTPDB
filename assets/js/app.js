@@ -300,7 +300,7 @@ function initHomePage() {
   window.renderBubbles = function(container, users) {
     if (!users?.length) { container.innerHTML = '<p style="color:var(--muted)">No contributors found</p>'; return }
     container.innerHTML = users.map(u => `
-      <div class="bubble-item" data-user-id="${u.id}" onclick="viewUser('${u.id}')">
+      <div class="bubble-item" data-user-id="${u.user_id}" onclick="viewUser('${u.user_id}')">
         <div class="bubble-avatar">
           <img src="${u.avatar_url}" alt="${u.name || u.display_name}" />
         </div>

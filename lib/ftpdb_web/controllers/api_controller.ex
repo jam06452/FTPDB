@@ -31,7 +31,7 @@ defmodule FtpdbWeb.ApiController do
 
   def most_time_spent(conn, _params) do
     most_time_spent =
-      Cachex.fetch!(:most_time_spent_cache, "most_time_spent", fn _key ->
+      Cachex.fetch!(:most_time_spent_cache, "most_time_spent_users_v2", fn _key ->
         Ftpdb.DB.most_time_spent()
       end)
 
@@ -106,7 +106,7 @@ defmodule FtpdbWeb.ApiController do
         fan_favourites(conn, %{})
 
       "most_active" ->
-        most_time_spent(conn, %{})
+        json(conn, Ftpdb.DB.most_active_projects(limit))
 
       _ ->
         json(conn, Ftpdb.DB.random_projects(limit))

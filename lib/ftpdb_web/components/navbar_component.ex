@@ -9,68 +9,34 @@ defmodule FtpdbWeb.NavbarComponent do
 
   ## Examples
 
-      <.navbar back_link="/" />
-      <.navbar search_enabled pills_enabled />
+      <.navbar />
+      <.navbar current_section="projects" />
   """
   attr :logo_text, :string, default: "FTPDB"
-  attr :back_link, :string, default: nil, doc: "Link for back button"
-  attr :search_enabled, :boolean, default: false, doc: "Show search bar"
-  attr :pills_enabled, :boolean, default: false, doc: "Show navigation pills"
+  attr :current_section, :string, default: nil, doc: "Currently active navigation section"
 
   def navbar(assigns) do
     ~H"""
     <!-- ═══ NAVBAR ═══ -->
-    <nav class="navbar">
+    <nav id="site-banner" class="navbar">
       <a href="/" class="nav-logo">{@logo_text}</a>
 
-      <%= if @back_link do %>
-        <a href={@back_link} class="nav-back">
-          <svg
-            width="12"
-            height="12"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2.5"
-          >
-            <path d="M15 18l-6-6 6-6" />
-          </svg>
-          Back
+      <div class="nav-spacer"></div>
+
+      <div class="nav-pills">
+        <a href="/projects" class={["nav-pill", @current_section == "projects" && "active"]}>
+          Projects
         </a>
-      <% end %>
-
-      <%= if @search_enabled do %>
-        <div class="nav-search">
-          <input
-            type="search"
-            id="searchInput"
-            placeholder="Search projects, channels…"
-            oninput="handleSearch(this.value)"
-          />
-          <svg
-            class="nav-search-icon"
-            width="14"
-            height="14"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-          >
-            <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
-          </svg>
-          <div class="search-autocomplete" id="searchAutocomplete"></div>
-        </div>
-      <% end %>
-
-      <%= if @pills_enabled do %>
-        <div class="nav-pills">
-          <a href="/projects" class="nav-pill">Projects</a>
-          <button class="nav-pill active" onclick="filterSection('top-week')">Top This Week</button>
-          <button class="nav-pill" onclick="filterSection('hot')">Hot</button>
-          <button class="nav-pill" onclick="filterSection('updates')">Updates</button>
-          <a href="/suggestions" class="nav-pill">Suggestions</a>
-        </div>
-      <% end %>
+        <a href="/devlogs" class={["nav-pill", @current_section == "devlogs" && "active"]}>
+          Devlogs
+        </a>
+        <a
+          href="/suggestions"
+          class={["nav-pill", @current_section == "suggestions" && "active"]}
+        >
+          Suggestions
+        </a>
+      </div>
     </nav>
     """
   end

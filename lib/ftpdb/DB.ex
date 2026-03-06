@@ -121,7 +121,7 @@ defmodule Ftpdb.DB do
     end)
   end
 
-  def most_time_spent do
+  def most_active_projects(limit \\ 10) do
     {:ok, response} =
       Supabase.PostgREST.from(client(), "projects")
       |> Supabase.PostgREST.select([
@@ -133,7 +133,7 @@ defmodule Ftpdb.DB do
         "stat_total_likes"
       ])
       |> Supabase.PostgREST.order("stat_total_duration_seconds", desc: true)
-      |> Supabase.PostgREST.limit(10)
+      |> Supabase.PostgREST.limit(limit)
       |> Map.put(:method, :get)
       |> Supabase.PostgREST.execute()
 
@@ -152,6 +152,29 @@ defmodule Ftpdb.DB do
         stat_hot_score: item["stat_hot_score"] || 0,
         total_hours: div(duration, 3600),
         stat_total_likes: item["stat_total_likes"] || 0
+      }
+    end)
+  end
+
+  def most_time_spent(limit \\ 10) do
+    {:ok, response} =
+      Supabase.PostgREST.from(client(), "users")
+      |> Supabase.PostgREST.select(["id", "display_name", "avatar_url", "total_time"])
+      |> Supabase.PostgREST.order("total_time", desc: true)
+      |> Supabase.PostgREST.limit(limit)
+      |> Map.put(:method, :get)
+      |> Supabase.PostgREST.execute()
+
+    response.body
+    |> Enum.map(fn item ->
+      total_time = item["total_time"] || 0
+
+      %{
+        user_id: to_string(item["id"]),
+        display_name: item["display_name"],
+        avatar_url: item["avatar_url"],
+        total_time: total_time,
+        total_hours: div(total_time, 3600)
       }
     end)
   end
