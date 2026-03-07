@@ -37,6 +37,17 @@
           <!-- Projects will be loaded here -->
         </div>
 
+        <div class="load-more-row" id="loadMoreProjectsRow" style="display: none;">
+          <button
+            class="load-more-btn"
+            id="loadMoreProjectsBtn"
+            type="button"
+            onclick="loadMoreProjects()"
+          >
+            Load more projects
+          </button>
+        </div>
+
         <div class="empty-state" id="emptyState" style="display: none;">
           <div class="empty-state-title">No projects found</div>
           <p>Try adjusting your filters</p>

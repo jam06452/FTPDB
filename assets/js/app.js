@@ -255,6 +255,21 @@ window.renderMarkdown = (source) => {
 window.viewProject = (id) => { window.location.href = `/project/${id}` }
 window.viewUser    = (id) => { window.location.href = `/user/${id}` }
 
+function formatProjectDuration(durationSeconds, fallbackHours = 0) {
+  if (Number.isFinite(durationSeconds) && durationSeconds > 0) {
+    const hours = Math.floor(durationSeconds / 3600)
+    const minutes = Math.floor((durationSeconds % 3600) / 60)
+
+    if (hours > 0 && minutes > 0) return `${hours}h ${minutes}m`
+    if (hours > 0) return `${hours}h`
+    if (minutes > 0) return `${minutes}m`
+    return "<1m"
+  }
+
+  if (fallbackHours > 0) return `${fallbackHours}h`
+  return "0m"
+}
+
 /* ══════════════════════════════════════════════════════════
    SHARED SEARCH (used by home + projects pages)
    ══════════════════════════════════════════════════════════ */
@@ -528,20 +543,75 @@ function initHomePage() {
    ══════════════════════════════════════════════════════════ */
 
 function initProjectsPage() {
-  let currentFilter  = "random"
-  let allProjects    = []
-  let displayedCount = 0
-  const itemsPerLoad = 100
-  let isLoadingMore  = false
+  let currentFilter       = "random"
+  let allProjects         = []
+  let displayedCount      = 0
+  const itemsPerLoad      = 24
+  const defaultFetchLimit = 120
+  let isLoadingMore       = false
+  let exhaustedRandomPool = false
+
+  const grid      = document.getElementById("projectsGrid")
+  const countEl   = document.getElementById("projectCount")
+  const emptyEl   = document.getElementById("emptyState")
+  const buttonRow = document.getElementById("loadMoreProjectsRow")
+  const buttonEl  = document.getElementById("loadMoreProjectsBtn")
+
+  function projectCountLabel() {
+    if (allProjects.length === 0) return "— No projects"
+    if (currentFilter === "random") return `— ${allProjects.length} loaded`
+    return `— ${Math.min(displayedCount, allProjects.length)} of ${allProjects.length} projects`
+  }
+
+  function updateProjectCount() {
+    countEl.textContent = projectCountLabel()
+  }
+
+  function updateLoadMoreButton() {
+    const hasVisibleProjects = allProjects.length > 0
+    const canRevealCached = displayedCount < allProjects.length
+    const canFetchMoreRandom = currentFilter === "random" && !exhaustedRandomPool
+    const shouldShow = hasVisibleProjects && (canRevealCached || canFetchMoreRandom)
+
+    buttonRow.style.display = shouldShow ? "flex" : "none"
+    buttonEl.disabled = isLoadingMore
+    buttonEl.textContent = isLoadingMore ? "Loading projects..." : "Load more projects"
+  }
+
+  function mergeUniqueProjects(existingProjects, incomingProjects) {
+    const seenIds = new Set(existingProjects.map(project => String(project.id)))
+    const uniqueIncoming = incomingProjects.filter(project => {
+      const projectId = String(project.id)
+
+      if (seenIds.has(projectId)) return false
+
+      seenIds.add(projectId)
+      return true
+    })
+
+    return existingProjects.concat(uniqueIncoming)
+  }
+
+  async function fetchProjects(filter, limit) {
+    const params = new URLSearchParams({filter, limit: String(limit)})
+    const response = await fetch(`/api/random_projects?${params.toString()}`)
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch projects: ${response.status}`)
+    }
+
+    const data = await response.json()
+    return Array.isArray(data) ? data : Object.values(data)
+  }
 
   async function loadProjects() {
     try {
-      const res      = await fetch(`/api/random_projects?filter=${currentFilter}&limit=25`)
-      allProjects    = await res.json()
+      const fetchLimit = currentFilter === "random" ? itemsPerLoad : defaultFetchLimit
+      allProjects = await fetchProjects(currentFilter, fetchLimit)
       displayedCount = 0
+      exhaustedRandomPool = false
+      grid.innerHTML = ""
       renderBatch()
-      const countEl = document.getElementById("projectCount")
-      countEl.textContent = allProjects.length > 0 ? `— ${allProjects.length} projects` : "— No projects"
     } catch (err) {
       console.error("Failed to load projects:", err)
       showEmpty()
@@ -549,22 +619,26 @@ function initProjectsPage() {
   }
 
   function renderBatch() {
-    const grid        = document.getElementById("projectsGrid")
-    const end         = Math.min(displayedCount + itemsPerLoad, allProjects.length)
-    const batch       = allProjects.slice(displayedCount, end)
+    const end = Math.min(displayedCount + itemsPerLoad, allProjects.length)
+    const batch = allProjects.slice(displayedCount, end)
 
-    if (batch.length === 0) { if (displayedCount === 0) showEmpty(); return }
+    if (batch.length === 0) {
+      if (displayedCount === 0) showEmpty()
+      updateProjectCount()
+      updateLoadMoreButton()
+      return
+    }
+
     hideEmpty()
-    if (displayedCount === 0) grid.innerHTML = ""
 
     batch.forEach((p, idx) => {
-      const card    = document.createElement("div")
+      const card = document.createElement("div")
       card.className = "project-card"
-      card.onclick   = () => viewProject(p.id)
+      card.onclick = () => viewProject(p.id)
       card.setAttribute("data-project-id", p.id)
-      const rank    = displayedCount + idx + 1
-      const hasImg  = p.banner_url?.trim()
-      const hasAva  = p.avatar_url?.trim()
+      const rank = displayedCount + idx + 1
+      const hasImg = p.banner_url?.trim()
+      const hasAva = p.avatar_url?.trim()
       card.innerHTML = `
         <div class="project-card-thumb">
           ${hasImg ? `<img src="${p.banner_url}" alt="${p.title || "Project"}" loading="lazy" onerror="this.style.display='none'" />` : ""}
@@ -581,40 +655,84 @@ function initProjectsPage() {
               <div class="project-card-meta">${p.display_name || "Unknown"}</div>
             </div>
           </div>
-          <div class="project-card-stats">❤️ ${p.stat_total_likes || 0} · 🔥 ${Math.round(p.stat_hot_score || 0)} · ⏱️ ${p.total_hours || 0}h</div>
+          <div class="project-card-stats">❤️ ${p.stat_total_likes || 0} · 🔥 ${Math.round(p.stat_hot_score || 0)} · ⏱️ ${formatProjectDuration(p.total_duration_seconds, p.total_hours || p.stat_total_hours || 0)}</div>
         </div>`
       grid.appendChild(card)
     })
 
     displayedCount = end
-    isLoadingMore  = false
+    updateProjectCount()
+    updateLoadMoreButton()
   }
 
   function showEmpty() {
-    document.getElementById("projectsGrid").style.display = "none"
-    document.getElementById("emptyState").style.display  = "block"
-  }
-  function hideEmpty() {
-    document.getElementById("projectsGrid").style.display = "grid"
-    document.getElementById("emptyState").style.display  = "none"
+    grid.style.display = "none"
+    emptyEl.style.display = "block"
+    updateProjectCount()
+    updateLoadMoreButton()
   }
 
-  // Infinite scroll
-  const main = document.querySelector("main")
-  main?.addEventListener("scroll", () => {
-    const { scrollTop, scrollHeight, clientHeight } = main
-    if (scrollHeight - (scrollTop + clientHeight) < 400 && !isLoadingMore && displayedCount < allProjects.length) {
-      isLoadingMore = true
-      renderBatch()
+  function hideEmpty() {
+    grid.style.display = "grid"
+    emptyEl.style.display = "none"
+  }
+
+  async function loadMoreProjects() {
+    if (isLoadingMore) return
+
+    isLoadingMore = true
+    updateLoadMoreButton()
+
+    try {
+      if (displayedCount < allProjects.length) {
+        renderBatch()
+        return
+      }
+
+      if (currentFilter !== "random") {
+        return
+      }
+
+      let mergedProjects = allProjects
+
+      for (let attempt = 0; attempt < 2; attempt += 1) {
+        const incomingProjects = await fetchProjects(currentFilter, itemsPerLoad)
+        mergedProjects = mergeUniqueProjects(mergedProjects, incomingProjects)
+
+        if (mergedProjects.length > allProjects.length) {
+          break
+        }
+      }
+
+      exhaustedRandomPool = mergedProjects.length === allProjects.length
+      allProjects = mergedProjects
+
+      if (displayedCount < allProjects.length) {
+        renderBatch()
+      } else {
+        updateProjectCount()
+        updateLoadMoreButton()
+      }
+    } catch (err) {
+      console.error("Failed to load more projects:", err)
+    } finally {
+      isLoadingMore = false
+      updateLoadMoreButton()
     }
-  })
+  }
 
   window.shuffleProjects = () => {
     currentFilter = "random"
     document.getElementById("filterSelect").value = "random"
     loadProjects()
   }
-  window.applyFilter = (filter) => { currentFilter = filter; loadProjects() }
+
+  window.applyFilter = (filter) => {
+    currentFilter = filter
+    loadProjects()
+  }
+
+  window.loadMoreProjects = loadMoreProjects
 
   loadProjects()
 }

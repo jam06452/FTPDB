@@ -1,6 +1,15 @@
 defmodule Ftpdb.DB do
   require Logger
 
+  defp project_duration_fields(duration_seconds) do
+    duration_seconds = duration_seconds || 0
+
+    %{
+      total_duration_seconds: duration_seconds,
+      total_hours: div(duration_seconds, 3600)
+    }
+  end
+
   def client do
     config = Application.get_env(:ftpdb, :supabase)
     {:ok, client} = Supabase.init_client(config[:url], config[:key])
@@ -29,17 +38,18 @@ defmodule Ftpdb.DB do
       [user_info] = get_user_info(user_id)
       duration = item["stat_total_duration_seconds"] || 0
 
-      project_map = %{
-        id: to_string(item["id"]),
-        title: item["title"],
-        banner_url: item["banner_url"],
-        display_name: user_info.display_name,
-        avatar_url: user_info.avatar_url,
-        stat_hot_score: item["stat_hot_score"] || 0,
-        total_hours: div(duration, 3600),
-        devlogs_count: get_devlog_count(item["id"]),
-        stat_total_likes: item["stat_total_likes"] || 0
-      }
+      project_map =
+        %{
+          id: to_string(item["id"]),
+          title: item["title"],
+          banner_url: item["banner_url"],
+          display_name: user_info.display_name,
+          avatar_url: user_info.avatar_url,
+          stat_hot_score: item["stat_hot_score"] || 0,
+          devlogs_count: get_devlog_count(item["id"]),
+          stat_total_likes: item["stat_total_likes"] || 0
+        }
+        |> Map.merge(project_duration_fields(duration))
 
       project_map
     end)
@@ -73,7 +83,13 @@ defmodule Ftpdb.DB do
   def fan_favourites do
     {:ok, response} =
       Supabase.PostgREST.from(client(), "projects")
-      |> Supabase.PostgREST.select(["title", "id", "banner_url", "stat_total_likes"])
+      |> Supabase.PostgREST.select([
+        "title",
+        "id",
+        "banner_url",
+        "stat_total_likes",
+        "stat_total_duration_seconds"
+      ])
       |> Supabase.PostgREST.order("stat_total_likes", desc: true)
       |> Supabase.PostgREST.limit(10)
       |> Map.put(:method, :get)
@@ -83,6 +99,7 @@ defmodule Ftpdb.DB do
     |> Enum.map(fn item ->
       user_id = get_user_id(item["id"])
       [user_info] = get_user_info(user_id)
+      duration = item["stat_total_duration_seconds"] || 0
 
       %{
         id: to_string(item["id"]),
@@ -91,9 +108,9 @@ defmodule Ftpdb.DB do
         display_name: user_info.display_name,
         avatar_url: user_info.avatar_url,
         stat_hot_score: 0,
-        total_hours: user_info.total_hours || 0,
         stat_total_likes: item["stat_total_likes"] || 0
       }
+      |> Map.merge(project_duration_fields(duration))
     end)
   end
 
@@ -151,9 +168,9 @@ defmodule Ftpdb.DB do
         display_name: user_info.display_name,
         avatar_url: user_info.avatar_url,
         stat_hot_score: item["stat_hot_score"] || 0,
-        total_hours: div(duration, 3600),
         stat_total_likes: item["stat_total_likes"] || 0
       }
+      |> Map.merge(project_duration_fields(duration))
     end)
   end
 
@@ -200,22 +217,22 @@ defmodule Ftpdb.DB do
     response.body
     |> Enum.map(fn item ->
       duration = item["stat_total_duration_seconds"] || 0
-      total_hours = div(duration, 3600)
       user_id = get_user_id(project_id)
       [user_info] = get_user_info(user_id)
 
       user_info = Map.drop(user_info, [:total_hours])
 
-      project_map = %{
-        title: item["title"],
-        description: item["description"],
-        repo_url: item["repo_url"],
-        demo_url: item["demo_url"],
-        ship_status: item["ship_status"],
-        total_hours: total_hours,
-        total_likes: item["stat_total_likes"],
-        banner_url: item["banner_url"]
-      }
+      project_map =
+        %{
+          title: item["title"],
+          description: item["description"],
+          repo_url: item["repo_url"],
+          demo_url: item["demo_url"],
+          ship_status: item["ship_status"],
+          total_likes: item["stat_total_likes"],
+          banner_url: item["banner_url"]
+        }
+        |> Map.merge(project_duration_fields(duration))
 
       Map.merge(user_info, project_map)
     end)
@@ -229,11 +246,12 @@ defmodule Ftpdb.DB do
 
     response.body
     |> Enum.map(fn item ->
-      duration = item["stat_total_duration_seconds"] || 0
-      total_hours = div(duration, 3600)
+      total_hours = item["stat_total_hours"] || 0
+      duration = item["stat_total_duration_seconds"] || total_hours * 3600
 
       item
       |> Map.drop(["stat_total_duration_seconds"])
+      |> Map.put("total_duration_seconds", duration)
       |> Map.put("total_hours", total_hours)
     end)
   end
