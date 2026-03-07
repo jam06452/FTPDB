@@ -431,7 +431,7 @@ function initHomePage() {
           <div class="banner-stats">
             <div class="banner-stat"><span class="banner-stat-val">—</span><span class="banner-stat-lbl">Rating</span></div>
             <div class="banner-stat"><span class="banner-stat-val">${p.total_hours || "—"}</span><span class="banner-stat-lbl">Hrs Spent</span></div>
-            <div class="banner-stat"><span class="banner-stat-val">—</span><span class="banner-stat-lbl">Contributors</span></div>
+            <div class="banner-stat"><span class="banner-stat-val">${p.devlogs_count ?? 0}</span><span class="banner-stat-lbl">Devlogs</span></div>
           </div>
           <button class="banner-btn" onclick="viewProject('${p.id}')">
             View Project

@@ -37,6 +37,7 @@ defmodule Ftpdb.DB do
         avatar_url: user_info.avatar_url,
         stat_hot_score: item["stat_hot_score"] || 0,
         total_hours: div(duration, 3600),
+        devlogs_count: get_devlog_count(item["id"]),
         stat_total_likes: item["stat_total_likes"] || 0
       }
 
@@ -410,6 +411,19 @@ defmodule Ftpdb.DB do
       end)
       |> Enum.sort_by(fn p -> -p.total_hours end)
     end
+  end
+
+  def get_devlog_count(project_id) do
+    {:ok, response} =
+      Supabase.PostgREST.from(client(), "devlogs")
+      |> Supabase.PostgREST.select(["id"])
+      |> Supabase.PostgREST.eq("project_id", project_id)
+      |> Map.put(:method, :get)
+      |> Supabase.PostgREST.execute()
+
+    response.body
+    |> List.wrap()
+    |> length()
   end
 
   def get_devlogs(project_id) do
