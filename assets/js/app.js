@@ -73,6 +73,22 @@ function sanitizeMarkdownUrl(url) {
   return "#"
 }
 
+function parseMarkdownTarget(rawTarget) {
+  if (!rawTarget) return {href: "#", title: ""}
+
+  const trimmed = rawTarget.trim()
+  const titleMatch = trimmed.match(/^(\S+)(?:\s+"([^"]*)")?$/)
+
+  if (!titleMatch) {
+    return {href: sanitizeMarkdownUrl(trimmed), title: ""}
+  }
+
+  return {
+    href: sanitizeMarkdownUrl(titleMatch[1]),
+    title: titleMatch[2] || ""
+  }
+}
+
 function renderMarkdownInline(source) {
   if (!source) return ""
 
@@ -87,9 +103,15 @@ function renderMarkdownInline(source) {
   rendered = window.escapeHtml(rendered)
 
   rendered = rendered
-    .replace(/\[([^\]]+)\]\(([^)\s]+(?:\s+"[^"]*")?)\)/g, (_match, label, rawTarget) => {
-      const href = sanitizeMarkdownUrl(rawTarget.split(/\s+"/)[0])
-      return `<a href="${href}" target="_blank" rel="noopener noreferrer">${label}</a>`
+    .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (_match, alt, rawTarget) => {
+      const {href, title} = parseMarkdownTarget(rawTarget)
+      const titleAttr = title ? ` title="${window.escapeHtml(title)}"` : ""
+      return `<img src="${href}" alt="${alt}" loading="lazy"${titleAttr} />`
+    })
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_match, label, rawTarget) => {
+      const {href, title} = parseMarkdownTarget(rawTarget)
+      const titleAttr = title ? ` title="${window.escapeHtml(title)}"` : ""
+      return `<a href="${href}" target="_blank" rel="noopener noreferrer"${titleAttr}>${label}</a>`
     })
     .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
     .replace(/__([^_]+)__/g, "<strong>$1</strong>")
@@ -157,6 +179,12 @@ function renderMarkdownBlocks(source) {
       flushAll()
       const level = headingMatch[1].length
       html.push(`<h${level}>${renderMarkdownInline(headingMatch[2].trim())}</h${level}>`)
+      return
+    }
+
+    if (/^([-*_]\s*){3,}$/.test(trimmed)) {
+      flushAll()
+      html.push("<hr>")
       return
     }
 
