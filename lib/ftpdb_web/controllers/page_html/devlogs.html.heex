@@ -198,10 +198,94 @@
         line-height: 1.72;
         color: var(--text);
       }
+
+      .devlog-text > :first-child { margin-top: 0; }
+      .devlog-text > :last-child { margin-bottom: 0; }
+      .devlog-text p,
+      .devlog-text ul,
+      .devlog-text ol,
+      .devlog-text blockquote,
+      .devlog-text pre,
+      .devlog-text h1,
+      .devlog-text h2,
+      .devlog-text h3,
+      .devlog-text h4,
+      .devlog-text h5,
+      .devlog-text h6 {
+        margin: 0 0 0.9em;
+      }
+
+      .devlog-text h1,
+      .devlog-text h2,
+      .devlog-text h3,
+      .devlog-text h4,
+      .devlog-text h5,
+      .devlog-text h6 {
+        color: #f5f7fb;
+        font-family: 'Cabinet Grotesk', sans-serif;
+        font-weight: 700;
+        line-height: 1.25;
+      }
+
+      .devlog-text h1 { font-size: 1.45rem; }
+      .devlog-text h2 { font-size: 1.25rem; }
+      .devlog-text h3 { font-size: 1.1rem; }
+
+      .devlog-text ul,
+      .devlog-text ol {
+        padding-left: 1.35rem;
+      }
+
+      .devlog-text li + li {
+        margin-top: 0.35rem;
+      }
+
+      .devlog-text a {
+        color: var(--gold);
+        text-decoration: underline;
+        text-decoration-color: rgba(232, 180, 85, 0.45);
+        transition: color var(--transition), text-decoration-color var(--transition);
+      }
+
+      .devlog-text a:hover {
+        color: #f3cf7a;
+        text-decoration-color: rgba(243, 207, 122, 0.8);
+      }
+
+      .devlog-text code {
+        font-family: 'DM Mono', monospace;
+        font-size: 0.92em;
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 6px;
+        padding: 0.12rem 0.38rem;
+      }
+
+      .devlog-text pre {
+        overflow-x: auto;
+        background: rgba(7, 10, 18, 0.92);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 0.95rem 1rem;
+      }
+
+      .devlog-text pre code {
+        background: transparent;
+        border: 0;
+        border-radius: 0;
+        padding: 0;
+        display: block;
+        white-space: pre;
+      }
+
+      .devlog-text blockquote {
+        border-left: 3px solid rgba(232, 180, 85, 0.42);
+        padding-left: 0.95rem;
+        color: #c7cfdb;
+      }
+
       .devlog-text.clamped {
-        display: -webkit-box;
-        -webkit-line-clamp: 5;
-        -webkit-box-orient: vertical;
+        max-height: calc(1.72em * 5.6);
         overflow: hidden;
       }
       .devlog-expand-btn {
@@ -489,8 +573,9 @@
         }
 
         timeline.innerHTML = devlogs.map((log, i) => {
-          const body = escapeHtml(log.body || "No content.");
-          const long = body.length > 400;
+          const rawBody = log.body || "No content.";
+          const body = window.renderMarkdown(rawBody);
+          const long = rawBody.length > 400;
           const mediaUrls = log.media_urls || [];
           const hasMedia = Array.isArray(mediaUrls) && mediaUrls.length > 0;
 
@@ -538,7 +623,7 @@
               <div class="devlog-card">
                 ${carouselHtml}
                 <div class="devlog-body">
-                  <p class="devlog-text${long ? " clamped" : ""}" id="devlog-text-${i}">${body}</p>
+                  <div class="devlog-text${long ? " clamped" : ""}" id="devlog-text-${i}">${body}</div>
                   ${long ? `<button class="devlog-expand-btn" onclick="toggleExpand(${i})">Read more ↓</button>` : ""}
                 </div>
                 <div class="devlog-footer">

@@ -61,6 +61,169 @@ window.escapeHtml = (str) => {
     .replace(/"/g, "&quot;")
 }
 
+function sanitizeMarkdownUrl(url) {
+  if (!url) return "#"
+
+  const trimmed = url.trim()
+
+  if (/^(https?:|mailto:|\/)/i.test(trimmed)) {
+    return trimmed.replace(/\"/g, "%22")
+  }
+
+  return "#"
+}
+
+function renderMarkdownInline(source) {
+  if (!source) return ""
+
+  const codeTokens = []
+
+  let rendered = source.replace(/`([^`]+)`/g, (_match, code) => {
+    const token = `@@MDCODE${codeTokens.length}@@`
+    codeTokens.push(`<code>${window.escapeHtml(code)}</code>`)
+    return token
+  })
+
+  rendered = window.escapeHtml(rendered)
+
+  rendered = rendered
+    .replace(/\[([^\]]+)\]\(([^)\s]+(?:\s+"[^"]*")?)\)/g, (_match, label, rawTarget) => {
+      const href = sanitizeMarkdownUrl(rawTarget.split(/\s+"/)[0])
+      return `<a href="${href}" target="_blank" rel="noopener noreferrer">${label}</a>`
+    })
+    .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+    .replace(/__([^_]+)__/g, "<strong>$1</strong>")
+    .replace(/\*([^*]+)\*/g, "<em>$1</em>")
+    .replace(/_([^_]+)_/g, "<em>$1</em>")
+    .replace(/~~([^~]+)~~/g, "<del>$1</del>")
+    .replace(/\n/g, "<br>")
+
+  codeTokens.forEach((token, index) => {
+    rendered = rendered.replace(`@@MDCODE${index}@@`, token)
+  })
+
+  return rendered
+}
+
+function renderMarkdownBlocks(source) {
+  const lines = source.split("\n")
+  const html = []
+  let paragraph = []
+  let unorderedList = []
+  let orderedList = []
+  let blockquote = []
+
+  function flushParagraph() {
+    if (paragraph.length === 0) return
+    html.push(`<p>${renderMarkdownInline(paragraph.join("\n"))}</p>`)
+    paragraph = []
+  }
+
+  function flushUnorderedList() {
+    if (unorderedList.length === 0) return
+    html.push(`<ul>${unorderedList.map(item => `<li>${renderMarkdownInline(item)}</li>`).join("")}</ul>`)
+    unorderedList = []
+  }
+
+  function flushOrderedList() {
+    if (orderedList.length === 0) return
+    html.push(`<ol>${orderedList.map(item => `<li>${renderMarkdownInline(item)}</li>`).join("")}</ol>`)
+    orderedList = []
+  }
+
+  function flushBlockquote() {
+    if (blockquote.length === 0) return
+    html.push(`<blockquote>${renderMarkdownInline(blockquote.join("\n"))}</blockquote>`)
+    blockquote = []
+  }
+
+  function flushAll() {
+    flushParagraph()
+    flushUnorderedList()
+    flushOrderedList()
+    flushBlockquote()
+  }
+
+  lines.forEach(line => {
+    const trimmed = line.trim()
+
+    if (trimmed === "") {
+      flushAll()
+      return
+    }
+
+    const headingMatch = line.match(/^(#{1,6})\s+(.*)$/)
+    if (headingMatch) {
+      flushAll()
+      const level = headingMatch[1].length
+      html.push(`<h${level}>${renderMarkdownInline(headingMatch[2].trim())}</h${level}>`)
+      return
+    }
+
+    const unorderedMatch = line.match(/^\s*[-*+]\s+(.*)$/)
+    if (unorderedMatch) {
+      flushParagraph()
+      flushOrderedList()
+      flushBlockquote()
+      unorderedList.push(unorderedMatch[1])
+      return
+    }
+
+    const orderedMatch = line.match(/^\s*\d+\.\s+(.*)$/)
+    if (orderedMatch) {
+      flushParagraph()
+      flushUnorderedList()
+      flushBlockquote()
+      orderedList.push(orderedMatch[1])
+      return
+    }
+
+    const blockquoteMatch = line.match(/^>\s?(.*)$/)
+    if (blockquoteMatch) {
+      flushParagraph()
+      flushUnorderedList()
+      flushOrderedList()
+      blockquote.push(blockquoteMatch[1])
+      return
+    }
+
+    paragraph.push(trimmed)
+  })
+
+  flushAll()
+
+  return html.join("")
+}
+
+window.renderMarkdown = (source) => {
+  const text = (source || "").replace(/\r\n?/g, "\n").trim()
+
+  if (!text) {
+    return "<p>No content.</p>"
+  }
+
+  const parts = []
+  let cursor = 0
+  const codeFencePattern = /```([\w-]+)?\n([\s\S]*?)```/g
+  let match
+
+  while ((match = codeFencePattern.exec(text)) !== null) {
+    if (match.index > cursor) {
+      parts.push(renderMarkdownBlocks(text.slice(cursor, match.index)))
+    }
+
+    const language = match[1] ? ` class="language-${window.escapeHtml(match[1])}"` : ""
+    parts.push(`<pre><code${language}>${window.escapeHtml(match[2].replace(/\n$/, ""))}</code></pre>`)
+    cursor = match.index + match[0].length
+  }
+
+  if (cursor < text.length) {
+    parts.push(renderMarkdownBlocks(text.slice(cursor)))
+  }
+
+  return parts.join("")
+}
+
 window.viewProject = (id) => { window.location.href = `/project/${id}` }
 window.viewUser    = (id) => { window.location.href = `/user/${id}` }
 
