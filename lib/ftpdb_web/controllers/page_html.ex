@@ -6,7 +6,5 @@ defmodule FtpdbWeb.PageHTML do
   """
   use FtpdbWeb, :html
 
-  import FtpdbWeb.NavbarComponent
-
   embed_templates "page_html/*"
 end

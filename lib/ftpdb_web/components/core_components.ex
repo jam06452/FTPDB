@@ -31,6 +31,8 @@ defmodule FtpdbWeb.CoreComponents do
 
   alias Phoenix.LiveView.JS
 
+  embed_templates "core_components/*"
+
   @doc """
   Renders flash notices.
 
@@ -50,34 +52,16 @@ defmodule FtpdbWeb.CoreComponents do
   def flash(assigns) do
     assigns = assign_new(assigns, :id, fn -> "flash-#{assigns.kind}" end)
 
-    ~H"""
-    <div
-      :if={msg = render_slot(@inner_block) || Phoenix.Flash.get(@flash, @kind)}
-      id={@id}
-      phx-click={JS.push("lv:clear-flash", value: %{key: @kind}) |> hide("##{@id}")}
-      role="alert"
-      class="toast toast-top toast-end z-50"
-      {@rest}
-    >
-      <div class={[
-        "alert w-80 sm:w-96 max-w-80 sm:max-w-96 text-wrap",
-        @kind == :info && "alert-info",
-        @kind == :error && "alert-error"
-      ]}>
-        <.icon :if={@kind == :info} name="hero-information-circle" class="size-5 shrink-0" />
-        <.icon :if={@kind == :error} name="hero-exclamation-circle" class="size-5 shrink-0" />
-        <div>
-          <p :if={@title} class="font-semibold">{@title}</p>
-          <p>{msg}</p>
-        </div>
-        <div class="flex-1" />
-        <button type="button" class="group self-start cursor-pointer" aria-label={gettext("close")}>
-          <.icon name="hero-x-mark" class="size-5 opacity-40 group-hover:opacity-70" />
-        </button>
-      </div>
-    </div>
-    """
+    flash_content(assigns)
   end
+
+  attr :id, :string, doc: "the optional id of flash container"
+  attr :flash, :map, default: %{}, doc: "the map of flash messages to display"
+  attr :title, :string, default: nil
+  attr :kind, :atom, values: [:info, :error], doc: "used for styling and flash lookup"
+  attr :rest, :global, doc: "the arbitrary HTML attributes to add to the flash container"
+  slot :inner_block, doc: "the optional inner block that renders the flash message"
+  def flash_content(assigns)
 
   @doc """
   Renders a button with navigation support.
@@ -102,19 +86,21 @@ defmodule FtpdbWeb.CoreComponents do
       end)
 
     if rest[:href] || rest[:navigate] || rest[:patch] do
-      ~H"""
-      <.link class={@class} {@rest}>
-        {render_slot(@inner_block)}
-      </.link>
-      """
+      button_link(assigns)
     else
-      ~H"""
-      <button class={@class} {@rest}>
-        {render_slot(@inner_block)}
-      </button>
-      """
+      button_button(assigns)
     end
   end
+
+  attr :rest, :global, include: ~w(href navigate patch method download name value disabled)
+  attr :class, :any
+  slot :inner_block, required: true
+  def button_link(assigns)
+
+  attr :rest, :global, include: ~w(href navigate patch method download name value disabled)
+  attr :class, :any
+  slot :inner_block, required: true
+  def button_button(assigns)
 
   @doc """
   Renders an input with label and error messages.
@@ -193,9 +179,7 @@ defmodule FtpdbWeb.CoreComponents do
   end
 
   def input(%{type: "hidden"} = assigns) do
-    ~H"""
-    <input type="hidden" id={@id} name={@name} value={@value} {@rest} />
-    """
+    input_hidden(assigns)
   end
 
   def input(%{type: "checkbox"} = assigns) do
@@ -204,106 +188,100 @@ defmodule FtpdbWeb.CoreComponents do
         Phoenix.HTML.Form.normalize_value("checkbox", assigns[:value])
       end)
 
-    ~H"""
-    <div class="fieldset mb-2">
-      <label>
-        <input
-          type="hidden"
-          name={@name}
-          value="false"
-          disabled={@rest[:disabled]}
-          form={@rest[:form]}
-        />
-        <span class="label">
-          <input
-            type="checkbox"
-            id={@id}
-            name={@name}
-            value="true"
-            checked={@checked}
-            class={@class || "checkbox checkbox-sm"}
-            {@rest}
-          />{@label}
-        </span>
-      </label>
-      <.error :for={msg <- @errors}>{msg}</.error>
-    </div>
-    """
+    input_checkbox(assigns)
   end
 
   def input(%{type: "select"} = assigns) do
-    ~H"""
-    <div class="fieldset mb-2">
-      <label>
-        <span :if={@label} class="label mb-1">{@label}</span>
-        <select
-          id={@id}
-          name={@name}
-          class={[@class || "w-full select", @errors != [] && (@error_class || "select-error")]}
-          multiple={@multiple}
-          {@rest}
-        >
-          <option :if={@prompt} value="">{@prompt}</option>
-          {Phoenix.HTML.Form.options_for_select(@options, @value)}
-        </select>
-      </label>
-      <.error :for={msg <- @errors}>{msg}</.error>
-    </div>
-    """
+    input_select(assigns)
   end
 
   def input(%{type: "textarea"} = assigns) do
-    ~H"""
-    <div class="fieldset mb-2">
-      <label>
-        <span :if={@label} class="label mb-1">{@label}</span>
-        <textarea
-          id={@id}
-          name={@name}
-          class={[
-            @class || "w-full textarea",
-            @errors != [] && (@error_class || "textarea-error")
-          ]}
-          {@rest}
-        >{Phoenix.HTML.Form.normalize_value("textarea", @value)}</textarea>
-      </label>
-      <.error :for={msg <- @errors}>{msg}</.error>
-    </div>
-    """
+    input_textarea(assigns)
   end
 
   # All other inputs text, datetime-local, url, password, etc. are handled here...
   def input(assigns) do
-    ~H"""
-    <div class="fieldset mb-2">
-      <label>
-        <span :if={@label} class="label mb-1">{@label}</span>
-        <input
-          type={@type}
-          name={@name}
-          id={@id}
-          value={Phoenix.HTML.Form.normalize_value(@type, @value)}
-          class={[
-            @class || "w-full input",
-            @errors != [] && (@error_class || "input-error")
-          ]}
-          {@rest}
-        />
-      </label>
-      <.error :for={msg <- @errors}>{msg}</.error>
-    </div>
-    """
+    input_default(assigns)
   end
 
+  attr :id, :any, default: nil
+  attr :name, :any
+  attr :value, :any
+
+  attr :rest, :global,
+    include: ~w(accept autocomplete capture cols disabled form list max maxlength min minlength
+                multiple pattern placeholder readonly required rows size step)
+
+  def input_hidden(assigns)
+
+  attr :id, :any, default: nil
+  attr :name, :any
+  attr :label, :string, default: nil
+  attr :value, :any
+  attr :errors, :list, default: []
+  attr :checked, :boolean, doc: "the checked flag for checkbox inputs"
+  attr :class, :any, default: nil, doc: "the input class to use over defaults"
+
+  attr :rest, :global,
+    include: ~w(accept autocomplete capture cols disabled form list max maxlength min minlength
+                multiple pattern placeholder readonly required rows size step)
+
+  def input_checkbox(assigns)
+
+  attr :id, :any, default: nil
+  attr :name, :any
+  attr :label, :string, default: nil
+  attr :value, :any
+  attr :errors, :list, default: []
+  attr :prompt, :string, default: nil, doc: "the prompt for select inputs"
+  attr :options, :list, doc: "the options to pass to Phoenix.HTML.Form.options_for_select/2"
+  attr :multiple, :boolean, default: false, doc: "the multiple flag for select inputs"
+  attr :class, :any, default: nil, doc: "the input class to use over defaults"
+  attr :error_class, :any, default: nil, doc: "the input error class to use over defaults"
+
+  attr :rest, :global,
+    include: ~w(accept autocomplete capture cols disabled form list max maxlength min minlength
+                multiple pattern placeholder readonly required rows size step)
+
+  def input_select(assigns)
+
+  attr :id, :any, default: nil
+  attr :name, :any
+  attr :label, :string, default: nil
+  attr :value, :any
+  attr :errors, :list, default: []
+  attr :class, :any, default: nil, doc: "the input class to use over defaults"
+  attr :error_class, :any, default: nil, doc: "the input error class to use over defaults"
+
+  attr :rest, :global,
+    include: ~w(accept autocomplete capture cols disabled form list max maxlength min minlength
+                multiple pattern placeholder readonly required rows size step)
+
+  def input_textarea(assigns)
+
+  attr :id, :any, default: nil
+  attr :name, :any
+  attr :label, :string, default: nil
+  attr :value, :any
+
+  attr :type, :string,
+    default: "text",
+    values: ~w(checkbox color date datetime-local email file month number password
+               search select tel text textarea time url week hidden)
+
+  attr :errors, :list, default: []
+  attr :class, :any, default: nil, doc: "the input class to use over defaults"
+  attr :error_class, :any, default: nil, doc: "the input error class to use over defaults"
+
+  attr :rest, :global,
+    include: ~w(accept autocomplete capture cols disabled form list max maxlength min minlength
+                multiple pattern placeholder readonly required rows size step)
+
+  def input_default(assigns)
+
   # Helper used by inputs to generate form errors
-  defp error(assigns) do
-    ~H"""
-    <p class="mt-1.5 flex gap-2 items-center text-sm text-error">
-      <.icon name="hero-exclamation-circle" class="size-5" />
-      {render_slot(@inner_block)}
-    </p>
-    """
-  end
+  slot :inner_block, required: true
+  def error(assigns)
 
   @doc """
   Renders a header with title.
@@ -312,21 +290,7 @@ defmodule FtpdbWeb.CoreComponents do
   slot :subtitle
   slot :actions
 
-  def header(assigns) do
-    ~H"""
-    <header class={[@actions != [] && "flex items-center justify-between gap-6", "pb-4"]}>
-      <div>
-        <h1 class="text-lg font-semibold leading-8">
-          {render_slot(@inner_block)}
-        </h1>
-        <p :if={@subtitle != []} class="text-sm text-base-content/70">
-          {render_slot(@subtitle)}
-        </p>
-      </div>
-      <div class="flex-none">{render_slot(@actions)}</div>
-    </header>
-    """
-  end
+  def header(assigns)
 
   @doc """
   Renders a table with generic styling.
@@ -359,37 +323,24 @@ defmodule FtpdbWeb.CoreComponents do
         assign(assigns, row_id: assigns.row_id || fn {id, _item} -> id end)
       end
 
-    ~H"""
-    <table class="table table-zebra">
-      <thead>
-        <tr>
-          <th :for={col <- @col}>{col[:label]}</th>
-          <th :if={@action != []}>
-            <span class="sr-only">{gettext("Actions")}</span>
-          </th>
-        </tr>
-      </thead>
-      <tbody id={@id} phx-update={is_struct(@rows, Phoenix.LiveView.LiveStream) && "stream"}>
-        <tr :for={row <- @rows} id={@row_id && @row_id.(row)}>
-          <td
-            :for={col <- @col}
-            phx-click={@row_click && @row_click.(row)}
-            class={@row_click && "hover:cursor-pointer"}
-          >
-            {render_slot(col, @row_item.(row))}
-          </td>
-          <td :if={@action != []} class="w-0 font-semibold">
-            <div class="flex gap-4">
-              <%= for action <- @action do %>
-                {render_slot(action, @row_item.(row))}
-              <% end %>
-            </div>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-    """
+    table_content(assigns)
   end
+
+  attr :id, :string, required: true
+  attr :rows, :list, required: true
+  attr :row_id, :any, default: nil, doc: "the function for generating the row id"
+  attr :row_click, :any, default: nil, doc: "the function for handling phx-click on each row"
+
+  attr :row_item, :any,
+    default: &Function.identity/1,
+    doc: "the function for mapping each row before calling the :col and :action slots"
+
+  slot :col, required: true do
+    attr :label, :string
+  end
+
+  slot :action, doc: "the slot for showing user actions in the last table column"
+  def table_content(assigns)
 
   @doc """
   Renders a data list.
@@ -405,18 +356,7 @@ defmodule FtpdbWeb.CoreComponents do
     attr :title, :string, required: true
   end
 
-  def list(assigns) do
-    ~H"""
-    <ul class="list">
-      <li :for={item <- @item} class="list-row">
-        <div class="list-col-grow">
-          <div class="font-bold">{item.title}</div>
-          <div>{render_slot(item)}</div>
-        </div>
-      </li>
-    </ul>
-    """
-  end
+  def list(assigns)
 
   @doc """
   Renders a [Heroicon](https://heroicons.com).
@@ -440,10 +380,12 @@ defmodule FtpdbWeb.CoreComponents do
   attr :class, :any, default: "size-4"
 
   def icon(%{name: "hero-" <> _} = assigns) do
-    ~H"""
-    <span class={[@name, @class]} />
-    """
+    icon_span(assigns)
   end
+
+  attr :name, :string, required: true
+  attr :class, :any, default: "size-4"
+  def icon_span(assigns)
 
   ## JS Commands
 
