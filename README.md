@@ -1,18 +1,25 @@
-# Ftpdb
 
-To start your Phoenix server:
+# FTPDB
 
-* Run `mix setup` to install and setup dependencies
-* Start Phoenix endpoint with `mix phx.server` or inside IEx with `iex -S mix phx.server`
+  
 
-Now you can visit [`localhost:4000`](http://localhost:4000) from your browser.
+## An IMDB like website for Projects, Users & Devlogs on the flavortown website
 
-Ready to run in production? Please [check our deployment guides](https://hexdocs.pm/phoenix/deployment.html).
+## API Documentation
+- https://registry.scalar.com/@jam06452/apis/ftpdb-public-api@latest
 
-## Learn more
+## Features
+- Liveish stats, refresh every six hours through a containered scraper
+- The ability to search for Projects & Users at the sametime
+- User Profiles with other projects & Time Spents
+- Project Profiles with all avaliable Devlogs with markdown rendering to support images
+- Suggestions page  that sends suggestions to my slack via a slack bot
 
-* Official website: https://www.phoenixframework.org/
-* Guides: https://hexdocs.pm/phoenix/overview.html
-* Docs: https://hexdocs.pm/phoenix
-* Forum: https://elixirforum.com/c/phoenix-forum
-* Source: https://github.com/phoenixframework/phoenix
+## Tech Stack
+- Elixir & Phoenix Liveview
+- Supabase as the database
+- Python for the scraper
+
+## Optimizations
+- Application caching on the elixir server via cachex
+- Page caching via cloudflare
