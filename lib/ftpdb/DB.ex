@@ -258,22 +258,108 @@ defmodule Ftpdb.DB do
     end)
   end
 
-  def random_projects(limit \\ 10) do
+  defp get_max_project_id do
     {:ok, response} =
-      client()
-      |> Supabase.PostgREST.rpc("get_random_projects", %{limit_count: limit})
+      Supabase.PostgREST.from(client(), "projects")
+      |> Supabase.PostgREST.select(["id"])
+      |> Supabase.PostgREST.order("id", desc: true)
+      |> Supabase.PostgREST.limit(1)
+      |> Map.put(:method, :get)
       |> Supabase.PostgREST.execute()
 
-    response.body
-    |> Enum.map(fn item ->
-      total_hours = item["stat_total_hours"] || 0
-      duration = item["stat_total_duration_seconds"] || total_hours * 3600
+    case response.body do
+      [%{"id" => max_id}] -> max_id
+      _ -> 0
+    end
+  end
 
-      item
-      |> Map.drop(["stat_total_duration_seconds"])
-      |> Map.put("total_duration_seconds", duration)
-      |> Map.put("total_hours", total_hours)
-    end)
+  defp fetch_and_format_project_for_random(id) do
+    result =
+      Supabase.PostgREST.from(client(), "projects")
+      |> Supabase.PostgREST.select([
+        "id",
+        "title",
+        "banner_url",
+        "stat_total_duration_seconds",
+        "stat_hot_score",
+        "stat_total_likes"
+      ])
+      |> Supabase.PostgREST.eq("id", id)
+      |> Map.put(:method, :get)
+      |> Supabase.PostgREST.execute()
+
+    case result do
+      {:ok, %{body: [item]}} when not is_nil(item) ->
+        banner_url = item["banner_url"]
+
+        if is_nil(banner_url) or
+             banner_url == "https://flavortown.hackclub.com/assets/default-banner-3d4e1b67.png" do
+          nil
+        else
+          user_id = get_user_id(item["id"])
+
+          {user_avatar, user_display_name} =
+            if user_id do
+              case get_user_info(user_id) do
+                [u] -> {u.avatar_url, u.display_name || "Unknown User"}
+                _ -> {nil, "Unknown User"}
+              end
+            else
+              {nil, "Unknown User"}
+            end
+
+          duration = item["stat_total_duration_seconds"] || 0
+
+          %{
+            id: to_string(item["id"]),
+            title: item["title"],
+            banner_url: banner_url,
+            display_name: user_display_name,
+            avatar_url: user_avatar,
+            stat_hot_score: item["stat_hot_score"] || 0,
+            stat_total_likes: item["stat_total_likes"] || 0,
+            total_duration_seconds: duration,
+            total_hours: div(duration, 3600)
+          }
+        end
+
+      _ ->
+        nil
+    end
+  end
+
+  def random_projects(limit \\ 10) do
+    max_id = get_max_project_id()
+
+    if max_id == 0 do
+      []
+    else
+      random_ids =
+        1..(limit * 10)
+        |> Enum.map(fn _ -> :rand.uniform(max_id) end)
+        |> Enum.uniq()
+
+      random_ids
+      |> Enum.reduce_while([], fn id, acc ->
+        if length(acc) >= limit do
+          {:halt, acc}
+        else
+          project =
+            Cachex.fetch!(
+              :random_project_cache,
+              to_string(id),
+              fn _key -> fetch_and_format_project_for_random(id) end,
+              expiration: :timer.minutes(30)
+            )
+
+          if project do
+            {:cont, [project | acc]}
+          else
+            {:cont, acc}
+          end
+        end
+      end)
+    end
   end
 
   def search_projects(query) when is_binary(query) do

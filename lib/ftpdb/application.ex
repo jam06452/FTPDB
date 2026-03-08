@@ -14,6 +14,9 @@ defmodule Ftpdb.Application do
       Supervisor.child_spec({Cachex, name: :random_devlog_cache},
         id: :random_devlog_cache_worker
       ),
+      Supervisor.child_spec({Cachex, name: :random_project_cache},
+        id: :random_project_cache_worker
+      ),
       Supervisor.child_spec({Cachex, name: :user_id_cache}, id: :user_id_cache_worker),
       Supervisor.child_spec({Cachex, name: :hot_cache}, id: :hot_cache_worker),
       Supervisor.child_spec({Cachex, name: :top_week_cache}, id: :top_week_cache_worker),
