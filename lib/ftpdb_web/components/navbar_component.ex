@@ -6,7 +6,7 @@ defmodule FtpdbWeb.NavbarComponent do
 
   embed_templates "navbar_component/*"
 
-  attr :logo_text, :string, default: "FTPDB", doc: "text for the logo/home link"
+  attr :logo_url, :string, default: "/images/logo.png", doc: "URL for the logo image"
 
   attr :current_section, :string,
     default: nil,
