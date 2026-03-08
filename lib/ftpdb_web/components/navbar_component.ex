@@ -4,9 +4,12 @@ defmodule FtpdbWeb.NavbarComponent do
   """
   use Phoenix.Component
 
-  embed_templates "navbar_component/*"
+  use Phoenix.VerifiedRoutes,
+    endpoint: FtpdbWeb.Endpoint,
+    router: FtpdbWeb.Router,
+    statics: FtpdbWeb.static_paths()
 
-  attr :logo_url, :string, default: "/images/logo.png", doc: "URL for the logo image"
+  embed_templates "navbar_component/*"
 
   attr :current_section, :string,
     default: nil,
