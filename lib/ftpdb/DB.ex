@@ -33,26 +33,32 @@ defmodule Ftpdb.DB do
       |> Supabase.PostgREST.execute()
 
     response.body
-    |> Enum.map(fn item ->
-      user_id = get_user_id(item["id"])
-      [user_info] = get_user_info(user_id)
-      duration = item["stat_total_duration_seconds"] || 0
+    |> Enum.filter_map(
+      fn item ->
+        user_id = get_user_id(item["id"])
+        user_id != nil
+      end,
+      fn item ->
+        user_id = get_user_id(item["id"])
+        [user_info] = get_user_info(user_id)
+        duration = item["stat_total_duration_seconds"] || 0
 
-      project_map =
-        %{
-          id: to_string(item["id"]),
-          title: item["title"],
-          banner_url: item["banner_url"],
-          display_name: user_info.display_name,
-          avatar_url: user_info.avatar_url,
-          stat_hot_score: item["stat_hot_score"] || 0,
-          devlogs_count: get_devlog_count(item["id"]),
-          stat_total_likes: item["stat_total_likes"] || 0
-        }
-        |> Map.merge(project_duration_fields(duration))
+        project_map =
+          %{
+            id: to_string(item["id"]),
+            title: item["title"],
+            banner_url: item["banner_url"],
+            display_name: user_info.display_name,
+            avatar_url: user_info.avatar_url,
+            stat_hot_score: item["stat_hot_score"] || 0,
+            devlogs_count: get_devlog_count(item["id"]),
+            stat_total_likes: item["stat_total_likes"] || 0
+          }
+          |> Map.merge(project_duration_fields(duration))
 
-      project_map
-    end)
+        project_map
+      end
+    )
   end
 
   def top_this_week do
@@ -65,19 +71,25 @@ defmodule Ftpdb.DB do
       |> Supabase.PostgREST.execute()
 
     response.body
-    |> Enum.map(fn item ->
-      user_id = get_user_id(item["id"])
-      [user_info] = get_user_info(user_id)
+    |> Enum.filter_map(
+      fn item ->
+        user_id = get_user_id(item["id"])
+        user_id != nil
+      end,
+      fn item ->
+        user_id = get_user_id(item["id"])
+        [user_info] = get_user_info(user_id)
 
-      user_map = %{
-        id: to_string(item["id"]),
-        title: item["title"],
-        rank: item["stat_weekly_rank"],
-        banner_url: item["banner_url"]
-      }
+        user_map = %{
+          id: to_string(item["id"]),
+          title: item["title"],
+          rank: item["stat_weekly_rank"],
+          banner_url: item["banner_url"]
+        }
 
-      Map.merge(user_info, user_map)
-    end)
+        Map.merge(user_info, user_map)
+      end
+    )
   end
 
   def fan_favourites do
@@ -96,22 +108,28 @@ defmodule Ftpdb.DB do
       |> Supabase.PostgREST.execute()
 
     response.body
-    |> Enum.map(fn item ->
-      user_id = get_user_id(item["id"])
-      [user_info] = get_user_info(user_id)
-      duration = item["stat_total_duration_seconds"] || 0
+    |> Enum.filter_map(
+      fn item ->
+        user_id = get_user_id(item["id"])
+        user_id != nil
+      end,
+      fn item ->
+        user_id = get_user_id(item["id"])
+        [user_info] = get_user_info(user_id)
+        duration = item["stat_total_duration_seconds"] || 0
 
-      %{
-        id: to_string(item["id"]),
-        title: item["title"],
-        banner_url: item["banner_url"],
-        display_name: user_info.display_name,
-        avatar_url: user_info.avatar_url,
-        stat_hot_score: 0,
-        stat_total_likes: item["stat_total_likes"] || 0
-      }
-      |> Map.merge(project_duration_fields(duration))
-    end)
+        %{
+          id: to_string(item["id"]),
+          title: item["title"],
+          banner_url: item["banner_url"],
+          display_name: user_info.display_name,
+          avatar_url: user_info.avatar_url,
+          stat_hot_score: 0,
+          stat_total_likes: item["stat_total_likes"] || 0
+        }
+        |> Map.merge(project_duration_fields(duration))
+      end
+    )
   end
 
   def top_all_time do
@@ -124,19 +142,25 @@ defmodule Ftpdb.DB do
       |> Supabase.PostgREST.execute()
 
     response.body
-    |> Enum.map(fn item ->
-      user_id = get_user_id(item["id"])
-      [user_info] = get_user_info(user_id)
+    |> Enum.filter_map(
+      fn item ->
+        user_id = get_user_id(item["id"])
+        user_id != nil
+      end,
+      fn item ->
+        user_id = get_user_id(item["id"])
+        [user_info] = get_user_info(user_id)
 
-      user_map = %{
-        id: to_string(item["id"]),
-        title: item["title"],
-        rank: item["stat_all_time_rank"],
-        banner_url: item["banner_url"]
-      }
+        user_map = %{
+          id: to_string(item["id"]),
+          title: item["title"],
+          rank: item["stat_all_time_rank"],
+          banner_url: item["banner_url"]
+        }
 
-      Map.merge(user_info, user_map)
-    end)
+        Map.merge(user_info, user_map)
+      end
+    )
   end
 
   def most_active_projects(limit \\ 10) do
@@ -156,22 +180,28 @@ defmodule Ftpdb.DB do
       |> Supabase.PostgREST.execute()
 
     response.body
-    |> Enum.map(fn item ->
-      user_id = get_user_id(item["id"])
-      [user_info] = get_user_info(user_id)
-      duration = item["stat_total_duration_seconds"] || 0
+    |> Enum.filter_map(
+      fn item ->
+        user_id = get_user_id(item["id"])
+        user_id != nil
+      end,
+      fn item ->
+        user_id = get_user_id(item["id"])
+        [user_info] = get_user_info(user_id)
+        duration = item["stat_total_duration_seconds"] || 0
 
-      %{
-        id: to_string(item["id"]),
-        title: item["title"],
-        banner_url: item["banner_url"],
-        display_name: user_info.display_name,
-        avatar_url: user_info.avatar_url,
-        stat_hot_score: item["stat_hot_score"] || 0,
-        stat_total_likes: item["stat_total_likes"] || 0
-      }
-      |> Map.merge(project_duration_fields(duration))
-    end)
+        %{
+          id: to_string(item["id"]),
+          title: item["title"],
+          banner_url: item["banner_url"],
+          display_name: user_info.display_name,
+          avatar_url: user_info.avatar_url,
+          stat_hot_score: item["stat_hot_score"] || 0,
+          stat_total_likes: item["stat_total_likes"] || 0
+        }
+        |> Map.merge(project_duration_fields(duration))
+      end
+    )
   end
 
   def most_time_spent(limit \\ 10) do
@@ -279,20 +309,26 @@ defmodule Ftpdb.DB do
         |> Supabase.PostgREST.execute()
 
       response.body
-      |> Enum.map(fn item ->
-        user_id = get_user_id(item["id"])
-        [user_info] = get_user_info(user_id)
+      |> Enum.filter_map(
+        fn item ->
+          user_id = get_user_id(item["id"])
+          user_id != nil
+        end,
+        fn item ->
+          user_id = get_user_id(item["id"])
+          [user_info] = get_user_info(user_id)
 
-        project_map = %{
-          id: to_string(item["id"]),
-          title: item["title"],
-          banner_url: item["banner_url"],
-          hot_score: item["stat_hot_score"] || 0,
-          likes: item["stat_total_likes"] || 0
-        }
+          project_map = %{
+            id: to_string(item["id"]),
+            title: item["title"],
+            banner_url: item["banner_url"],
+            hot_score: item["stat_hot_score"] || 0,
+            likes: item["stat_total_likes"] || 0
+          }
 
-        Map.merge(user_info, project_map)
-      end)
+          Map.merge(user_info, project_map)
+        end
+      )
       |> Enum.sort_by(fn item ->
         # Sort by a weighted combination: 60% hot score, 40% likes
         # Normalize likes to be within reasonable range (divide by 100)
