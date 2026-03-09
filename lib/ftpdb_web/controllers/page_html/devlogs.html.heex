@@ -10,7 +10,7 @@
             <span class="section-meta" id="devlogCount">Loading…</span>
           </div>
           <div class="filter-controls">
-            <button class="shuffle-btn" onclick="shuffleDevlogs()">
+            <button class="shuffle-btn" type="button" onclick="shuffleDevlogs()">
               <svg
                 width="14"
                 height="14"
@@ -18,9 +18,14 @@
                 fill="none"
                 stroke="currentColor"
                 stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
               >
-                <path d="M3 9h14V5M21 5h-14v4" />
-                <path d="M3 15h14v4M21 19H7v-4" />
+                <path d="M16 3h5v5" />
+                <path d="M4 20 21 3" />
+                <path d="M21 16v5h-5" />
+                <path d="m15 15 6 6" />
+                <path d="m4 4 5 5" />
               </svg>
               Shuffle
             </button>
@@ -259,29 +264,10 @@
       grid.insertAdjacentHTML("beforeend", html);
     }
 
-    setTimeout(() => renderBanners(batch, displayedCount), 0);
     displayedCount = endIdx;
     
     countEl.textContent = `${allDevlogs.length} entr${allDevlogs.length === 1 ? "y" : "ies"}${hasMoreFromApi ? "+" : ""}`;
     updateLoadMoreButton();
-  }
-
-  function renderBanners(devlogsBatch, startIdx) {
-    devlogsBatch.forEach((log, relIdx) => {
-      const i = startIdx + relIdx;
-      const area = document.getElementById(`dl-banner-${i}`);
-      const placeholder = document.getElementById(`dl-banner-placeholder-${i}`);
-      if (!area || !placeholder) return;
-      if (log.project_banner) {
-        const img = document.createElement("img");
-        img.src = log.project_banner;
-        img.alt = log.project_title || "Project";
-        img.className = "dl-banner-img";
-        img.onload = () => { placeholder.style.display = "none"; img.classList.add("loaded"); };
-        img.onerror = () => { placeholder.style.display = "flex"; };
-        area.appendChild(img);
-      }
-    });
   }
 
   /* ──────────────────────────────

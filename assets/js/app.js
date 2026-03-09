@@ -61,6 +61,11 @@ window.escapeHtml = (str) => {
     .replace(/"/g, "&quot;")
 }
 
+function setFooterYear() {
+  const footerYearEl = document.getElementById("footerYear")
+  if (footerYearEl) footerYearEl.textContent = new Date().getFullYear()
+}
+
 function sanitizeMarkdownUrl(url) {
   if (!url) return "#"
 
@@ -543,7 +548,7 @@ function initHomePage() {
   async function loadTopAllTime()       { renderHCards(document.getElementById("topAllTimeGrid"),      await load("/api/top_all_time")) }
   async function loadTopContributors()  { renderBubbles(document.getElementById("bubbleRow"),          Object.values(await (await fetch("/api/most_time_spent")).json())) }
 
-  document.getElementById("footerYear").textContent = new Date().getFullYear()
+  setFooterYear()
   loadFeaturedBanner()
   loadTopWeek()
   loadFanFavourites()
@@ -799,7 +804,7 @@ function initProjectPage(projectId) {
         : `<div style="width:36px;height:36px;border-radius:50%;background:var(--surface2);flex-shrink:0"></div>`
       const name    = escapeHtml(project.display_name || "")
       const nameEl  = project.user_id
-        ? `<a href="/user/${project.user_id}" class="hero-author-name" style="color:inherit;transition:color var(--transition)" onmouseover="this.style.color='var(--gold)'" onmouseout="this.style.color='inherit'">${name}</a>`
+        ? `<a href="/user/${project.user_id}" class="hero-author-name hero-author-link">${name}</a>`
         : `<span class="hero-author-name">${name}</span>`
       authorEl.innerHTML = `${avatarHtml}${nameEl}`
     }
@@ -832,14 +837,15 @@ function initProjectPage(projectId) {
 
     timeline.innerHTML = devlogs.map((log, i) => {
       const hasScreenshot = log.attachments?.length > 0 && log.attachments[0]
-      const body  = escapeHtml(log.body || "No content.")
-      const long  = body.length > 400
+      const rawBody = log.body || "No content."
+      const body  = window.renderMarkdown ? window.renderMarkdown(rawBody) : escapeHtml(rawBody)
+      const long  = rawBody.length > 400
       return `
         <div class="devlog-entry" style="animation-delay:${(i * 0.06).toFixed(2)}s" id="entry-${i}">
           <div class="devlog-card">
             ${hasScreenshot ? `<img class="devlog-screenshot" src="${escapeHtml(log.attachments[0])}" alt="Devlog screenshot" loading="lazy" onerror="this.remove()" />` : ""}
             <div class="devlog-body">
-              <p class="devlog-text${long ? " clamped" : ""}" id="devlog-text-${i}">${body}</p>
+              <div class="devlog-text${long ? " clamped" : ""}" id="devlog-text-${i}">${body}</div>
               ${long ? `<button class="devlog-expand-btn" onclick="toggleExpand(${i})">Read more ↓</button>` : ""}
             </div>
             <div class="devlog-footer">
@@ -861,7 +867,7 @@ function initProjectPage(projectId) {
     btn.textContent = expanded ? "Read more ↓" : "Show less ↑"
   }
 
-  document.getElementById("footerYear").textContent = new Date().getFullYear()
+  setFooterYear()
 
   fetch(`/api/project_info/${projectId}`).then(r => r.json()).then(renderHero).catch(console.warn)
   fetch(`/api/devlogs/${projectId}`).then(r => r.json()).then(data => {
@@ -908,11 +914,13 @@ function initUserPage(userId) {
       if (!projects?.length) {
         document.getElementById("emptyState").style.display = "block"
         grid.style.display = "none"
-        countEl.textContent = ""
+        countEl.textContent = "0 projects"
         return
       }
 
-      countEl.textContent = `— ${projects.length}`
+      document.getElementById("emptyState").style.display = "none"
+      grid.style.display = "grid"
+      countEl.textContent = `${projects.length} project${projects.length === 1 ? "" : "s"}`
       grid.innerHTML = projects.map(project => {
         const title   = escapeHtml(project.title || "Untitled")
         const hasImg  = project.banner_url?.trim()
@@ -943,7 +951,7 @@ function initUserPage(userId) {
    ══════════════════════════════════════════════════════════ */
 
 function initSuggestionsPage() {
-  document.getElementById("footerYear").textContent = new Date().getFullYear()
+  setFooterYear()
 
   const form          = document.getElementById("suggestionsForm")
   const alertContainer = document.getElementById("alertContainer")
