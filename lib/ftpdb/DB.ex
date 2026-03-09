@@ -2,8 +2,37 @@ defmodule Ftpdb.DB do
   require Logger
 
   @random_project_batch_size 100
+  @random_devlog_batch_size 100
   @random_project_cache_ttl :timer.minutes(30)
   @default_project_banner_url "https://flavortown.hackclub.com/assets/default-banner-3d4e1b67.png"
+
+  def warm_random_caches do
+    [
+      {:random_project_cache, random_project_batch_key(0),
+       fn -> fetch_recent_project_batch(0) end},
+      {:random_devlog_cache, random_devlog_batch_key(0), fn -> fetch_recent_devlog_batch(0) end}
+    ]
+    |> Task.async_stream(
+      fn {cache_name, key, fetcher} ->
+        Cachex.fetch!(
+          cache_name,
+          key,
+          fn _key -> fetcher.() end,
+          expiration: @random_project_cache_ttl
+        )
+      end,
+      max_concurrency: 2,
+      ordered: false,
+      timeout: :infinity
+    )
+    |> Stream.run()
+
+    :ok
+  rescue
+    exception ->
+      Logger.warning("Failed to warm random caches on startup: #{Exception.message(exception)}")
+      :ok
+  end
 
   defp project_duration_fields(duration_seconds) do
     duration_seconds = duration_seconds || 0
@@ -627,23 +656,61 @@ defmodule Ftpdb.DB do
     end)
   end
 
-  defp get_max_devlog_id do
-    {:ok, response} =
-      Supabase.PostgREST.from(client(), "devlogs")
-      |> Supabase.PostgREST.select(["id"])
-      |> Supabase.PostgREST.order("id", desc: true)
-      |> Supabase.PostgREST.limit(1)
-      |> Map.put(:method, :get)
-      |> Supabase.PostgREST.execute()
+  def random_devlogs(limit \\ 25, excluded_devlog_ids \\ [])
 
-    case response.body do
-      [%{"id" => max_id}] -> max_id
-      _ -> 0
+  def random_devlogs(limit, excluded_devlog_ids)
+      when is_integer(limit) and limit > 0 and is_list(excluded_devlog_ids) do
+    excluded_devlog_ids =
+      excluded_devlog_ids
+      |> Enum.map(&to_string/1)
+      |> MapSet.new()
+
+    limit
+    |> build_random_devlog_pool(0, [], excluded_devlog_ids)
+    |> Enum.take_random(limit)
+  end
+
+  def random_devlogs(_limit, _excluded_devlog_ids), do: []
+
+  defp build_random_devlog_pool(limit, _batch_index, acc, _excluded_devlog_ids)
+       when length(acc) >= limit,
+       do: acc
+
+  defp build_random_devlog_pool(limit, batch_index, acc, excluded_devlog_ids) do
+    batch =
+      Cachex.fetch!(
+        :random_devlog_cache,
+        random_devlog_batch_key(batch_index),
+        fn _key -> fetch_recent_devlog_batch(batch_index) end,
+        expiration: @random_project_cache_ttl
+      )
+
+    case batch do
+      [] ->
+        acc
+
+      devlogs ->
+        filtered_devlogs =
+          Enum.reject(devlogs, fn devlog ->
+            MapSet.member?(excluded_devlog_ids, to_string(devlog.id))
+          end)
+
+        build_random_devlog_pool(
+          limit,
+          batch_index + 1,
+          acc ++ filtered_devlogs,
+          excluded_devlog_ids
+        )
     end
   end
 
-  defp fetch_and_format_devlog(id) do
-    result =
+  defp random_devlog_batch_key(batch_index), do: "recent_devlogs_batch:#{batch_index}"
+
+  defp fetch_recent_devlog_batch(batch_index) do
+    start_index = batch_index * @random_devlog_batch_size
+    end_index = start_index + @random_devlog_batch_size - 1
+
+    {:ok, response} =
       Supabase.PostgREST.from(client(), "devlogs")
       |> Supabase.PostgREST.select([
         "id",
@@ -654,103 +721,101 @@ defmodule Ftpdb.DB do
         "media_urls",
         "project_id"
       ])
-      |> Supabase.PostgREST.eq("id", id)
       |> then(fn req ->
         Supabase.Fetcher.Request.with_query(req, %{"project_id" => "not.is.null"})
       end)
+      |> Supabase.PostgREST.order("created_at", desc: true)
+      |> Supabase.PostgREST.range(start_index, end_index)
       |> Map.put(:method, :get)
       |> Supabase.PostgREST.execute()
 
-    case result do
-      {:ok, %{body: [item]}} when not is_nil(item) ->
-        duration = item["duration_seconds"] || 0
-        media_urls = item["media_urls"] || []
-        project_id = item["project_id"]
+    response.body
+    |> List.wrap()
+    |> Task.async_stream(&format_recent_devlog_for_random/1,
+      max_concurrency: System.schedulers_online() * 2,
+      ordered: false,
+      timeout: :infinity
+    )
+    |> Enum.reduce([], fn
+      {:ok, nil}, acc ->
+        acc
 
-        # Fetch project
-        {:ok, project_resp} =
-          Supabase.PostgREST.from(client(), "projects")
-          |> Supabase.PostgREST.select(["title", "banner_url"])
-          |> Supabase.PostgREST.eq("id", project_id)
-          |> Map.put(:method, :get)
-          |> Supabase.PostgREST.execute()
+      {:ok, devlog}, acc ->
+        [devlog | acc]
 
-        {project_title, project_banner} =
-          case project_resp.body do
-            [p] -> {p["title"] || "Unknown", p["banner_url"]}
-            _ -> {"Unknown", nil}
+      {:exit, reason}, acc ->
+        Logger.warning("Failed to build random devlog batch #{batch_index}: #{inspect(reason)}")
+        acc
+    end)
+    |> Enum.reverse()
+  end
+
+  defp format_recent_devlog_for_random(item) do
+    duration = item["duration_seconds"] || 0
+    media_urls = item["media_urls"] || []
+    project_id = item["project_id"]
+
+    with project_id when not is_nil(project_id) <- project_id,
+         %{title: project_title, banner_url: project_banner} <-
+           cached_random_devlog_project(project_id) do
+      user_id = cached_user_id(project_id)
+
+      {user_avatar, user_display_name} =
+        if user_id do
+          case cached_user_info(user_id) do
+            [user_info] -> {user_info.avatar_url, user_info.display_name || "Unknown User"}
+            _ -> {nil, "Unknown User"}
           end
+        else
+          {nil, "Unknown User"}
+        end
 
-        # Fetch user
-        user_id = get_user_id(project_id)
+      %{
+        id: item["id"],
+        body: item["body"],
+        total_hours: div(duration, 3600),
+        comments_count: item["comments_count"] || 0,
+        created_at: item["created_at"],
+        media_urls: media_urls,
+        project_id: project_id,
+        project_title: project_title,
+        project_banner: project_banner,
+        project_avatar: user_avatar,
+        user_id: user_id,
+        user_avatar: user_avatar,
+        user_display_name: user_display_name
+      }
+    else
+      _ -> nil
+    end
+  end
 
-        {user_avatar, user_display_name} =
-          if user_id do
-            case get_user_info(user_id) do
-              [u] -> {u.avatar_url, u.display_name || "Unknown User"}
-              _ -> {nil, "Unknown User"}
-            end
-          else
-            {nil, "Unknown User"}
-          end
+  defp cached_random_devlog_project(project_id) do
+    Cachex.fetch!(
+      :random_devlog_cache,
+      "devlog_project_summary:#{project_id}",
+      fn _key -> fetch_random_devlog_project(project_id) end,
+      expiration: @random_project_cache_ttl
+    )
+  end
 
+  defp fetch_random_devlog_project(project_id) do
+    {:ok, response} =
+      Supabase.PostgREST.from(client(), "projects")
+      |> Supabase.PostgREST.select(["title", "banner_url"])
+      |> Supabase.PostgREST.eq("id", project_id)
+      |> Map.put(:method, :get)
+      |> Supabase.PostgREST.execute()
+
+    case response.body do
+      [project] ->
         %{
-          id: item["id"],
-          body: item["body"],
-          total_hours: div(duration, 3600),
-          comments_count: item["comments_count"] || 0,
-          created_at: item["created_at"],
-          media_urls: media_urls,
-          project_id: project_id,
-          project_title: project_title,
-          project_banner: project_banner,
-          project_avatar: user_avatar,
-          user_id: user_id,
-          user_avatar: user_avatar,
-          user_display_name: user_display_name
+          title: project["title"] || "Unknown",
+          banner_url: project["banner_url"]
         }
 
       _ ->
         nil
-    end
-  end
-
-  def random_devlogs do
-    max_id = get_max_devlog_id()
-
-    if max_id == 0 do
-      []
-    else
-      # We need 25 devlogs, but some IDs might be missing or without project_id
-      # Generate more IDs to ensure we get 25 valid ones.
-      random_ids =
-        1..200
-        |> Enum.map(fn _ -> :rand.uniform(max_id) end)
-        |> Enum.uniq()
-
-      random_ids
-      |> Enum.reduce_while([], fn id, acc ->
-        if length(acc) >= 25 do
-          {:halt, acc}
-        else
-          devlog =
-            Cachex.fetch!(
-              :random_devlog_cache,
-              to_string(id),
-              fn _key ->
-                fetch_and_format_devlog(id)
-              end,
-              expiration: :timer.minutes(30)
-            )
-
-          if devlog do
-            {:cont, [devlog | acc]}
-          else
-            {:cont, acc}
-          end
-        end
-      end)
-      |> Enum.sort_by(fn devlog -> devlog.created_at end, :desc)
     end
   end
 end

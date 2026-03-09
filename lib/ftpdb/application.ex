@@ -39,7 +39,21 @@ defmodule Ftpdb.Application do
     # See https://hexdocs.pm/elixir/Supervisor.html
     # for other strategies and supported options
     opts = [strategy: :one_for_one, name: Ftpdb.Supervisor]
-    Supervisor.start_link(children, opts)
+
+    case Supervisor.start_link(children, opts) do
+      {:ok, _pid} = result ->
+        maybe_warm_random_caches()
+        result
+
+      other ->
+        other
+    end
+  end
+
+  defp maybe_warm_random_caches do
+    if Application.get_env(:ftpdb, :warm_random_cache_on_start, true) do
+      Task.start(fn -> Ftpdb.DB.warm_random_caches() end)
+    end
   end
 
   # Tell Phoenix to update the endpoint configuration

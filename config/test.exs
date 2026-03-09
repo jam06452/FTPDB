@@ -7,6 +7,9 @@ config :ftpdb, FtpdbWeb.Endpoint,
   secret_key_base: "ElCR6TV0Hrxke9LrQYUKjKUwY7D6jV6jGgtfyG1HaaZ0OWh7teUxRdDjI/NkePhf",
   server: false
 
+config :ftpdb,
+  warm_random_cache_on_start: false
+
 # In test we don't send emails
 config :ftpdb, Ftpdb.Mailer, adapter: Swoosh.Adapters.Test
 

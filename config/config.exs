@@ -8,7 +8,8 @@
 import Config
 
 config :ftpdb,
-  generators: [timestamp_type: :utc_datetime]
+  generators: [timestamp_type: :utc_datetime],
+  warm_random_cache_on_start: true
 
 # Configure the endpoint
 config :ftpdb, FtpdbWeb.Endpoint,

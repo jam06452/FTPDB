@@ -113,6 +113,7 @@
   let isLoadingMore = false;
   let currentOffset = 0;
   let hasMoreFromApi = true;
+  const seenDevlogIds = new Set();
 
   /* ──────────────────────────────
      UTILS
@@ -255,6 +256,7 @@
 
     const endIdx = Math.min(displayedCount + PAGE_SIZE, allDevlogs.length);
     const batch = allDevlogs.slice(displayedCount, endIdx);
+    batch.forEach(log => seenDevlogIds.add(String(log.id)));
 
     const html = batch.map((log, relIdx) => renderCard(log, displayedCount + relIdx)).join("");
     
@@ -342,10 +344,13 @@
     updateLoadMoreButton();
 
     try {
-      // Add limit and offset params to fetch older/different batches
-      // Assuming api/random_devlogs just returns up to 200 items each time, 
-      // we can simulate fetching "different" ones by asking API again and merging.
-      const res = await fetch(`/api/random_devlogs?offset=${currentOffset}&limit=100`);
+      const params = new URLSearchParams({offset: String(currentOffset), limit: "100"});
+
+      if (seenDevlogIds.size > 0) {
+        params.set("exclude_ids", Array.from(seenDevlogIds).join(","));
+      }
+
+      const res = await fetch(`/api/random_devlogs?${params.toString()}`);
       const data = await res.json();
       const incoming = Array.isArray(data) ? data : Object.values(data);
       
