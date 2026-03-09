@@ -2139,6 +2139,11 @@ main {
 .project-page-shell,
 .user-page-shell {
   width: 100%;
+  padding: 36px 28px 64px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
 }
 
 .hero {
@@ -2150,6 +2155,7 @@ main {
   border: 1px solid var(--border);
   background: linear-gradient(180deg, rgba(22, 26, 34, 0.98), rgba(14, 17, 24, 0.98));
   overflow: hidden;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.32);
 }
 
 .hero-banner {
@@ -2159,9 +2165,18 @@ main {
 
 .hero-banner-image-area {
   position: relative;
-  min-height: 340px;
+  min-height: 360px;
   background: var(--surface2);
   overflow: hidden;
+}
+
+.hero-banner-image-area::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 60%, rgba(5, 7, 12, 0.18));
+  pointer-events: none;
+  z-index: 1;
 }
 
 .hero-img {
@@ -2199,11 +2214,12 @@ main {
 .hero-info {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 16px;
   justify-content: center;
-  padding: 32px;
+  padding: 36px;
   border-left: 1px solid var(--border);
-  min-height: 340px;
+  min-height: 360px;
+  background: linear-gradient(135deg, rgba(22, 26, 34, 0.6), rgba(14, 17, 24, 0.8));
 }
 
 .hero-channel {
@@ -2463,6 +2479,20 @@ main {
   background: var(--gold);
 }
 
+.devlog-screenshot {
+  display: block;
+  width: 100%;
+  max-height: 480px;
+  object-fit: cover;
+  object-position: center top;
+  border-bottom: 1px solid var(--border);
+  transition: opacity 0.3s ease;
+}
+
+.devlog-screenshot:hover {
+  opacity: 0.92;
+}
+
 .state-box {
   text-align: center;
   padding: 48px 0;
@@ -2601,6 +2631,11 @@ main {
 }
 
 @media (max-width: 900px) {
+  .project-page-shell,
+  .user-page-shell {
+    padding: 24px 16px 48px;
+  }
+
   .hero-banner {
     grid-template-columns: 1fr;
   }
@@ -2622,6 +2657,12 @@ main {
 }
 
 @media (max-width: 640px) {
+  .project-page-shell,
+  .user-page-shell {
+    padding: 16px 12px 40px;
+    gap: 20px;
+  }
+
   .section-header {
     align-items: stretch;
   }
