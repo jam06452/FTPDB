@@ -603,7 +603,7 @@
           <span class="section-meta" id="weekLabel">— Loading…</span>
         </div>
         <!-- API HOOK: fetch /api/top_this_week, render .hcard for each result -->
-        <div class="hscroll-wrapper">
+        <div class="hscroll-wrapper" id="topWeekWrapper">
           <div class="hscroll" id="topWeekGrid">
             
 <!-- Template hcard -->
@@ -678,6 +678,39 @@
               </div>
             </div>
           </div>
+          <!-- Scroll arrows -->
+          <button
+            class="hscroll-arrow prev"
+            onclick="scrollHorizontal('topWeekGrid', -1)"
+            aria-label="Previous"
+          >
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+            >
+              <path d="M15 18l-6-6 6-6" />
+            </svg>
+          </button>
+          <button
+            class="hscroll-arrow next"
+            onclick="scrollHorizontal('topWeekGrid', 1)"
+            aria-label="Next"
+          >
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+            >
+              <path d="M9 18l6-6-6-6" />
+            </svg>
+          </button>
         </div>
       </section>
 
@@ -690,7 +723,7 @@
           <span class="section-meta">Community voted</span>
         </div>
         <!-- API HOOK: fetch /api/fan_favourites, render .hcard for each -->
-        <div class="hscroll-wrapper">
+        <div class="hscroll-wrapper" id="fanFavWrapper">
           <div class="hscroll" id="fanFavGrid">
             
 <!-- Template hcard -->
@@ -749,17 +782,40 @@
                 </div>
               </div>
             </div>
-            <div class="hcard">
-              <div class="hcard-thumb skeleton"></div>
-              <div class="hcard-body">
-                <div class="hcard-icon"></div>
-                <div>
-                  <div class="hcard-name">Project Name</div>
-                  <div class="hcard-sub">#channel</div>
-                </div>
-              </div>
-            </div>
           </div>
+          <!-- Scroll arrows -->
+          <button
+            class="hscroll-arrow prev"
+            onclick="scrollHorizontal('fanFavGrid', -1)"
+            aria-label="Previous"
+          >
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+            >
+              <path d="M15 18l-6-6 6-6" />
+            </svg>
+          </button>
+          <button
+            class="hscroll-arrow next"
+            onclick="scrollHorizontal('fanFavGrid', 1)"
+            aria-label="Next"
+          >
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+            >
+              <path d="M9 18l6-6-6-6" />
+            </svg>
+          </button>
         </div>
       </section>
 
@@ -772,7 +828,7 @@
           <span class="section-meta">All time greats</span>
         </div>
         <!-- API HOOK: TODO - add /api/top_all_time endpoint -->
-        <div class="hscroll-wrapper">
+        <div class="hscroll-wrapper" id="topAllTimeWrapper">
           <div class="hscroll" id="topAllTimeGrid">
             <div class="hcard" onclick="viewProject('ID')">
               <div class="hcard-thumb skeleton">
@@ -827,6 +883,39 @@
               </div>
             </div>
           </div>
+          <!-- Scroll arrows -->
+          <button
+            class="hscroll-arrow prev"
+            onclick="scrollHorizontal('topAllTimeGrid', -1)"
+            aria-label="Previous"
+          >
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+            >
+              <path d="M15 18l-6-6 6-6" />
+            </svg>
+          </button>
+          <button
+            class="hscroll-arrow next"
+            onclick="scrollHorizontal('topAllTimeGrid', 1)"
+            aria-label="Next"
+          >
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+            >
+              <path d="M9 18l6-6-6-6" />
+            </svg>
+          </button>
         </div>
       </section>
 

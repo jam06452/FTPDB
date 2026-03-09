@@ -255,6 +255,19 @@ window.renderMarkdown = (source) => {
 window.viewProject = (id) => { window.location.href = `/project/${id}` }
 window.viewUser    = (id) => { window.location.href = `/user/${id}` }
 
+window.scrollHorizontal = (containerId, direction) => {
+  const container = document.getElementById(containerId)
+  if (!container) return
+  
+  const scrollAmount = 300 // pixels to scroll per click
+  const targetScroll = container.scrollLeft + (direction * scrollAmount)
+  
+  container.scrollTo({
+    left: targetScroll,
+    behavior: 'smooth'
+  })
+}
+
 function formatProjectDuration(durationSeconds, fallbackHours = 0) {
   if (Number.isFinite(durationSeconds) && durationSeconds > 0) {
     const hours = Math.floor(durationSeconds / 3600)
