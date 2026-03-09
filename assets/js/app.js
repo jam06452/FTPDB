@@ -563,6 +563,7 @@ function initHomePage() {
 function initProjectsPage() {
   let currentFilter       = "random"
   let allProjects         = []
+  const seenProjectIds    = new Set()
   let displayedCount      = 0
   const itemsPerLoad      = 24
   const defaultFetchLimit = 120
@@ -612,6 +613,11 @@ function initProjectsPage() {
 
   async function fetchProjects(filter, limit) {
     const params = new URLSearchParams({filter, limit: String(limit)})
+
+    if (filter === "random" && seenProjectIds.size > 0) {
+      params.set("exclude_ids", Array.from(seenProjectIds).join(","))
+    }
+
     const response = await fetch(`/api/random_projects?${params.toString()}`)
 
     if (!response.ok) {
@@ -650,6 +656,8 @@ function initProjectsPage() {
     hideEmpty()
 
     batch.forEach((p, idx) => {
+      seenProjectIds.add(String(p.id))
+
       const card = document.createElement("div")
       card.className = "project-card"
       card.onclick = () => viewProject(p.id)

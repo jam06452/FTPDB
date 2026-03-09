@@ -97,6 +97,7 @@ defmodule FtpdbWeb.ApiController do
 
   def random_projects(conn, %{"filter" => filter} = params) do
     limit = String.to_integer(Map.get(params, "limit", "10"))
+    excluded_project_ids = parse_excluded_project_ids(params)
 
     case filter do
       "hottest" ->
@@ -109,13 +110,20 @@ defmodule FtpdbWeb.ApiController do
         json(conn, Ftpdb.DB.most_active_projects(limit))
 
       _ ->
-        json(conn, Ftpdb.DB.random_projects(limit))
+        json(conn, Ftpdb.DB.random_projects(limit, excluded_project_ids))
     end
   end
 
   def random_projects(conn, params) do
     limit = String.to_integer(Map.get(params, "limit", "10"))
-    json(conn, Ftpdb.DB.random_projects(limit))
+    excluded_project_ids = parse_excluded_project_ids(params)
+    json(conn, Ftpdb.DB.random_projects(limit, excluded_project_ids))
+  end
+
+  defp parse_excluded_project_ids(params) do
+    params
+    |> Map.get("exclude_ids", "")
+    |> String.split(",", trim: true)
   end
 
   def random_devlogs(conn, _params) do
