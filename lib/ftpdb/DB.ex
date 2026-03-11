@@ -6,6 +6,12 @@ defmodule Ftpdb.DB do
   @random_project_cache_ttl :timer.minutes(30)
   @default_project_banner_url "https://flavortown.hackclub.com/assets/default-banner-3d4e1b67.png"
 
+    def client do
+    config = Application.get_env(:ftpdb, :supabase)
+    {:ok, client} = Supabase.init_client(config[:url], config[:key])
+    client
+  end
+
   def warm_random_caches do
     [
       {:random_project_cache, random_project_batch_key(0),
@@ -41,12 +47,6 @@ defmodule Ftpdb.DB do
       total_duration_seconds: duration_seconds,
       total_hours: div(duration_seconds, 3600)
     }
-  end
-
-  def client do
-    config = Application.get_env(:ftpdb, :supabase)
-    {:ok, client} = Supabase.init_client(config[:url], config[:key])
-    client
   end
 
   def hot do
@@ -321,8 +321,11 @@ defmodule Ftpdb.DB do
       )
 
     case batch do
-      [] ->
+      :end_of_results ->
         acc
+
+      [] ->
+        build_random_project_pool(limit, batch_index + 1, acc, excluded_project_ids)
 
       projects ->
         filtered_projects =
@@ -360,25 +363,30 @@ defmodule Ftpdb.DB do
       |> Map.put(:method, :get)
       |> Supabase.PostgREST.execute()
 
-    response.body
-    |> List.wrap()
-    |> Task.async_stream(&format_recent_project_for_random/1,
-      max_concurrency: System.schedulers_online() * 2,
-      ordered: false,
-      timeout: :infinity
-    )
-    |> Enum.reduce([], fn
-      {:ok, nil}, acc ->
-        acc
+    case List.wrap(response.body) do
+      [] ->
+        :end_of_results
 
-      {:ok, project}, acc ->
-        [project | acc]
+      projects ->
+        projects
+        |> Task.async_stream(&format_recent_project_for_random/1,
+          max_concurrency: System.schedulers_online() * 2,
+          ordered: false,
+          timeout: :infinity
+        )
+        |> Enum.reduce([], fn
+          {:ok, nil}, acc ->
+            acc
 
-      {:exit, reason}, acc ->
-        Logger.warning("Failed to build random project batch #{batch_index}: #{inspect(reason)}")
-        acc
-    end)
-    |> Enum.reverse()
+          {:ok, project}, acc ->
+            [project | acc]
+
+          {:exit, reason}, acc ->
+            Logger.warning("Failed to build random project batch #{batch_index}: #{inspect(reason)}")
+            acc
+        end)
+        |> Enum.reverse()
+    end
   end
 
   defp format_recent_project_for_random(item) do
@@ -686,8 +694,11 @@ defmodule Ftpdb.DB do
       )
 
     case batch do
-      [] ->
+      :end_of_results ->
         acc
+
+      [] ->
+        build_random_devlog_pool(limit, batch_index + 1, acc, excluded_devlog_ids)
 
       devlogs ->
         filtered_devlogs =
@@ -729,25 +740,30 @@ defmodule Ftpdb.DB do
       |> Map.put(:method, :get)
       |> Supabase.PostgREST.execute()
 
-    response.body
-    |> List.wrap()
-    |> Task.async_stream(&format_recent_devlog_for_random/1,
-      max_concurrency: System.schedulers_online() * 2,
-      ordered: false,
-      timeout: :infinity
-    )
-    |> Enum.reduce([], fn
-      {:ok, nil}, acc ->
-        acc
+    case List.wrap(response.body) do
+      [] ->
+        :end_of_results
 
-      {:ok, devlog}, acc ->
-        [devlog | acc]
+      devlogs ->
+        devlogs
+        |> Task.async_stream(&format_recent_devlog_for_random/1,
+          max_concurrency: System.schedulers_online() * 2,
+          ordered: false,
+          timeout: :infinity
+        )
+        |> Enum.reduce([], fn
+          {:ok, nil}, acc ->
+            acc
 
-      {:exit, reason}, acc ->
-        Logger.warning("Failed to build random devlog batch #{batch_index}: #{inspect(reason)}")
-        acc
-    end)
-    |> Enum.reverse()
+          {:ok, devlog}, acc ->
+            [devlog | acc]
+
+          {:exit, reason}, acc ->
+            Logger.warning("Failed to build random devlog batch #{batch_index}: #{inspect(reason)}")
+            acc
+        end)
+        |> Enum.reverse()
+    end
   end
 
   defp format_recent_devlog_for_random(item) do
