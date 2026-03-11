@@ -2549,6 +2549,12 @@ main {
   letter-spacing: -0.03em;
 }
 
+.user-slack-id {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--muted);
+}
+
 .user-stats {
   display: flex;
   gap: 24px;

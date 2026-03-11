@@ -903,6 +903,7 @@ function initUserPage(userId) {
         </div>
         <div class="user-info">
           <h1 class="user-name">${escapeHtml(user.display_name || "User")}</h1>
+          ${user.slack_id ? `<div class="user-slack-id">${escapeHtml(user.slack_id)}</div>` : ''}
           <div class="user-stats">
             <div class="user-stat">
               <span class="user-stat-val">${user.total_hours || 0}</span>
