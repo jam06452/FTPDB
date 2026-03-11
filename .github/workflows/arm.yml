@@ -1,4 +1,4 @@
-name: Publish Docker Image
+name: Arm build and push
 
 on:
   workflow_dispatch:
