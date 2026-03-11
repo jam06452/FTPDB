@@ -6,6 +6,72 @@ import {LiveSocket} from "phoenix_live_view"
 import {hooks as colocatedHooks} from "phoenix-colocated/ftpdb"
 import topbar from "../vendor/topbar"
 
+const AVAILABLE_THEMES = ["catppuccin-mocha", "catppuccin-macchiato"]
+const DEFAULT_THEME = "catppuccin-mocha"
+const THEME_STORAGE_KEY = "ftpdb:theme"
+
+function normalizeTheme(theme) {
+  return AVAILABLE_THEMES.includes(theme) ? theme : DEFAULT_THEME
+}
+
+function syncThemeSelectState(activeTheme = document.documentElement.getAttribute("data-theme")) {
+  const nextTheme = normalizeTheme(activeTheme)
+
+  document.querySelectorAll("[data-theme-select]").forEach((select) => {
+    if (select.value !== nextTheme) {
+      select.value = nextTheme
+    }
+  })
+}
+
+function applyTheme(theme) {
+  const nextTheme = normalizeTheme(theme)
+
+  document.documentElement.setAttribute("data-theme", nextTheme)
+  document.documentElement.style.colorScheme = "dark"
+  syncThemeSelectState(nextTheme)
+
+  return nextTheme
+}
+
+function setTheme(theme, {persist = true} = {}) {
+  const nextTheme = applyTheme(theme)
+
+  if (persist) {
+    localStorage.setItem(THEME_STORAGE_KEY, nextTheme)
+  }
+
+  return nextTheme
+}
+
+function initializeTheme() {
+  const storedTheme = localStorage.getItem(THEME_STORAGE_KEY)
+  applyTheme(storedTheme || document.documentElement.dataset.theme || DEFAULT_THEME)
+}
+
+initializeTheme()
+window.setSiteTheme = setTheme
+
+document.addEventListener("change", (event) => {
+  const select = event.target.closest("[data-theme-select]")
+
+  if (!select) {
+    return
+  }
+
+  setTheme(select.value)
+})
+
+window.addEventListener("storage", (event) => {
+  if (event.key === THEME_STORAGE_KEY) {
+    applyTheme(event.newValue || DEFAULT_THEME)
+  }
+})
+
+window.addEventListener("phx:page-loading-stop", () => {
+  syncThemeSelectState()
+})
+
 const csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
 const liveSocket = new LiveSocket("/live", Socket, {
   longPollFallbackMs: 2500,

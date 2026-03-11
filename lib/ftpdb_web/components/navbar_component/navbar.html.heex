@@ -25,26 +25,56 @@
     <div class="search-autocomplete" id="searchAutocomplete"></div>
   </div>
 
-  <div class="nav-pills">
-    <a href="/projects" class={["nav-pill", @current_section == "projects" && "active"]}>
-      Projects
-    </a>
-    <a href="/devlogs" class={["nav-pill", @current_section == "devlogs" && "active"]}>
-      Devlogs
-    </a>
-    <a
-      href="/suggestions"
-      class={["nav-pill", @current_section == "suggestions" && "active"]}
-    >
-      Suggestions
-    </a>
-    <a
-      href="https://registry.scalar.com/@jam06452/apis/ftpdb-public-api@latest"
-      class="nav-pill"
-      target="_blank"
-      rel="noopener noreferrer"
-    >
-      API Docs
-    </a>
+  <div class="nav-actions">
+    <div class="nav-pills">
+      <a href="/projects" class={["nav-pill", @current_section == "projects" && "active"]}>
+        Projects
+      </a>
+      <a href="/devlogs" class={["nav-pill", @current_section == "devlogs" && "active"]}>
+        Devlogs
+      </a>
+      <a
+        href="/suggestions"
+        class={["nav-pill", @current_section == "suggestions" && "active"]}
+      >
+        Suggestions
+      </a>
+      <a
+        href="https://registry.scalar.com/@jam06452/apis/ftpdb-public-api@latest"
+        class="nav-pill"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        API Docs
+      </a>
+    </div>
+
+    <div class="theme-select-group">
+      <label class="theme-select-label sr-only" for="site-theme-select">Theme</label>
+      <div class="theme-select-wrap">
+        <select
+          id="site-theme-select"
+          class="theme-select"
+          data-theme-select
+          aria-label="Choose site theme"
+        >
+          <option value="catppuccin-mocha">Catppuccin Mocha</option>
+          <option value="catppuccin-macchiato">Catppuccin Macchiato</option>
+        </select>
+
+        <svg
+          class="theme-select-icon"
+          viewBox="0 0 20 20"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.75"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <path d="m5 7.5 5 5 5-5" />
+        </svg>
+      </div>
+    </div>
   </div>
 </nav>

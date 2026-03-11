@@ -43,11 +43,4 @@ defmodule FtpdbWeb.Layouts do
   attr :id, :string, default: "flash-group", doc: "the optional id of flash container"
 
   def flash_group(assigns)
-
-  @doc """
-  Provides dark vs light theme toggle based on themes defined in app.css.
-
-  See <head> in root layout which applies the theme before page load.
-  """
-  def theme_toggle(assigns)
 end
