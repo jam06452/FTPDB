@@ -49,6 +49,10 @@ defmodule Ftpdb.DB do
     }
   end
 
+  defp exclude_deleted_projects(query) do
+    Supabase.PostgREST.any_of(query, "ship_status.is.null,ship_status.neq.deleted")
+  end
+
   def hot do
     {:ok, response} =
       Supabase.PostgREST.from(client(), "projects")
@@ -60,6 +64,7 @@ defmodule Ftpdb.DB do
         "stat_hot_score",
         "stat_total_likes"
       ])
+      |> exclude_deleted_projects()
       |> Supabase.PostgREST.order("stat_hot_score", desc: true)
       |> Supabase.PostgREST.limit(10)
       |> Map.put(:method, :get)
@@ -96,6 +101,7 @@ defmodule Ftpdb.DB do
     {:ok, response} =
       Supabase.PostgREST.from(client(), "projects")
       |> Supabase.PostgREST.select(["title", "id", "stat_weekly_rank", "banner_url"])
+      |> exclude_deleted_projects()
       |> Supabase.PostgREST.order("stat_weekly_rank", asc: true)
       |> Supabase.PostgREST.limit(10)
       |> Map.put(:method, :get)
@@ -131,6 +137,7 @@ defmodule Ftpdb.DB do
         "stat_total_likes",
         "stat_total_duration_seconds"
       ])
+      |> exclude_deleted_projects()
       |> Supabase.PostgREST.order("stat_total_likes", desc: true)
       |> Supabase.PostgREST.limit(10)
       |> Map.put(:method, :get)
@@ -163,6 +170,7 @@ defmodule Ftpdb.DB do
     {:ok, response} =
       Supabase.PostgREST.from(client(), "projects")
       |> Supabase.PostgREST.select(["title", "id", "stat_all_time_rank", "banner_url"])
+      |> exclude_deleted_projects()
       |> Supabase.PostgREST.order("stat_all_time_rank", asc: true)
       |> Supabase.PostgREST.limit(10)
       |> Map.put(:method, :get)
