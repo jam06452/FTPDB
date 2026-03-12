@@ -23,6 +23,7 @@ defmodule FtpdbWeb.Router do
     get "/suggestions", PageController, :suggestions
     get "/projects", PageController, :projects
     get "/devlogs", PageController, :devlogs
+    get "/credits", PageController, :credits
   end
 
   scope "/api", FtpdbWeb do

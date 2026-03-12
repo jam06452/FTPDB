@@ -1,0 +1,115 @@
+<Layouts.app flash={@flash}>
+  <.navbar />
+
+  <!-- ═══ MAIN ═══ -->
+  <main>
+    <div class="container">
+      <!-- ── CREDITS SECTION ── -->
+      <section class="credits-section fade-up">
+        <h1 class="credits-title">Credits</h1>
+        
+        <div class="credits-grid">
+          <!-- Credit card 1 - User 3196 -->
+          <a href="/user/3196" class="credit-card credit-card-link" id="credit-3196">
+            <div class="credit-avatar">
+              <div class="credit-avatar-circle"></div>
+            </div>
+            <div class="credit-info">
+              <div class="credit-name">Loading...</div>
+              <div class="credit-contribution">Epic favicon & logo</div>
+            </div>
+          </a>
+
+          <!-- Credit card 2 - User 9729 -->
+          <a href="/user/9729" class="credit-card credit-card-link" id="credit-9729">
+            <div class="credit-avatar">
+              <div class="credit-avatar-circle"></div>
+            </div>
+            <div class="credit-info">
+              <div class="credit-name">Loading...</div>
+              <div class="credit-contribution">Helps for identifying flaws & brainstorming solutions for /random endpoints</div>
+            </div>
+          </a>
+
+          <!-- Credit card 3 - Placeholder -->
+          <div class="credit-card">
+            <div class="credit-avatar">
+              <div class="credit-avatar-circle"></div>
+            </div>
+            <div class="credit-fields">
+              <div class="credit-field">
+                <input type="text" placeholder="Name" class="credit-input" />
+              </div>
+              <div class="credit-field">
+                <input type="text" placeholder="Contribution" class="credit-input" />
+              </div>
+            </div>
+          </div>
+
+          <!-- Credit card 4 - Placeholder -->
+          <div class="credit-card">
+            <div class="credit-avatar">
+              <div class="credit-avatar-circle"></div>
+            </div>
+            <div class="credit-fields">
+              <div class="credit-field">
+                <input type="text" placeholder="Name" class="credit-input" />
+              </div>
+              <div class="credit-field">
+                <input type="text" placeholder="Contribution" class="credit-input" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer>
+    FTPDB &nbsp;·&nbsp; FTP Database &nbsp;·&nbsp; <span id="footerYear"></span>
+  </footer>
+
+  <script>
+    // Load user information for credits
+    async function loadUserInfo() {
+      const users = [
+        { id: 3196, cardId: 'credit-3196' },
+        { id: 9729, cardId: 'credit-9729' }
+      ];
+
+      for (const user of users) {
+        try {
+          const response = await fetch(`/api/user_info/${user.id}`);
+          if (response.ok) {
+            const userData = await response.json();
+            const creditCard = document.getElementById(user.cardId);
+            const nameElement = creditCard.querySelector('.credit-name');
+            if (nameElement && userData.display_name) {
+              nameElement.textContent = userData.display_name;
+            }
+            
+            // Check if avatar data exists in user_info response
+            const avatarCircle = creditCard.querySelector('.credit-avatar-circle');
+            if (userData.avatar_url && avatarCircle) {
+              const avatarImg = document.createElement('img');
+              avatarImg.src = userData.avatar_url;
+              avatarImg.alt = 'User avatar';
+              avatarImg.className = 'credit-avatar-img';
+              avatarImg.onerror = function() { this.remove(); };
+              avatarCircle.appendChild(avatarImg);
+            }
+          }
+        } catch (error) {
+          console.error(`Failed to load user info for ${user.id}:`, error);
+          // Keep "Loading..." text on error
+        }
+      }
+    }
+
+    // Load user info when page loads
+    document.addEventListener('DOMContentLoaded', loadUserInfo);
+    
+    // Set footer year
+    document.getElementById('footerYear').textContent = new Date().getFullYear();
+  </script>
+</Layouts.app>

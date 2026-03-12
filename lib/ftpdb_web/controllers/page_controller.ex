@@ -24,4 +24,8 @@ defmodule FtpdbWeb.PageController do
   def user(conn, %{"user_id" => user_id}) do
     render(conn, :user, user_id: user_id)
   end
+
+  def credits(conn, _params) do
+    render(conn, :credits)
+  end
 end
