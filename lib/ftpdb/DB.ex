@@ -6,7 +6,7 @@ defmodule Ftpdb.DB do
   @random_project_cache_ttl :timer.minutes(30)
   @default_project_banner_url "https://flavortown.hackclub.com/assets/default-banner-3d4e1b67.png"
 
-    def client do
+  def client do
     config = Application.get_env(:ftpdb, :supabase)
     {:ok, client} = Supabase.init_client(config[:url], config[:key])
     client
@@ -382,7 +382,10 @@ defmodule Ftpdb.DB do
             [project | acc]
 
           {:exit, reason}, acc ->
-            Logger.warning("Failed to build random project batch #{batch_index}: #{inspect(reason)}")
+            Logger.warning(
+              "Failed to build random project batch #{batch_index}: #{inspect(reason)}"
+            )
+
             acc
         end)
         |> Enum.reverse()
@@ -759,7 +762,10 @@ defmodule Ftpdb.DB do
             [devlog | acc]
 
           {:exit, reason}, acc ->
-            Logger.warning("Failed to build random devlog batch #{batch_index}: #{inspect(reason)}")
+            Logger.warning(
+              "Failed to build random devlog batch #{batch_index}: #{inspect(reason)}"
+            )
+
             acc
         end)
         |> Enum.reverse()

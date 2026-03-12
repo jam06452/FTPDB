@@ -160,6 +160,12 @@ function parseMarkdownTarget(rawTarget) {
   }
 }
 
+function isMarkdownEmojiUrl(url) {
+  if (!url) return false
+
+  return /(?:emoji\.slack-edge\.com|images\.weserv\.nl\/\?url=.*emoji\.slack-edge\.com)/i.test(url)
+}
+
 function renderMarkdownInline(source) {
   if (!source) return ""
 
@@ -177,7 +183,10 @@ function renderMarkdownInline(source) {
     .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (_match, alt, rawTarget) => {
       const {href, title} = parseMarkdownTarget(rawTarget)
       const titleAttr = title ? ` title="${window.escapeHtml(title)}"` : ""
-      return `<img src="${href}" alt="${alt}" loading="lazy"${titleAttr} />`
+      const emojiAttrs = isMarkdownEmojiUrl(href)
+        ? ' class="markdown-emoji" width="20" height="20"'
+        : ""
+      return `<img src="${href}" alt="${alt}" loading="lazy"${titleAttr}${emojiAttrs} />`
     })
     .replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_match, label, rawTarget) => {
       const {href, title} = parseMarkdownTarget(rawTarget)

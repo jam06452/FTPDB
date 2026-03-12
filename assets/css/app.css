@@ -2159,6 +2159,18 @@ main {
   background: rgba(255, 255, 255, 0.03);
 }
 
+.devlog-text img.markdown-emoji {
+  display: inline-block;
+  width: 20px;
+  min-width: 20px;
+  max-width: 20px;
+  height: 20px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  vertical-align: text-bottom;
+}
+
 .devlog-text hr {
   border: 0;
   border-top: 1px solid var(--border);
