@@ -453,7 +453,7 @@ defmodule Ftpdb.DB do
   end
 
   def search_projects(query) when is_binary(query) do
-    cleaned_query = String.trim(query)
+    cleaned_query = String.trim(query) |> String.downcase()
 
     if String.length(cleaned_query) == 0 do
       []
@@ -541,7 +541,7 @@ defmodule Ftpdb.DB do
   end
 
   def search_users(query, min_hours \\ 0) when is_binary(query) do
-    cleaned_query = String.trim(query)
+    cleaned_query = String.trim(query) |> String.downcase()
 
     if String.length(cleaned_query) == 0 do
       []
