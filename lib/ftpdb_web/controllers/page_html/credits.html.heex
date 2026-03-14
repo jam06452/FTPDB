@@ -31,35 +31,27 @@
             </div>
           </a>
 
-          <!-- Credit card 3 - Placeholder -->
-          <div class="credit-card">
+          <!-- Credit card 3 - User 7434 -->
+          <a href="/user/7434" class="credit-card credit-card-link" id="credit-7434">
             <div class="credit-avatar">
               <div class="credit-avatar-circle"></div>
             </div>
-            <div class="credit-fields">
-              <div class="credit-field">
-                <input type="text" placeholder="Name" class="credit-input" />
-              </div>
-              <div class="credit-field">
-                <input type="text" placeholder="Contribution" class="credit-input" />
-              </div>
+            <div class="credit-info">
+              <div class="credit-name">Loading...</div>
+              <div class="credit-contribution">Asking nicely and I needed to fill these up before shipping</div>
             </div>
-          </div>
+          </a>
 
-          <!-- Credit card 4 - Placeholder -->
-          <div class="credit-card">
+          <!-- Credit card 4 - User 2809 -->
+          <a href="/user/2809" class="credit-card credit-card-link" id="credit-2809">
             <div class="credit-avatar">
               <div class="credit-avatar-circle"></div>
             </div>
-            <div class="credit-fields">
-              <div class="credit-field">
-                <input type="text" placeholder="Name" class="credit-input" />
-              </div>
-              <div class="credit-field">
-                <input type="text" placeholder="Contribution" class="credit-input" />
-              </div>
+            <div class="credit-info">
+              <div class="credit-name">Loading...</div>
+              <div class="credit-contribution">Making FTPDB</div>
             </div>
-          </div>
+          </a>
         </div>
       </section>
     </div>
@@ -74,7 +66,9 @@
     async function loadUserInfo() {
       const users = [
         { id: 3196, cardId: 'credit-3196' },
-        { id: 9729, cardId: 'credit-9729' }
+        { id: 9729, cardId: 'credit-9729' },
+        { id: 7434, cardId: 'credit-7434' },
+        { id: 2809, cardId: 'credit-2809' }
       ];
 
       for (const user of users) {
