@@ -2529,6 +2529,194 @@ main {
   border-color: rgba(232, 180, 85, 0.34);
 }
 
+/* ─── PROJECT DESCRIPTION SECTION ─── */
+.project-description-section {
+  width: 100%;
+  padding: 32px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.project-page .devlog-title {
+  margin-bottom: 20px;
+  position: relative;
+  padding-bottom: 16px;
+}
+
+.project-description-content {
+  color: var(--text);
+  line-height: 1.8;
+  font-family: var(--font-body);
+  font-size: 15px;
+}
+
+.project-description-content p {
+  margin-bottom: 18px;
+  color: color-mix(in srgb, var(--text) 95%, white 5%);
+}
+
+.project-description-content p:last-child {
+  margin-bottom: 0;
+}
+
+.project-description-content h1,
+.project-description-content h2,
+.project-description-content h3,
+.project-description-content h4,
+.project-description-content h5,
+.project-description-content h6 {
+  font-family: var(--font-display);
+  margin-top: 28px;
+  margin-bottom: 14px;
+  line-height: 1.15;
+  color: var(--text);
+  font-weight: 400;
+  letter-spacing: -0.02em;
+}
+
+.project-description-content h1 {
+  font-size: 32px;
+}
+
+.project-description-content h2 {
+  font-size: 28px;
+}
+
+.project-description-content h3 {
+  font-size: 23px;
+}
+
+.project-description-content h4 {
+  font-size: 20px;
+}
+
+.project-description-content h5 {
+  font-size: 18px;
+}
+
+.project-description-content h6 {
+  font-size: 16px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.project-description-content strong,
+.project-description-content b {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.project-description-content em,
+.project-description-content i {
+  font-style: italic;
+  color: color-mix(in srgb, var(--text) 92%, white 8%);
+}
+
+.project-description-content del {
+  color: var(--muted);
+  text-decoration: line-through;
+  opacity: 0.7;
+}
+
+.project-description-content a {
+  color: var(--accent);
+  text-decoration: none;
+  border-bottom: 1px solid rgba(137, 180, 250, 0.3);
+  transition: color var(--transition), border-color var(--transition), background var(--transition);
+}
+
+.project-description-content a:hover {
+  color: var(--gold);
+  border-bottom-color: rgba(232, 180, 85, 0.5);
+}
+
+.project-description-content ul,
+.project-description-content ol {
+  margin-bottom: 18px;
+  margin-left: 28px;
+}
+
+.project-description-content ul {
+  list-style-type: disc;
+}
+
+.project-description-content ol {
+  list-style-type: decimal;
+}
+
+.project-description-content li {
+  margin-bottom: 10px;
+  color: color-mix(in srgb, var(--text) 94%, white 6%);
+}
+
+.project-description-content li > p {
+  margin-bottom: 6px;
+}
+
+.project-description-content code {
+  background: rgba(49, 50, 68, 0.6);
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: #89dceb;
+  border: 1px solid rgba(137, 180, 250, 0.2);
+  white-space: nowrap;
+}
+
+.project-description-content pre {
+  background: linear-gradient(180deg, rgba(49, 50, 68, 0.4), rgba(30, 30, 46, 0.6));
+  padding: 18px;
+  border-radius: 12px;
+  overflow-x: auto;
+  margin-bottom: 18px;
+  border: 1px solid rgba(137, 180, 250, 0.15);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.project-description-content pre code {
+  background: none;
+  padding: 0;
+  color: #cdd6f4;
+  border: none;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.project-description-content blockquote {
+  border-left: 4px solid var(--gold);
+  padding-left: 18px;
+  margin-left: 0;
+  margin-right: 0;
+  margin-bottom: 18px;
+  color: color-mix(in srgb, var(--muted) 85%, var(--gold) 15%);
+  font-style: italic;
+  background: rgba(232, 180, 85, 0.05);
+  padding: 14px 18px;
+  border-radius: 8px;
+}
+
+.project-description-content img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 12px;
+  margin: 22px 0;
+  border: 1px solid var(--border);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.3);
+  transition: transform var(--transition);
+}
+
+.project-description-content img:hover {
+  transform: scale(1.02);
+}
+
+.project-description-content hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 28px 0;
+  opacity: 0.5;
+}
+
 .project-page {
   width: 100%;
   max-width: 1100px;

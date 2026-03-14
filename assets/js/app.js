@@ -904,6 +904,16 @@ function initProjectPage(projectId) {
 
     const demoEl = document.getElementById("heroDemo")
     if (project.demo_url) { demoEl.href = escapeHtml(project.demo_url); demoEl.style.display = "inline-flex" }
+
+    // Render description if available
+    const descriptionSection = document.getElementById("descriptionSection")
+    const descriptionContent = document.getElementById("projectDescription")
+    if (project.description && project.description.trim()) {
+      descriptionContent.innerHTML = window.renderMarkdown(project.description)
+      descriptionSection.style.display = "block"
+    } else {
+      descriptionSection.style.display = "none"
+    }
   }
 
   window.heroSlideCarousel = (_dir) => {} // single-project view — no-op
@@ -985,6 +995,24 @@ function initUserPage(userId) {
               <span class="user-stat-lbl">Hours</span>
             </div>
           </div>
+          <a class="hero-cta" href="https://flavortown.hackclub.com/users/${encodeURIComponent(userId)}" target="_blank" rel="noopener noreferrer">
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+            >
+              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" /><polyline points="15 3 21 3 21 9" /><line
+                x1="10"
+                y1="14"
+                x2="21"
+                y2="3"
+              />
+            </svg>
+            View on Flavortown
+          </a>
         </div>`
     } catch (e) { console.error("Failed to load user data:", e) }
   }
