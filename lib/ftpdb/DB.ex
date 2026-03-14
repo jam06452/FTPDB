@@ -75,6 +75,10 @@ defmodule Ftpdb.DB do
       user_id = get_user_id(item["id"])
       user_id != nil
     end)
+    |> Enum.filter(fn item ->
+      banner_url = item["banner_url"]
+      banner_url != nil && banner_url != "" && banner_url != @default_project_banner_url
+    end)
     |> Enum.map(fn item ->
       user_id = get_user_id(item["id"])
       [user_info] = get_user_info(user_id)
@@ -103,7 +107,7 @@ defmodule Ftpdb.DB do
       |> Supabase.PostgREST.select(["title", "id", "stat_weekly_rank", "banner_url"])
       |> exclude_deleted_projects()
       |> Supabase.PostgREST.order("stat_weekly_rank", asc: true)
-      |> Supabase.PostgREST.limit(10)
+      |> Supabase.PostgREST.limit(20)
       |> Map.put(:method, :get)
       |> Supabase.PostgREST.execute()
 
@@ -111,6 +115,10 @@ defmodule Ftpdb.DB do
     |> Enum.filter(fn item ->
       user_id = get_user_id(item["id"])
       user_id != nil
+    end)
+    |> Enum.filter(fn item ->
+      banner_url = item["banner_url"]
+      banner_url != nil && banner_url != "" && banner_url != @default_project_banner_url
     end)
     |> Enum.map(fn item ->
       user_id = get_user_id(item["id"])
@@ -148,6 +156,10 @@ defmodule Ftpdb.DB do
       user_id = get_user_id(item["id"])
       user_id != nil
     end)
+    |> Enum.filter(fn item ->
+      banner_url = item["banner_url"]
+      banner_url != nil && banner_url != "" && banner_url != @default_project_banner_url
+    end)
     |> Enum.map(fn item ->
       user_id = get_user_id(item["id"])
       [user_info] = get_user_info(user_id)
@@ -180,6 +192,10 @@ defmodule Ftpdb.DB do
     |> Enum.filter(fn item ->
       user_id = get_user_id(item["id"])
       user_id != nil
+    end)
+    |> Enum.filter(fn item ->
+      banner_url = item["banner_url"]
+      banner_url != nil && banner_url != "" && banner_url != @default_project_banner_url
     end)
     |> Enum.map(fn item ->
       user_id = get_user_id(item["id"])
