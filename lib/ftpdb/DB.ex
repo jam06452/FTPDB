@@ -66,39 +66,75 @@ defmodule Ftpdb.DB do
       ])
       |> exclude_deleted_projects()
       |> Supabase.PostgREST.order("stat_hot_score", desc: true)
-      |> Supabase.PostgREST.limit(10)
+      |> Supabase.PostgREST.limit(15)
       |> Map.put(:method, :get)
       |> Supabase.PostgREST.execute()
 
-    response.body
-    |> Enum.filter(fn item ->
-      user_id = get_user_id(item["id"])
-      user_id != nil
-    end)
-    |> Enum.filter(fn item ->
-      banner_url = item["banner_url"]
-      banner_url != nil && banner_url != "" && banner_url != @default_project_banner_url
-    end)
-    |> Enum.map(fn item ->
-      user_id = get_user_id(item["id"])
-      [user_info] = get_user_info(user_id)
-      duration = item["stat_total_duration_seconds"] || 0
+    projects_with_banner =
+      response.body
+      |> Enum.filter(fn item ->
+        user_id = get_user_id(item["id"])
+        user_id != nil
+      end)
+      |> Enum.filter(fn item ->
+        banner_url = item["banner_url"]
+        banner_url != nil && banner_url != "" && banner_url != @default_project_banner_url
+      end)
+      |> Enum.take(10)
+      |> Enum.map(fn item ->
+        user_id = get_user_id(item["id"])
+        [user_info] = get_user_info(user_id)
+        duration = item["stat_total_duration_seconds"] || 0
 
-      project_map =
-        %{
-          id: to_string(item["id"]),
-          title: item["title"],
-          banner_url: item["banner_url"],
-          display_name: user_info.display_name,
-          avatar_url: user_info.avatar_url,
-          stat_hot_score: item["stat_hot_score"] || 0,
-          devlogs_count: get_devlog_count(item["id"]),
-          stat_total_likes: item["stat_total_likes"] || 0
-        }
-        |> Map.merge(project_duration_fields(duration))
+        project_map =
+          %{
+            id: to_string(item["id"]),
+            title: item["title"],
+            banner_url: item["banner_url"],
+            display_name: user_info.display_name,
+            avatar_url: user_info.avatar_url,
+            stat_hot_score: item["stat_hot_score"] || 0,
+            devlogs_count: get_devlog_count(item["id"]),
+            stat_total_likes: item["stat_total_likes"] || 0
+          }
+          |> Map.merge(project_duration_fields(duration))
 
-      project_map
-    end)
+        project_map
+      end)
+
+    projects_with_default_banner =
+      response.body
+      |> Enum.filter(fn item ->
+        user_id = get_user_id(item["id"])
+        user_id != nil
+      end)
+      |> Enum.filter(fn item ->
+        banner_url = item["banner_url"]
+        banner_url == @default_project_banner_url
+      end)
+      |> Enum.take(10)
+      |> Enum.map(fn item ->
+        user_id = get_user_id(item["id"])
+        [user_info] = get_user_info(user_id)
+        duration = item["stat_total_duration_seconds"] || 0
+
+        project_map =
+          %{
+            id: to_string(item["id"]),
+            title: item["title"],
+            banner_url: item["banner_url"],
+            display_name: user_info.display_name,
+            avatar_url: user_info.avatar_url,
+            stat_hot_score: item["stat_hot_score"] || 0,
+            devlogs_count: get_devlog_count(item["id"]),
+            stat_total_likes: item["stat_total_likes"] || 0
+          }
+          |> Map.merge(project_duration_fields(duration))
+
+        project_map
+      end)
+
+    projects_with_banner ++ projects_with_default_banner
   end
 
   def top_this_week do
@@ -111,28 +147,57 @@ defmodule Ftpdb.DB do
       |> Map.put(:method, :get)
       |> Supabase.PostgREST.execute()
 
-    response.body
-    |> Enum.filter(fn item ->
-      user_id = get_user_id(item["id"])
-      user_id != nil
-    end)
-    |> Enum.filter(fn item ->
-      banner_url = item["banner_url"]
-      banner_url != nil && banner_url != "" && banner_url != @default_project_banner_url
-    end)
-    |> Enum.map(fn item ->
-      user_id = get_user_id(item["id"])
-      [user_info] = get_user_info(user_id)
+    projects_with_banner =
+      response.body
+      |> Enum.filter(fn item ->
+        user_id = get_user_id(item["id"])
+        user_id != nil
+      end)
+      |> Enum.filter(fn item ->
+        banner_url = item["banner_url"]
+        banner_url != nil && banner_url != "" && banner_url != @default_project_banner_url
+      end)
+      |> Enum.take(10)
+      |> Enum.map(fn item ->
+        user_id = get_user_id(item["id"])
+        [user_info] = get_user_info(user_id)
 
-      user_map = %{
-        id: to_string(item["id"]),
-        title: item["title"],
-        rank: item["stat_weekly_rank"],
-        banner_url: item["banner_url"]
-      }
+        user_map = %{
+          id: to_string(item["id"]),
+          title: item["title"],
+          rank: item["stat_weekly_rank"],
+          banner_url: item["banner_url"]
+        }
 
-      Map.merge(user_info, user_map)
-    end)
+        Map.merge(user_info, user_map)
+      end)
+
+    projects_with_default_banner =
+      response.body
+      |> Enum.filter(fn item ->
+        user_id = get_user_id(item["id"])
+        user_id != nil
+      end)
+      |> Enum.filter(fn item ->
+        banner_url = item["banner_url"]
+        banner_url == @default_project_banner_url
+      end)
+      |> Enum.take(10)
+      |> Enum.map(fn item ->
+        user_id = get_user_id(item["id"])
+        [user_info] = get_user_info(user_id)
+
+        user_map = %{
+          id: to_string(item["id"]),
+          title: item["title"],
+          rank: item["stat_weekly_rank"],
+          banner_url: item["banner_url"]
+        }
+
+        Map.merge(user_info, user_map)
+      end)
+
+    projects_with_banner ++ projects_with_default_banner
   end
 
   def fan_favourites do
@@ -147,35 +212,67 @@ defmodule Ftpdb.DB do
       ])
       |> exclude_deleted_projects()
       |> Supabase.PostgREST.order("stat_total_likes", desc: true)
-      |> Supabase.PostgREST.limit(10)
+      |> Supabase.PostgREST.limit(15)
       |> Map.put(:method, :get)
       |> Supabase.PostgREST.execute()
 
-    response.body
-    |> Enum.filter(fn item ->
-      user_id = get_user_id(item["id"])
-      user_id != nil
-    end)
-    |> Enum.filter(fn item ->
-      banner_url = item["banner_url"]
-      banner_url != nil && banner_url != "" && banner_url != @default_project_banner_url
-    end)
-    |> Enum.map(fn item ->
-      user_id = get_user_id(item["id"])
-      [user_info] = get_user_info(user_id)
-      duration = item["stat_total_duration_seconds"] || 0
+    projects_with_banner =
+      response.body
+      |> Enum.filter(fn item ->
+        user_id = get_user_id(item["id"])
+        user_id != nil
+      end)
+      |> Enum.filter(fn item ->
+        banner_url = item["banner_url"]
+        banner_url != nil && banner_url != "" && banner_url != @default_project_banner_url
+      end)
+      |> Enum.take(10)
+      |> Enum.map(fn item ->
+        user_id = get_user_id(item["id"])
+        [user_info] = get_user_info(user_id)
+        duration = item["stat_total_duration_seconds"] || 0
 
-      %{
-        id: to_string(item["id"]),
-        title: item["title"],
-        banner_url: item["banner_url"],
-        display_name: user_info.display_name,
-        avatar_url: user_info.avatar_url,
-        stat_hot_score: 0,
-        stat_total_likes: item["stat_total_likes"] || 0
-      }
-      |> Map.merge(project_duration_fields(duration))
-    end)
+        %{
+          id: to_string(item["id"]),
+          title: item["title"],
+          banner_url: item["banner_url"],
+          display_name: user_info.display_name,
+          avatar_url: user_info.avatar_url,
+          stat_hot_score: 0,
+          stat_total_likes: item["stat_total_likes"] || 0
+        }
+        |> Map.merge(project_duration_fields(duration))
+      end)
+
+    projects_with_default_banner =
+      response.body
+      |> Enum.filter(fn item ->
+        user_id = get_user_id(item["id"])
+        user_id != nil
+      end)
+      |> Enum.filter(fn item ->
+        banner_url = item["banner_url"]
+        banner_url == @default_project_banner_url
+      end)
+      |> Enum.take(10)
+      |> Enum.map(fn item ->
+        user_id = get_user_id(item["id"])
+        [user_info] = get_user_info(user_id)
+        duration = item["stat_total_duration_seconds"] || 0
+
+        %{
+          id: to_string(item["id"]),
+          title: item["title"],
+          banner_url: item["banner_url"],
+          display_name: user_info.display_name,
+          avatar_url: user_info.avatar_url,
+          stat_hot_score: 0,
+          stat_total_likes: item["stat_total_likes"] || 0
+        }
+        |> Map.merge(project_duration_fields(duration))
+      end)
+
+    projects_with_banner ++ projects_with_default_banner
   end
 
   def top_all_time do
@@ -184,32 +281,61 @@ defmodule Ftpdb.DB do
       |> Supabase.PostgREST.select(["title", "id", "stat_all_time_rank", "banner_url"])
       |> exclude_deleted_projects()
       |> Supabase.PostgREST.order("stat_all_time_rank", asc: true)
-      |> Supabase.PostgREST.limit(10)
+      |> Supabase.PostgREST.limit(15)
       |> Map.put(:method, :get)
       |> Supabase.PostgREST.execute()
 
-    response.body
-    |> Enum.filter(fn item ->
-      user_id = get_user_id(item["id"])
-      user_id != nil
-    end)
-    |> Enum.filter(fn item ->
-      banner_url = item["banner_url"]
-      banner_url != nil && banner_url != "" && banner_url != @default_project_banner_url
-    end)
-    |> Enum.map(fn item ->
-      user_id = get_user_id(item["id"])
-      [user_info] = get_user_info(user_id)
+    projects_with_banner =
+      response.body
+      |> Enum.filter(fn item ->
+        user_id = get_user_id(item["id"])
+        user_id != nil
+      end)
+      |> Enum.filter(fn item ->
+        banner_url = item["banner_url"]
+        banner_url != nil && banner_url != "" && banner_url != @default_project_banner_url
+      end)
+      |> Enum.take(10)
+      |> Enum.map(fn item ->
+        user_id = get_user_id(item["id"])
+        [user_info] = get_user_info(user_id)
 
-      user_map = %{
-        id: to_string(item["id"]),
-        title: item["title"],
-        rank: item["stat_all_time_rank"],
-        banner_url: item["banner_url"]
-      }
+        user_map = %{
+          id: to_string(item["id"]),
+          title: item["title"],
+          rank: item["stat_all_time_rank"],
+          banner_url: item["banner_url"]
+        }
 
-      Map.merge(user_info, user_map)
-    end)
+        Map.merge(user_info, user_map)
+      end)
+
+    projects_with_default_banner =
+      response.body
+      |> Enum.filter(fn item ->
+        user_id = get_user_id(item["id"])
+        user_id != nil
+      end)
+      |> Enum.filter(fn item ->
+        banner_url = item["banner_url"]
+        banner_url == @default_project_banner_url
+      end)
+      |> Enum.take(10)
+      |> Enum.map(fn item ->
+        user_id = get_user_id(item["id"])
+        [user_info] = get_user_info(user_id)
+
+        user_map = %{
+          id: to_string(item["id"]),
+          title: item["title"],
+          rank: item["stat_all_time_rank"],
+          banner_url: item["banner_url"]
+        }
+
+        Map.merge(user_info, user_map)
+      end)
+
+    projects_with_banner ++ projects_with_default_banner
   end
 
   def most_active_projects(limit \\ 10) do
