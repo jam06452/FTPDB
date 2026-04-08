@@ -1,6 +1,8 @@
 defmodule FtpdbWeb.Endpoint do
   use Phoenix.Endpoint, otp_app: :ftpdb
 
+  @api_methods ["GET", "POST", "OPTIONS"]
+
   # The session will be stored in the cookie and signed,
   # this means its contents can be read but not tampered with.
   # Set :encryption_salt if you would also like to encrypt it.
@@ -42,6 +44,11 @@ defmodule FtpdbWeb.Endpoint do
   plug Plug.RequestId
   plug Plug.Telemetry, event_prefix: [:phoenix, :endpoint]
 
+  plug CORSPlug,
+    origin: "*",
+    methods: @api_methods,
+    if: &__MODULE__.api_request?/1
+
   plug Plug.Parsers,
     parsers: [:urlencoded, :multipart, :json],
     pass: ["*/*"],
@@ -51,4 +58,6 @@ defmodule FtpdbWeb.Endpoint do
   plug Plug.Head
   plug Plug.Session, @session_options
   plug FtpdbWeb.Router
+
+  def api_request?(%Plug.Conn{request_path: path}), do: String.starts_with?(path, "/api")
 end
