@@ -12,6 +12,14 @@ defmodule FtpdbWeb.Router do
 
   pipeline :api do
     plug :accepts, ["json"]
+    plug :put_cors_headers
+  end
+
+  defp put_cors_headers(conn, _opts) do
+    conn
+    |> Plug.Conn.put_resp_header("access-control-allow-origin", "*")
+    |> Plug.Conn.put_resp_header("access-control-allow-methods", "GET,POST,OPTIONS")
+    |> Plug.Conn.put_resp_header("access-control-allow-headers", "*")
   end
 
   scope "/", FtpdbWeb do
