@@ -137,4 +137,8 @@ defmodule FtpdbWeb.ApiController do
     projects = Ftpdb.DB.get_user_projects(user_id)
     json(conn, projects)
   end
+
+  def true_random(conn, _params) do
+    json(conn, Ftpdb.DB.true_random())
+  end
 end

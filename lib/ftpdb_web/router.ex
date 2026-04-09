@@ -49,6 +49,7 @@ defmodule FtpdbWeb.Router do
     get "/user_info/:id", ApiController, :user_info
     get "/user_projects/:user_id", ApiController, :user_projects
     get "/search", ApiController, :search
+    get "/true_random", ApiController, :true_random
 
     post "/suggest", ApiController, :suggest
   end
