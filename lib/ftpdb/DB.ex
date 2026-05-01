@@ -992,10 +992,11 @@ defmodule Ftpdb.DB do
   end
 
   def true_random() do
-  {:ok, %{body: body}} = Supabase.PostgREST.rpc(client(), "get_random_project", %{})
-    |> Supabase.PostgREST.single()
-    |> Supabase.PostgREST.execute()
+    {:ok, %{body: body}} =
+      Supabase.PostgREST.rpc(client(), "get_random_project", %{})
+      |> Supabase.PostgREST.single()
+      |> Supabase.PostgREST.execute()
 
-  body
+    body
   end
 end

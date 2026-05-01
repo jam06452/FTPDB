@@ -1,13 +1,13 @@
 <Layouts.app flash={@flash}>
   <.navbar current_section="credits" />
-
-  <!-- ═══ MAIN ═══ -->
+  
+<!-- ═══ MAIN ═══ -->
   <main>
     <div class="container">
       <!-- ── CREDITS SECTION ── -->
       <section class="credits-section fade-up">
         <h1 class="credits-title">Credits</h1>
-        
+
         <div class="credits-grid">
           <!-- Credit card 1 - User 3196 -->
           <a href="/user/3196" class="credit-card credit-card-link" id="credit-3196">
@@ -19,30 +19,34 @@
               <div class="credit-contribution">Epic favicon & logo</div>
             </div>
           </a>
-
-          <!-- Credit card 2 - User 9729 -->
+          
+<!-- Credit card 2 - User 9729 -->
           <a href="/user/9729" class="credit-card credit-card-link" id="credit-9729">
             <div class="credit-avatar">
               <div class="credit-avatar-circle"></div>
             </div>
             <div class="credit-info">
               <div class="credit-name">Loading...</div>
-              <div class="credit-contribution">Helps for identifying flaws & brainstorming solutions for /random endpoints</div>
+              <div class="credit-contribution">
+                Helps for identifying flaws & brainstorming solutions for /random endpoints
+              </div>
             </div>
           </a>
-
-          <!-- Credit card 3 - User 7434 -->
+          
+<!-- Credit card 3 - User 7434 -->
           <a href="/user/7434" class="credit-card credit-card-link" id="credit-7434">
             <div class="credit-avatar">
               <div class="credit-avatar-circle"></div>
             </div>
             <div class="credit-info">
               <div class="credit-name">Loading...</div>
-              <div class="credit-contribution">Asking nicely and I needed to fill these up before shipping</div>
+              <div class="credit-contribution">
+                Asking nicely and I needed to fill these up before shipping
+              </div>
             </div>
           </a>
-
-          <!-- Credit card 4 - User 2809 -->
+          
+<!-- Credit card 4 - User 2809 -->
           <a href="/user/2809" class="credit-card credit-card-link" id="credit-2809">
             <div class="credit-avatar">
               <div class="credit-avatar-circle"></div>
@@ -56,8 +60,6 @@
       </section>
     </div>
   </main>
-
-
 
   <script>
     // Load user information for credits
@@ -100,7 +102,7 @@
 
     // Load user info when page loads
     document.addEventListener('DOMContentLoaded', loadUserInfo);
-    
+
     // Set footer year
     document.getElementById('footerYear').textContent = new Date().getFullYear();
   </script>
